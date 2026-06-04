@@ -1,0 +1,38 @@
+name: Release
+
+# Opens/updates a "Version Packages" PR that applies changesets: bumps each
+# package's version and writes its CHANGELOG. Merging that PR publishes the
+# version bumps to main, which triggers web-publish.yml (web) and lets you run
+# Extension · Publish (extension). We never run `changeset publish` — neither
+# package is on npm.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Version Packages PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - uses: changesets/action@v1
+        with:
+          version: pnpm version-packages
+          commit: "chore: version packages"
+          title: "Version Packages (joint release)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

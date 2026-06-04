@@ -1,0 +1,39 @@
+name: Web · Build & Publish
+
+on:
+  push:
+    branches: [main, publish]
+    paths:
+      - "packages/adr-manager/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/web-publish.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: web-publish
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Build & deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # GITHUB_TOKEN needs write access to push the gh-pages branch
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter adr-manager build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # same-repo deploy — no PAT
+          publish_branch: gh-pages
+          publish_dir: ./packages/adr-manager/dist
+          force_orphan: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"

@@ -1,0 +1,48 @@
+name: Web · Tests
+
+on:
+  push:
+    paths:
+      - "packages/adr-manager/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/web-tests.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: web-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Jest unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter adr-manager test
+
+  e2e-tests:
+    name: Cypress e2e (Chrome)
+    runs-on: ubuntu-latest
+    container: cypress/browsers:node-18.16.0-chrome-113.0.5672.92-1-ff-113.0-edge-113.0.1774.35-1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter adr-manager exec cypress verify
+      - name: Run Cypress
+        env:
+          CYPRESS_OAUTH_E2E_AUTH_ID: ${{ secrets.OAUTH_E2E_AUTH_ID }}
+          CYPRESS_USER: ${{ secrets.USER }}
+        run: |
+          pnpm --filter adr-manager start &
+          pnpm --filter adr-manager e2e:test-ci

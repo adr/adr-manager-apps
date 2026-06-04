@@ -1,0 +1,25 @@
+name: Extension · Publish
+
+# Publishes the VS Code extension to the Marketplace via vsce. Triggered
+# manually (workflow_dispatch) to avoid accidental Marketplace publishes —
+# run it after the "Version Packages" PR has bumped the extension's version.
+# Requires the VSCE_PAT secret (Azure DevOps token for the StevenChen publisher).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: vsce publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter vscode-adr-manager exec vsce publish --no-dependencies
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}

@@ -1,0 +1,212 @@
+{
+	"name": "vscode-adr-manager",
+	"displayName": "ADR Manager",
+	"description": "A VS Code extension for the ADR Manager, for documenting and managing MADRs in VS Code.",
+	"version": "0.1.8",
+	"publisher": "StevenChen",
+	"icon": "assets/logo.png",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/adr/vscode-adr-manager.git"
+	},
+	"engines": {
+		"vscode": "^1.67.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"keywords": [
+		"ADR, MADR, Manager"
+	],
+	"activationEvents": [
+		"onStartupFinished",
+		"onLanguage:markdown",
+		"onWebviewPanel:adrManager",
+		"onCommand:vscode-adr-manager.openMainWebView",
+		"onCommand:vscode-adr-manager.openAddAdrWebView",
+		"onCommand:vscode-adr-manager.viewInAdrManager"
+	],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "vscode-adr-manager.openMainWebView",
+				"title": "Open ADR Manager",
+				"category": "ADR Manager"
+			},
+			{
+				"command": "vscode-adr-manager.openAddAdrWebView",
+				"title": "Add New ADR",
+				"category": "ADR Manager"
+			},
+			{
+				"command": "vscode-adr-manager.initializeAdrDirectory",
+				"title": "Initialize ADR Directory",
+				"category": "ADR Manager"
+			},
+			{
+				"command": "vscode-adr-manager.changeAdrDirectory",
+				"title": "Change ADR Directory",
+				"category": "ADR Manager"
+			},
+			{
+				"command": "vscode-adr-manager.viewInAdrManager",
+				"title": "Open ADR Manager on This File",
+				"category": "ADR Manager"
+			},
+			{
+				"command": "vscode-adr-manager.viewAdrFromContextMenu",
+				"title": "Open ADR Manager on This File",
+				"category": "ADR Manager"
+			}
+		],
+		"configuration": {
+			"title": "ADR Manager",
+			"properties": {
+				"adrManager.adrDirectory": {
+					"type": "string",
+					"default": "docs/decisions",
+					"description": "Specifies the path of the ADR directory, relative to a root workspace folder",
+					"pattern": "^([^?*:\"<>|]+[\\/]?)+$",
+					"patternErrorMessage": "Invalid directory. Avoid using the following characters:\n? * : \" < > |"
+				},
+				"adrManager.editorMode.addAdrEditorMode": {
+					"type": "string",
+					"default": "basic",
+					"enum": [
+						"basic",
+						"professional"
+					],
+					"enumDescriptions": [
+						"Use a short MADR template with only required fields of a MADR",
+						"Use a long MADR template with access to every field of a MADR"
+					],
+					"description": "Specifies the grade of detail of the MADR template when adding a new MADR"
+				},
+				"adrManager.editorMode.viewAdrEditorMode": {
+					"type": "string",
+					"default": "sufficient",
+					"enum": [
+						"basic",
+						"professional",
+						"sufficient"
+					],
+					"enumDescriptions": [
+						"Use a short MADR template with only required fields of a MADR",
+						"Use a long MADR template with access to every field of a MADR",
+						"Automatically select the least sufficient editor mode based on the displayed MADR"
+					],
+					"description": "Specifies the grade of detail of the MADR template when editing an existing MADR"
+				},
+				"adrManager.showDiagnostics": {
+					"type": "boolean",
+					"default": true,
+					"description": "Specifies whether ADR Manager displays diagnostics when viewing potential ADRs in the text editor"
+				},
+				"adrManager.treatSingleRootAsMultiRoot": {
+					"type": "boolean",
+					"default": true,
+					"description": "Specifies whether ADR Manager treats single-root workspaces with only subdirectories like multi-root workspaces"
+				}
+			}
+		},
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "vscode-adr-manager.viewInAdrManager",
+					"when": "editorLangId == markdown"
+				},
+				{
+					"command": "vscode-adr-manager.viewAdrFromContextMenu",
+					"when": "vscode-adr-manager.hideCommand"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "vscode-adr-manager.openMainWebView",
+					"when": "explorerResourceIsFolder && resourceFilename in vscode-adr-manager.adrDirectory",
+					"group": "vscode-adr-manager"
+				},
+				{
+					"command": "vscode-adr-manager.viewAdrFromContextMenu",
+					"when": "resourceLangId == markdown && resourceFilename =~ /^\\d{4}((-|_)[^\\s-_?*:\"<>|\\/]+)+.md$/",
+					"group": "vscode-adr-manager"
+				}
+			]
+		},
+		"snippets": [
+			{
+				"language": "markdown",
+				"path": "./snippets/snippets.json"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "pnpm run package",
+		"build": "pnpm run package",
+		"compile": "webpack",
+		"compile-web": "rollup -c",
+		"watch": "concurrently \"rollup -c -w\" \"webpack --watch\"",
+		"package": "concurrently \"webpack --mode production\" \"rollup -c\"",
+		"compile-tests": "tsc -p . --outDir dist",
+		"watch-tests": "tsc -p . -w --outDir dist",
+		"pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "jest",
+		"antlr4ts": "antlr4ts src/plugins/parser/MADR.g4"
+	},
+	"devDependencies": {
+		"@rollup/plugin-alias": "^3.1.9",
+		"@rollup/plugin-commonjs": "^22.0.1",
+		"@rollup/plugin-image": "^2.1.1",
+		"@rollup/plugin-json": "^4.1.0",
+		"@rollup/plugin-node-resolve": "^13.3.0",
+		"@rollup/plugin-replace": "^4.0.0",
+		"@rollup/plugin-typescript": "^8.3.3",
+		"@types/glob": "^7.2.0",
+		"@types/jest": "^28.1.4",
+		"@types/lodash": "^4.14.182",
+		"@types/minimatch": "^3.0.5",
+		"@types/node": "14.x",
+		"@types/vscode": "^1.67.0",
+		"@typescript-eslint/eslint-plugin": "^5.21.0",
+		"@typescript-eslint/parser": "^5.21.0",
+		"@vscode/test-electron": "^2.1.3",
+		"@vue/compiler-sfc": "^3.2.37",
+		"concurrently": "^7.2.1",
+		"eslint": "^8.14.0",
+		"generate-source-map": "^0.0.5",
+		"glob": "^8.0.1",
+		"jest": "^28.1.2",
+		"jest-environment-jsdom": "^28.1.2",
+		"postcss-import": "^14.1.0",
+		"rollup": "^2.76.0",
+		"rollup-plugin-copy": "^3.4.0",
+		"rollup-plugin-esbuild": "^4.9.1",
+		"rollup-plugin-external-globals": "^0.6.1",
+		"rollup-plugin-filesize": "^9.1.2",
+		"rollup-plugin-polyfill-node": "^0.10.0",
+		"rollup-plugin-postcss": "^4.0.2",
+		"rollup-plugin-require-context": "^1.0.1",
+		"rollup-plugin-terser": "^7.0.2",
+		"rollup-plugin-vue": "^6.0.0",
+		"sass": "^1.52.1",
+		"ts-jest": "^28.0.5",
+		"ts-loader": "^9.2.8",
+		"ts-node": "^10.8.2",
+		"typescript": "~4.7.4",
+		"webpack": "^5.70.0",
+		"webpack-cli": "^4.9.2"
+	},
+	"dependencies": {
+		"@types/vscode-webview": "^1.57.0",
+		"@vscode/codicons": "^0.0.31",
+		"@vueform/toggle": "^2.1.1",
+		"@vuelidate/core": "^2.0.0-alpha.42",
+		"@vuelidate/validators": "^2.0.0-alpha.30",
+		"antlr4": "4.10.1",
+		"vue": "^3.2.37",
+		"vue-class-component": "^8.0.0-0",
+		"vue-draggable-next": "^2.1.1"
+	}
+}

@@ -1,0 +1,28 @@
+name: Extension · CI
+
+on:
+  push:
+    paths:
+      - "packages/vscode-adr-manager/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/extension-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    name: Build, test & package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter vscode-adr-manager test # `pretest` auto-runs compile-tests + compile + lint
+      - run: pnpm vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: packages/vscode-adr-manager/*.vsix

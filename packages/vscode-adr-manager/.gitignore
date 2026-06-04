@@ -1,0 +1,13 @@
+# compiled output
+dist
+dist-web
+
+# Dependency directories
+node_modules
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# VS Code Extension File
+*.vsix

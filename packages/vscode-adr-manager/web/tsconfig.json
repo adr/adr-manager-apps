@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"target": "es5",
+		"module": "commonjs",
+		"strict": true,
+		"jsx": "preserve",
+		"allowJs": true,
+		"checkJs": false,
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"baseUrl": ".",
+		"lib": ["esnext", "dom", "dom.iterable", "scripthost"]
+	},
+	"vueCompilerOptions": {
+		"target": 2.7,
+		"experimentalDisableTemplateSupport": true
+	},
+	"include": ["pages/**/*.ts", "pages/**/*.tsx", "**/*.vue"]
+}

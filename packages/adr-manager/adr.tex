@@ -1,0 +1,192 @@
+\documentclass{article}
+\begin{document}
+
+
+\section{Heuristic Evaluation}
+Following the manual exploration of both running applications, a heuristic evaluation was conducted to evaluate the usability of their user interfaces. A heuristic evaluation is a method for inspecting the usability of the user interface \cite{nielsen1994}. In the evaluation, the user interfaces were compared against a set of recognized usability principles.
+
+For this analysis, the ten heuristic principles, which can be seen in Table \ref{ten heuristic principles}, were applied to both applications, with each principle being discussed in detail in each subsection. The evaluation is based on the observations gathered during the manual exploration phase. A short overview of both applications can be seen in Tables \ref{VS Code Heuristic overview} and \ref{Web Heuristic overview}.
+
+\subsection{Ten Heuristic Principles}
+\begin{tabular}{|p{2cm}|p{10cm}|}
+\hline
+\textbf{Heuristic} & \textbf{Description} \\
+\hline
+Visibility of system status & The system should always keep users informed in real time through appropriate feedback. \\
+\hline
+Match between system and real world & The system should speak the user's language using familiar words and concepts. \\
+\hline
+User control and freedom & Users need clearly marked emergency exits to leave unwanted states without lengthy dialogues. \\
+\hline
+Consistency and standards & Follow platform conventions so users do not wonder if different actions mean the same thing. \\
+\hline
+Error prevention & Careful design should prevent problems from occurring in the first place. \\
+\hline
+Recognition rather than recall & Make objects, actions, and options visible to minimize the user's memory load. \\
+\hline
+Flexibility and efficiency of use & Provide accelerators for expert users while remaining usable for novices. \\
+\hline
+Aesthetic and minimalist design & Remove irrelevant or rarely needed information from dialogues. \\
+\hline
+Help users recognize, diagnose, and recover from errors & Error messages should use plain language, indicate the problem, and suggest solutions. \\
+\hline
+Help and documentation & Provide help and documentation even though ideally the system should be self-explanatory. \\
+\hline
+\label{ten heuristic principles}
+\end{tabular}
+
+\section{ADR Manager VS Code Extension Heuristic Evaluation of User Interface}
+In this section the VS Code Extension will be evaluated based on the ten heuristics. A quick overview of how the extension scored can be seen in Table \ref{VS Code Heuristic overview}.
+
+
+\begin{tabular}{|c|p{4cm}|c|p{6cm}|}
+\hline
+\textbf{\#} & \textbf{Heuristic} & \textbf{Verdict} & \textbf{Summary} \\
+\hline
+1 & Visibility of System Status & Strong & Mandatory fields turn red when empty; squiggles update in real time. \\
+\hline
+2 & Match Between System and Real World & Strong & Domain-specific MADR terminology with (i) buttons for definitions. \\
+\hline
+3 & User Control and Freedom & Partial & Multiple exit paths and OS trash recovery, but no draft save or in-form undo. \\
+\hline
+4 & Consistency and Standards & Strong & Consistent ``ADR Manager:'' command prefix and MADR naming pattern. \\
+\hline
+5 & Error Prevention & Strong & Blocks invalid filenames; auto-generates IDs to prevent duplicates. \\
+\hline
+6 & Recognition Rather Than Recall & Partial & Template and ADR list reduce memory load, but no clear command overview. \\
+\hline
+7 & Flexibility and Efficiency of Use & Strong & Multiple paths to actions; basic and professional modes for different users. \\
+\hline
+8 & Aesthetic and Minimalist Design & Strong & Default form shows only core fields; clean, uncluttered overview. \\
+\hline
+9 & Help Users Recognize and Recover from Errors & Strong & Hover messages explain errors; lightbulb provides one-click fixes. \\
+\hline
+10 & Help and Documentation & Partial & In-app (i) buttons and example ADR exist, but no tutorial or FAQ. \\
+\hline
+\label{VS Code Heuristic overview}
+\end{tabular}
+
+
+\subsubsection{Visibility of System Status}
+The system does a good job of keeping the user informed with what is going on in the application. For example when creating an ADR, the mandatory core fields that have not yet been filled in will be highlighted red and will return to a neutral, gray state once completed. Furthermore, in malformed ADRs error squiggles relating to ADR syntax will automatically adapt in real time once being changed.
+
+\subsubsection{Match Between the System and the Real World} \label{Match between the system and the real world}
+The extension abstracts most technical implementation details, exposing primarily domain-specific MADR terminology. Furthermore, for these terms it provides the user with an optional \textit{(i)} information button for additional context, such as providing the definition for the term: \textit{decision drivers}.
+
+\subsubsection{User Control and Freedom}
+The user is able to maintain control throughout the entire system. The user is able to leave any unwanted states by either making use of the return button once in the editor, which leads back to the ADR manager overview, by pressing \textit{esc} when changing the directory or by exiting out of the web-view entirely through the \textit{x} button. Moreover, an ADR file will be moved to the OS trash once it has been deleted making recovery possible if the user changes their mind. In addition, there are options present in the VS Code Settings Panel, that allow the user to change certain settings based on their preferences, such as, automatically having \textit{professional} mode turned on when adding a new ADR.
+
+However, a restriction the user might experience is that there is no partial save button when adding an ADR. An ADR file can only be saved once all core fields have been filled in (\textit{Title, Context and Problem Statement, Considered Options and Decision Outcome}). There is no draft option, thus if a user is unable to complete all core fields the ADR won't be able to be saved, leading to the potential loss of progress. This occurs, for example, when exiting out of the ADR editor screen without saving, once re-opening the screen, all changes made will be gone. In addition, there is no \textit{in-form undo} button, specifically when deleting a \textit{considered option}. When an option is deleted, the user will have to manually make a new considered option and re-type the name.
+
+\subsubsection{Consistency and Standards}
+The system manages to remain consistent and follows several conventions. The ADR files generated make use of the same MADR naming pattern. Moreover, every command of the extension is prefixed with \textit{"ADR Manager:"} and all settings related to the manager live under \textit{"adrManager"} in the VS Code settings.
+
+\subsubsection{Error Prevention}
+The application makes good use of error prevention by making it compulsory to follow the ADR template rules. For example, if special characters are present in the title such as \textit{? or :}, a warning will appear informing the user that this is not allowed and must be changed. Saving the ADR won't be possible until the fix has taken place, thus enforcing the ADR file conventions. Furthermore, when creating a new ADR, the filename with its own respective ID will be automatically generated. Since the extension takes over this task, potential errors regarding duplicate IDs or inconsistent capitalization will be minimized.
+
+\subsubsection{Recognition Rather Than Recall}
+The system, to an extent, is able to provide the user with sufficient information to navigate the manager adequately. A template of an example ADR is given to the user once having initialized the ADR directory. By not forcing the user to learn this by heart, the system is able to minimize the user's memory load and maximize their thinking capacity. Additionally, in the \textit{ADR Manager Overview} section, there is a clear outline of all existing ADR files, so that the user does not need to memorize all the names.
+
+Nevertheless, one point where the application under performs with regard to this heuristic, is with its available commands. The extension does not provide a clear command overview. The user will either have to search for the possible commands in the VS Code Command Palette or via going to the extension's GitHub if they do not remember them.
+
+\subsubsection{Flexibility and Efficiency of Use}
+The application is well tailored to both new and more experienced users. The extension provides optional, more in-depth fields to users if they so desire. This can make the application seem less daunting to new users, whilst still providing enough support for those that have more experience. Moreover, there are several paths possible to perform the same action, leading to potentially higher efficiency since the users are not forced to do specific tasks a certain way. For example, the \textit{ADR Manager: Change ADR Directory} command can be performed via the VS Code Command Palette, opening the right-click context menu on the current directory or via the VS Code Settings panel.
+
+\subsubsection{Aesthetic and Minimalist Design}
+Only the necessary elements are shown in the system. The default ADR form only shows the four core fields, hiding all other information and fields behind \textit{(i)} buttons and the professional setting. In addition, the general ADR overview only displays the ADR manager logo, the repository's name, the ADR file list with their own respective \textit{view} and \textit{delete} buttons as well as the \textit{Add ADR} button. By only displaying the most important information and abstracting optional information, the extension manages to keep the decorative clutter to a minimum and keep a minimalist design that does not overwhelm the user.
+
+\subsubsection{Help Users Recognize, Diagnose and Recover From Errors}
+The error messages the extension can display provide a good insight into what exactly the root of the problem is. Hovering over a squiggle reveals an explanation of the lint failure. With common issues, a light bulb figure appears next to the error, that when pressed, can perform a quick fix for simple issues, such as wrong heading capitalization or missing sub header sections. The error messages are also able to stack when several things go wrong, ensuring that the user has all available information at their disposal.
+
+\subsubsection{Help and Documentation}
+Within the application the user is able to find information that can aid them when in doubt. This information can be found in several forms: the \textit{(i)} button to give context-related definitions, the example ADR file generated automatically or via a link in the README file to a more extensive overview of the application in the corresponding GitHub.
+
+However, the extension does not provide any (optional) first time tutorial to guide users through the different commands or the extension in general. Moreover, there is also no built-in FAQ document. For new users this can prove to be an issue, as they will have to leave the application and manually scan the GitHub repository to figure out how the application works.
+
+\section{ADR Manager Web Version Heuristic Evaluation of User Interface}
+In this section the Web Version will be evaluated based on the same ten heuristics that were applied to the VS Code Extension. A quick overview of how the web application scored can be seen in Table \ref{Web Heuristic overview}.
+
+\begin{tabular}{|c|p{4cm}|c|p{6cm}|}
+\hline
+\textbf{\#} & \textbf{Heuristic} & \textbf{Verdict} & \textbf{Summary} \\
+\hline
+1 & Visibility of System Status & Partial & Loading overlays, commit alerts and edited-file markers exist, but repository loading can remain active without explanation. \\
+\hline
+2 & Match Between System and Real World & Strong & GitHub concepts are combined with MADR terminology and contextual (i) explanations. \\
+\hline
+3 & User Control and Freedom & Partial & Cancel buttons and confirmation dialogs are provided, but there is no in-form undo or restore action for deleted ADRs. \\
+\hline
+4 & Consistency and Standards & Strong & The main interface consistently uses Vuetify components, Material Design Icons and repeated MADR labels. \\
+\hline
+5 & Error Prevention & Partial & Commit and repository dialogs prevent some invalid actions, but ADR form validation is limited. \\
+\hline
+6 & Recognition Rather Than Recall & Strong & Status suggestions, chosen-option lists, the file explorer and help icons reduce memory load. \\
+\hline
+7 & Flexibility and Efficiency of Use & Strong & Basic and professional modes, editor tabs, drag-and-drop reordering and repository search support different workflows. \\
+\hline
+8 & Aesthetic and Minimalist Design & Strong & The landing page, empty repository state and basic mode keep optional complexity hidden. \\
+\hline
+9 & Help Users Recognize and Recover from Errors & Partial & Parser errors are explained with a conversion view, but recovery still depends on manual correction. \\
+\hline
+10 & Help and Documentation & Partial & Inline help, landing-page text and external links exist, but no guided tutorial or FAQ is included. \\
+\hline
+\label{Web Heuristic overview}
+\end{tabular}
+
+\subsubsection{Visibility of System Status}
+The web version provides several visible indicators of the application's current state. When repositories are being added, a loading overlay with an indeterminate progress indicator is shown. The \textit{Add Repositories} dialog also contains a linear progress indicator while repository data is being loaded. When the user commits and pushes ADR changes, the \textit{Commit \& Push} dialog uses a loading overlay and then displays feedback such as \textit{"Successfully pushed"} after a successful push. If the user opens the commit dialog without any changed, new or deleted files, the application shows an \textit{"Everything up to date"} alert.
+
+The editor itself also communicates state continuously. The bottom system bar displays the current ADR path and the current branch. In the file explorer, an ADR whose edited Markdown differs from its original Markdown is displayed with an asterisk next to its name. In the ADR form, the selected decision outcome is shown in the considered-options list with a light-green background and a green check icon. These indicators make repository state, editing state and decision state visible without requiring the user to inspect the underlying Markdown.
+
+However, live testing also showed a weakness in this feedback. After logging in through GitHub and pressing \textit{Add Repositories}, the repository list could remain in a loading state until the page was refreshed. This behaviour is consistent with the implementation: the authorization header is set when the application starts, while the OAuth token is only written to local storage after login. A refresh causes the application to start again with the token already present. From a user-interface perspective, the problem is that the loading indicator does not explain why it is still active or tell the user that refreshing may be needed.
+
+\subsubsection{Match Between the System and the Real World}
+The web version uses terminology that matches the domain it supports. Repository management is described with GitHub-oriented terms such as \textit{repository}, \textit{branch}, \textit{commit} and \textit{push}. The file explorer also represents repositories as folder-like entries that contain ADR files. This is consistent with the README, which describes the tool as a web-based application for managing MADRs in GitHub repositories.
+
+The ADR editor uses MADR section names directly, including \textit{Context and Problem Statement}, \textit{Decision Drivers}, \textit{Considered Options} and \textit{Decision Outcome}. Several of these sections include an \textit{(i)} help icon that explains the term in the context of ADR writing. For example, the help text for \textit{Decision Drivers} describes them as competing forces or concerns that influence the decision, and the help text for \textit{Considered Options} tells the user to list all considered options. This keeps both the version-control concepts and the ADR concepts close to the language used by the target domain.
+
+\subsubsection{User Control and Freedom}
+The web version gives users several ways to cancel or avoid unwanted actions. The \textit{Add Repositories}, \textit{Delete ADR}, \textit{Remove Repository} and \textit{Commit \& Push} dialogs all provide a \textit{Cancel} button. Destructive actions are also guarded by confirmation dialogs. Deleting an ADR opens a dialog that asks whether the user is sure they want to delete the named file, and removing a repository opens a dialog that warns that local changes will be deleted. When the user selects a different branch, the application asks \textit{"Do you really want to change branch?"} before loading that branch. A \textit{Disconnect} button is also permanently available in the top toolbar.
+
+However, user control is incomplete in the ADR form itself. When a \textit{Considered Option}, \textit{pro}, \textit{con}, consequence or link item is removed from a list, no undo action is shown. The item has to be recreated manually. Deleting an ADR is also not reversible from the interface after the confirmation has been accepted. The store removes the ADR from the repository list, adds existing ADRs to a deleted-ADR list and writes the updated repository state to local storage. The deleted file is only pushed to GitHub later, through the commit dialog, but the web interface does not provide a dedicated restore action before that push.
+
+\subsubsection{Consistency and Standards}
+The main interface is consistent in both structure and visual language. The application uses Vuetify components for toolbars, dialogs, buttons, tabs, lists, chips and form controls. It also uses Material Design Icons for repeated actions: repositories use a folder icon, Markdown files use a Markdown icon, pushing uses a publish icon, deleting uses a trash icon and adding a repository uses a folder-plus icon. The same dialog pattern is reused for adding repositories, deleting ADRs, removing repositories and committing changes.
+
+The ADR terminology is also consistent. The structured editor, help icons and generated Markdown are all organized around the same MADR section names, such as \textit{Context and Problem Statement}, \textit{Considered Options} and \textit{Decision Outcome}. The mode switch consistently uses only two modes, \textit{basic} and \textit{professional}, and the toolbar labels those modes in the same way every time the editor is shown.
+
+\subsubsection{Error Prevention}
+The web version prevents some errors before they can be submitted. In the \textit{Commit \& Push} dialog, the \textit{Commit \& Push} button is disabled until a commit message has been entered and at least one file has been selected. The same dialog displays alert icons when the commit message or file selection is missing. The \textit{Add Repositories} dialog disables its \textit{Add Repositories} button until at least one repository has been staged. Delete and remove actions require confirmation before they change the local repository state.
+
+The editor also prevents hidden professional-mode content from being overlooked. If the current mode is too low to display all content in an ADR, the editor shows a warning that some fields are not displayed and offers a \textit{Switch to Professional Mode} action. A similar warning is shown when considered options contain descriptions, pros or cons while the editor is in \textit{basic} mode.
+
+Nevertheless, field-level error prevention is limited. The title field warns that changing the title changes the file name and that special characters should not be used, but this is a hint rather than a blocking validation rule. The store sanitizes the generated filename for newly added ADRs, which protects the file path, but the form itself does not mark the title as invalid. The structured ADR form also does not show the same kind of mandatory-field validation that was observed in the VS Code extension.
+
+\subsubsection{Recognition Rather Than Recall}
+The web version makes many available options visible. In professional mode, the \textit{Status} field is a chip that opens a dropdown with preset values: \textit{proposed}, \textit{rejected}, \textit{accepted}, \textit{deprecated} and \textit{superseded}. The \textit{Decision Outcome} section uses a combobox whose items are generated from the titles entered under \textit{Considered Options}. This allows the chosen option to be selected from visible choices instead of being retyped from memory.
+
+Once repositories have been added, the file explorer stays visible on the left side of the editor and lists the repositories and ADR files. The bottom system bar also repeats the current ADR path and current branch. Help icons next to ADR sections provide on-demand reminders of what each section is for. A limitation is that the application does not provide a single in-app overview of all available features. For example, the \textit{MADR Editor}, \textit{Markdown Preview}, \textit{Raw Markdown} and \textit{Convert} views are visible through tabs only after an ADR has been opened.
+
+\subsubsection{Flexibility and Efficiency of Use}
+The web version supports both simple and more detailed workflows. The editor mode control lets the user choose between \textit{basic} mode, which shows the required ADR content, and \textit{professional} mode, which also shows fields such as status, date, deciders, technical story, decision drivers, consequences and links. The selected mode is stored in local storage, so the chosen mode is restored after a page reload unless the user disconnects.
+
+The editor also provides multiple representations of the same ADR. Users can edit through the structured \textit{MADR Editor}, inspect the rendered \textit{Markdown Preview} or edit the underlying \textit{Raw Markdown}. If the raw Markdown cannot be round-tripped cleanly through the parser, the \textit{MADR Editor} tab is replaced by a \textit{Convert} tab. That tab shows the original ADR beside the generated result and provides an \textit{Accept} button. In addition, considered options and list-based fields such as pros, cons and consequences support drag-and-drop reordering. The \textit{Add Repositories} dialog includes a debounced search field, which helps users find repositories without manually scanning the full list.
+
+\subsubsection{Aesthetic and Minimalist Design}
+The web version avoids showing the complete editing interface before it is needed. The landing page contains the application logo, a short explanation of ADRs, a \textit{Connect to GitHub} button and a \textit{View on GitHub} link. After authentication, if no repositories have been added, the editor area shows a single centered \textit{Add Repositories} button. This keeps the initial workflow focused on the next required action.
+
+The ADR editor also hides optional detail by default. The store starts in \textit{basic} mode unless another mode has been stored in local storage, and \textit{basic} mode hides professional-only fields such as status, date, deciders, technical story, decision drivers and links. The editor initially shows the structured \textit{MADR Editor} tab without the separate Markdown preview pane. In professional mode, considered options are displayed as compact entries that only show descriptions, pros and cons when expanded. This keeps the interface more concise while still making detailed editing available.
+
+\subsubsection{Help Users Recognize, Diagnose and Recover From Errors}
+The clearest recovery support is provided by the parser workflow. If the Markdown cannot be reconciled with the structured MADR editor, the editor shows the \textit{Convert} tab. This tab states that there were issues while parsing the ADR, explains that the parser will generate Markdown on the right-hand side and links to the supported MADR template. It also labels the two sides as \textit{Your ADR} and \textit{Result}, which helps the user compare the original text with the generated output before accepting the conversion.
+
+Other errors are also surfaced through alerts. If selected repository content cannot be loaded after the user has chosen repositories to add, the application shows an error alert saying that the requested repositories could not be loaded. If pushing fails, the commit dialog reports that the changes were not pushed and includes an error code. If the user tries to push again too soon after a previous push, the application warns: \textit{"Latency problem with GitHub Api. Please wait \textasciitilde 60 seconds!"}
+
+However, recovery is still mostly manual. The \textit{Convert} tab helps the user diagnose parser differences, but it does not provide automatic quick fixes for individual MADR structure problems. Commit and selected-repository loading errors are reported, but the interface generally asks the user to retry or manually correct the content rather than offering a one-click repair. Repository-list loading errors are weaker still, since the list-loading catch path logs the error to the console without resetting the loading counter or showing a user-facing recovery instruction.
+
+\subsubsection{Help and Documentation}
+The web version provides help mainly inside the interface. The landing page briefly explains that Architectural Decision Records are used to write down architectural decisions and that the tool makes editing and managing ADRs on GitHub easier. The toolbar also contains a \textit{View on GitHub} link. Inside the ADR form, help icons explain several fields and sections, including the title, context and problem statement, decision drivers, considered options, decision outcome, consequences, deciders and technical story. The mode control also provides tooltips explaining that \textit{basic} mode only shows required fields and \textit{professional} mode shows all fields.
+
+The application also links to external documentation when parser recovery is needed. The \textit{Convert} tab includes a link to the MADR template that the parser supports. However, no guided first-time tutorial or in-app FAQ was found in the interface or the tested flows. A user who needs a broader explanation of the full workflow must use the README or the linked GitHub repository.
+
+\end{document}

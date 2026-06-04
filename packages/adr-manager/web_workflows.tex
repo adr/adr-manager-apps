@@ -1,0 +1,35 @@
+\section{Most Common User Workflows in Web Version of ADR Manager}
+
+This section describes the most common workflows in the web version of ADR Manager. The workflows were reconstructed through manual exploration of the running application, review of the README and inspection of the relevant source-code components. This combined approach was used to compare the visible user interface with the behaviour implemented in the application. The focus is on recurring user tasks rather than on isolated interface elements.
+
+\subsection{Connecting to GitHub}
+
+The first workflow begins on the landing page. Before working with any repositories or ADRs, the user has to authenticate with GitHub by pressing the \textit{Connect to GitHub} button. The application starts a GitHub sign-in flow through Firebase authentication and requests access to GitHub repositories. After a successful sign in, the user is redirected to the editor view. This workflow is necessary because the web version does not edit local files. Instead, it manages MADRs that are stored in GitHub repositories. The README therefore states that the tool requires a GitHub account with access to a repository containing MADRs. It also explains that the connection information and local ADR changes are kept in local storage, so that a page reload does not immediately discard the current session. The \textit{Disconnect} button clears this local state and returns the user to the initial workflow.
+
+\subsection{Adding a Repository}
+
+After authentication, the next common workflow is adding a repository. If no repository has been added yet, the editor view shows the \textit{Add Repositories} button. The same action remains available later at the bottom of the file explorer. Pressing the button opens a dialog that loads the repositories available to the GitHub account. The repository dialog supports both browsing and searching. It lists repositories with their names, descriptions and last update dates, and it provides a search field for narrowing the repository list. Repositories are not added immediately when selected. Instead, the user first stages them in a \textit{Repositories to be added} list. Only after confirming the dialog does the application load the selected repository contents from GitHub and add them to the local store. The web version is specifically oriented toward repositories that contain MADRs in \texttt{docs/adr}. Once a repository is added, it appears in the file explorer as a folder-like entry. Its ADR files are shown below the repository and can be opened from the same tree.
+
+\subsection{Creating and Editing ADRs}
+
+The central workflow is creating or editing ADRs. Existing ADRs are opened from the file explorer. New ADRs are created through the \textit{New ADR} button shown below the ADR list of a repository. When a new ADR is created, the application generates a new MADR object, assigns the next numeric identifier in that repository and opens the new file in the editor. The generated filename is later adapted from the ADR title.
+
+The main editor contains multiple representations of the same ADR. The \textit{MADR Editor} tab offers a structured form using MADR terminology such as \textit{Context and Problem Statement}, \textit{Decision Drivers}, \textit{Considered Options} and \textit{Decision Outcome}. The editor can be used in \textit{basic} mode, which shows the required fields, or in \textit{professional} mode, which also exposes additional fields such as status, date, deciders, technical story, decision drivers, consequences and links.
+
+In addition to the structured editor, users can switch to the \textit{Markdown Preview} tab to inspect the rendered ADR or to the \textit{Raw Markdown} tab to edit the underlying Markdown directly. When the application detects that the raw Markdown cannot be converted cleanly through the MADR parser, the structured editor is replaced by a \textit{Convert} tab. This tab compares the user's ADR with the generated MADR result and lets the user accept the conversion after reviewing possible content changes.
+
+\subsection{Browsing, Deleting, and Switching Branches}
+
+After one or more repositories have been added, browsing is mainly performed through the file explorer. Repositories are listed alphabetically, and ADR files inside each repository are sorted by path. The current ADR path is repeated in the bottom system bar, which helps the user understand which repository and file are currently open. If an ADR has local changes compared with the original Markdown loaded from GitHub, the file explorer shows this with an added asterisk at the end of the name.
+
+ADRs can also be deleted from the file explorer. Pressing the delete action opens a confirmation dialog that names the ADR file and asks whether the user is sure. Confirming the dialog removes the ADR from the repository's visible ADR list. If the ADR already existed in GitHub, the application records it as a deleted file so that the deletion can later be included in a commit and push operation. If the ADR was newly created and not yet pushed, it is simply removed from the local list of new ADRs.
+
+Branch switching is handled in the bottom system bar. The user can open the branch selector to load the available branches of the current repository. Selecting another branch triggers a confirmation prompt. If the user confirms, the application loads the repository contents for the selected branch from GitHub and updates the local repository state. This workflow keeps branch changes explicit, because switching branches can replace the currently visible ADR list.
+
+\subsection{Committing and Pushing Changes to GitHub}
+
+The final common workflow is publishing local ADR changes back to GitHub. Each repository entry in the file explorer has a \textit{Commit \& Push} action. Opening this dialog causes the application to collect the changed files, newly created files and deleted files for the selected repository. These groups are shown separately, and the user chooses which files should be included in the push.
+
+The dialog also requires a commit message. The \textit{Commit \& Push} button remains disabled until at least one file has been selected and a commit message has been entered. This prevents empty commits and commits without a message. The dialog then uses the current branch of the selected repository, the GitHub user information and the selected ADR changes to create blobs, create a new tree, create a commit and update the branch reference on GitHub.
+
+After a successful push, the application reports success and updates the local storage state. New files are no longer treated as new, changed files have their edited Markdown stored as the new original Markdown, and deleted files are removed from the pending deletion list. The README emphasizes this workflow by instructing users not to forget pushing changes to GitHub after editing, because the web application keeps intermediate changes locally until the commit and push workflow is completed.

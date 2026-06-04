@@ -31,13 +31,13 @@ Read the package README files for package-specific usage details:
 
 Install these tools before working on the repository:
 
-- [Node.js](https://nodejs.org/) version 18 or newer
-- [pnpm](https://pnpm.io/) version 10.33.0
+- [Node.js](https://nodejs.org/) version 22.13 or newer
+- [pnpm](https://pnpm.io/) version 11.5.1
 - [Git](https://git-scm.com/)
 - [Visual Studio Code](https://code.visualstudio.com/) when developing or testing the extension
 
 The workspace uses pnpm with a hoisted `node_modules` layout because the legacy Vue and VS Code packaging toolchains expect flat dependency resolution.
-The relevant settings are stored in `.npmrc` and `pnpm-workspace.yaml`.
+The relevant settings are stored in `pnpm-workspace.yaml`.
 
 ## Getting Started
 
@@ -55,7 +55,7 @@ If pnpm reports blocked dependency build scripts, run:
 pnpm approve-builds
 ```
 
-The workspace currently allows the build scripts needed by `esbuild`, `cypress`, and `core-js`.
+The workspace delays newly published dependency versions for five days, allows the reviewed build scripts needed by `esbuild`, `cypress`, and `core-js`, and explicitly blocks known unnecessary dependency build scripts.
 
 ## Run The Web App
 

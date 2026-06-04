@@ -18,25 +18,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "pnpm"
+          node-version: "22.19.0"
+      - uses: pnpm/action-setup@v6
+        with:
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter adr-manager test
 
   e2e-tests:
     name: Cypress e2e (Chrome)
     runs-on: ubuntu-latest
-    container: cypress/browsers:node-18.16.0-chrome-113.0.5672.92-1-ff-113.0-edge-113.0.1774.35-1
+    container: cypress/browsers:node-22.19.0-chrome-140.0.7339.207-1-ff-143.0.1-edge-140.0.3485.81-1
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "pnpm"
+          node-version: "22.19.0"
+      - uses: pnpm/action-setup@v6
+        with:
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter adr-manager exec cypress verify
       - name: Run Cypress

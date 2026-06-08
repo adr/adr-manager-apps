@@ -1,74 +1,43 @@
 <template>
-    <v-dialog
-        v-bind:value="showDialog"
-        v-on:input="
-            (value) => {
-                showDialog = value;
-                $emit('input', value);
-            }
-        "
-        width="600px"
-    >
-        <template v-slot:activator="{ on, attrs }">
-            <slot name="activator" v-bind:on="on" v-bind:attrs="attrs"> </slot>
+    <v-dialog v-model="show" width="600">
+        <template #activator="{ props }">
+            <slot name="activator" :props="props" />
         </template>
         <v-card>
             <v-card-title>
                 <div>
-                    <v-avatar color="primary" size="35"> <v-icon dark>mdi-delete</v-icon></v-avatar>
+                    <v-avatar color="primary" size="35"> <v-icon color="white">mdi-delete</v-icon></v-avatar>
                     <span class="dialogTitle"> Delete ADR</span>
                 </div>
             </v-card-title>
             <v-divider></v-divider>
 
-            <v-card-text> Are you sure you want to delete '{{ adr.path }}'? </v-card-text>
+            <v-card-text> Are you sure you want to delete '{{ adr?.path }}'? </v-card-text>
             <v-divider></v-divider>
 
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn data-cy="dialogDeleteAdrBtn" text color="success" @click="deleteAdr"> Delete </v-btn>
-                <v-btn text color="error" @click="showDialog = false"> Cancel </v-btn>
+                <v-btn data-cy="dialogDeleteAdrBtn" variant="text" color="success" @click="deleteAdr"> Delete </v-btn>
+                <v-btn variant="text" color="error" @click="show = false"> Cancel </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
 </template>
 
-<script>
-import { store } from "/src/plugins/store";
+<script setup lang="ts">
+import { store } from "@/plugins/store";
+import type { Repository } from "@/plugins/classes";
+import type { AdrFile } from "@/types/adr";
 
-export default {
-    name: "EditorDeleteAdr",
-    props: {
-        // value is true, iff showDialog == true, iff the dialog is shown. (value-prop enables v-model)
-        value: {
-            type: Boolean,
-            required: false,
-            default: false
-        },
-        repo: {
-            type: Object,
-            required: true
-        },
-        adr: {
-            type: Object,
-            required: true
-        }
-    },
-    data: () => ({
-        showDialog: false
-    }),
-    watch: {
-        value() {
-            this.dialog = this.value;
-        }
-    },
-    methods: {
-        deleteAdr() {
-            store.deleteAdr(this.adr, this.repo);
-            this.showDialog = false;
-        }
+const show = defineModel<boolean>({ default: false });
+const props = defineProps<{ repo?: Repository | undefined; adr?: AdrFile | undefined }>();
+
+function deleteAdr(): void {
+    if (props.adr && props.repo) {
+        store.deleteAdr(props.adr, props.repo);
     }
-};
+    show.value = false;
+}
 </script>
 
 <style scoped></style>

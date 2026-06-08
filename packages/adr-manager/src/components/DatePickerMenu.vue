@@ -1,64 +1,43 @@
 <template>
     <v-menu
-        ref="menu"
         v-model="menu"
         :close-on-content-click="false"
         transition="scale-transition"
-        offset-y
+        location="bottom"
         max-width="290px"
         min-width="290px"
     >
-        <template v-slot:activator="{ on }">
-            <v-chip v-on="on" outlined> <v-icon class="mr-2">mdi-calendar</v-icon> {{ value }} </v-chip>
+        <template #activator="{ props }">
+            <v-chip v-bind="props" variant="outlined">
+                <v-icon class="mr-2">mdi-calendar</v-icon> {{ modelValue }}
+            </v-chip>
         </template>
-        <v-date-picker v-model="date" no-title @input="update"></v-date-picker>
+        <v-date-picker :model-value="date" hide-header @update:model-value="update"></v-date-picker>
     </v-menu>
 </template>
 
-<script>
-export default {
-    props: ["value"],
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
 
-    data: () => ({
-        date: new Date().toISOString().substr(0, 10),
-        menu: false
-    }),
+const props = withDefaults(defineProps<{ modelValue?: string }>(), { modelValue: "" });
+const emit = defineEmits<{ "update:modelValue": [string] }>();
 
-    mounted() {
-        if (this.value.match("\\d{4}-\\d{2}-\\d{2}")) {
-            this.date = this.value;
-        }
-    },
+const menu = ref(false);
+const date = ref<Date>(new Date());
 
-    computed: {
-        computedDateFormatted() {
-            return this.formatDate(this.date);
-        }
-    },
-
-    watch: {
-        date() {
-            this.dateFormatted = this.formatDate(this.date);
-        }
-    },
-
-    methods: {
-        formatDate(date) {
-            if (!date) return null;
-
-            const [year, month, day] = date.split("-");
-            return `${month}/${day}/${year}`;
-        },
-        parseDate(date) {
-            if (!date) return null;
-
-            const [month, day, year] = date.split("/");
-            return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-        },
-        update(e) {
-            this.menu = false; // Close menu
-            this.$emit("input", e);
-        }
+onMounted(() => {
+    if (/\d{4}-\d{2}-\d{2}/.test(props.modelValue)) {
+        date.value = new Date(props.modelValue);
     }
-};
+});
+
+function update(value: unknown): void {
+    menu.value = false;
+    const picked = value instanceof Date ? value : new Date(String(value));
+    if (!Number.isNaN(picked.getTime())) {
+        date.value = picked;
+        // The rest of the app stores dates as ISO yyyy-mm-dd strings.
+        emit("update:modelValue", picked.toISOString().slice(0, 10));
+    }
+}
 </script>

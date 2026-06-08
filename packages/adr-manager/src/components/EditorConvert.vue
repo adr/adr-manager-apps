@@ -1,9 +1,7 @@
-﻿<template>
+<template>
     <v-card
-        fluid
-        class="editor text-left d-flex flex-column px-0 pb-2"
-        id="editor-madr"
-        style="height: 100%"
+        class="editor text-left d-flex flex-column px-0 pb-2 h-100"
+        id="editor-convert"
         data-cy="convertEditor"
     >
         <v-card-title> Sorry, there were issues while parsing the ADR. </v-card-title>
@@ -20,120 +18,95 @@
             <h5 class="flex-grow-1 text-center">Your ADR</h5>
             <h5 class="flex-grow-1 text-center">Result</h5>
         </div>
-        <div class="flex-grow-1 overflow-auto">
-            <codemirror
-                ref="compare"
-                class="flex-grow-1"
-                v-model="mergeMd"
-                :merge="true"
-                :options="cmOption"
-                @scroll="onCmScroll"
-                v-observe-visibility="visibilityChanged"
-            ></codemirror>
-        </div>
+        <div ref="host" class="flex-grow-1 overflow-auto"></div>
 
         <v-btn data-cy="acceptDiv" color="success" @click="accept"> Accept </v-btn>
     </v-card>
 </template>
 
-<script>
-// require component
-import { adr2md, md2adr } from "/src/plugins/parser.js";
-import _ from "lodash";
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, useTemplateRef, watch } from "vue";
+import { MergeView } from "@codemirror/merge";
+import { EditorView } from "@codemirror/view";
+import { EditorState } from "@codemirror/state";
+import { markdown } from "@codemirror/lang-markdown";
+import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
+import { adr2md, md2adr } from "@/plugins/parser";
+import { debounce } from "@/utils/debounce";
 
-// require component
-import { codemirror } from "vue-codemirror";
-// require styles
-import "codemirror/lib/codemirror.css";
+const props = withDefaults(defineProps<{ raw?: string }>(), { raw: "" });
+const emit = defineEmits<{ accept: [string] }>();
 
-// merge js
-import "codemirror/addon/merge/merge.js";
-// merge css
-import "codemirror/addon/merge/merge.css";
+const host = useTemplateRef<HTMLDivElement>("host");
+let merge: MergeView | null = null;
+let mergeMd = props.raw;
 
-// language
-import "codemirror/mode/markdown/markdown.js";
+const baseExt = [markdown(), syntaxHighlighting(defaultHighlightStyle), EditorView.lineWrapping];
 
-// google DiffMatchPatch
-import DiffMatchPatch from "diff-match-patch";
-// DiffMatchPatch config with global
-window.diff_match_patch = DiffMatchPatch;
-window.DIFF_DELETE = -1;
-window.DIFF_INSERT = 1;
-window.DIFF_EQUAL = 0;
+function rightDoc(): string {
+    return adr2md(md2adr(mergeMd));
+}
 
-export default {
-    components: {
-        codemirror
-    },
-    props: {
-        raw: {
-            // original MD pulled from GitHub
-            type: String,
-            default: "Test String",
-            required: false // For testing
-        }
-    },
-    data: () => ({
-        cmOption: {
-            connect: "align",
-            mode: "text/x-markdown",
-            lineNumbers: true,
-            lineWrapping: true,
-            collapseIdentical: false,
-            highlightDifferences: true,
-            viewPortMargin: Infinity
+const scheduleRight = debounce(() => {
+    if (!merge) {
+        return;
+    }
+    const next = rightDoc();
+    const cur = merge.b.state.doc.toString();
+    if (next !== cur) {
+        merge.b.dispatch({ changes: { from: 0, to: cur.length, insert: next } });
+    }
+}, 300);
+
+onMounted(() => {
+    if (!host.value) {
+        return;
+    }
+    merge = new MergeView({
+        a: {
+            doc: mergeMd,
+            extensions: [
+                ...baseExt,
+                EditorView.updateListener.of((u) => {
+                    if (u.docChanged) {
+                        mergeMd = u.state.doc.toString();
+                        scheduleRight();
+                    }
+                })
+            ]
         },
-        mergeMd: " "
-    }),
-    computed: {
-        codemirror() {
-            return this.$refs.compare.codemirror;
-        }
-    },
-    created() {
-        this.mergeMd = this.raw;
-        this.cmOption.value = this.mergeMd;
-        this.$set(this.cmOption, "origRight", adr2md(md2adr(this.mergeMd)));
-    },
-    watch: {
-        mergeMd() {
-            this.updateOrig();
+        b: {
+            doc: rightDoc(),
+            extensions: [...baseExt, EditorState.readOnly.of(true)]
         },
-        raw: function (newRaw) {
-            this.mergeMd = (" " + newRaw).slice(1);
-        }
-    },
-    methods: {
-        onCmScroll() {
-            console.log("onCmScroll");
-        },
-        /** Called when user accepted. Emits 'accept' event.
-         */
-        accept() {
-            console.log("Accept");
-            this.$emit("accept", adr2md(md2adr(this.mergeMd)));
-        },
-        updateOrig: _.debounce(function () {
-            this.codemirror.right.orig.setValue(adr2md(md2adr(this.mergeMd)));
-        }, 300),
-        /** Refresh code mirror, when it becomes visible, to avoid anomalies.
-         */
-        visibilityChanged(isVisible) {
-            if (isVisible) {
-                this.codemirror.edit.refresh();
-                this.codemirror.right.orig.refresh();
-            }
+        highlightChanges: true,
+        gutter: true,
+        parent: host.value
+    });
+});
+
+// Re-seed the editable side when the source markdown changes (the slice clones the string).
+watch(
+    () => props.raw,
+    (newRaw) => {
+        mergeMd = (" " + newRaw).slice(1);
+        if (merge) {
+            const a = merge.a.state.doc.toString();
+            merge.a.dispatch({ changes: { from: 0, to: a.length, insert: mergeMd } });
+            scheduleRight();
         }
     }
-};
+);
+
+onBeforeUnmount(() => {
+    scheduleRight.cancel();
+    merge?.destroy();
+    merge = null;
+});
+
+function accept(): void {
+    emit("accept", rightDoc());
+}
 </script>
 
-<style>
-.CodeMirror-merge,
-.CodeMirror-merge .CodeMirror {
-    height: auto;
-    min-height: 100px;
-    /*border-bottom: none;*/
-}
-</style>
+<style scoped></style>

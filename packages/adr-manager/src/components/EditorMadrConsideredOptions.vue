@@ -1,11 +1,10 @@
 <template>
     <div data-cy="considerOptTextAdr">
         <v-row class="mx-0 my-1">
-            <h3 style="display: inline-flex">
+            <h3 class="d-inline-flex">
                 Considered Options
                 <HelpIcon v-if="mode === 'basic'">
                     List all considered options. <br />
-
                     Only write a concise description. You can add a more detailed description in Professional mode.
                 </HelpIcon>
                 <HelpIcon v-else>
@@ -14,13 +13,12 @@
                 </HelpIcon>
             </h3>
         </v-row>
-        <!-- Display an alert when there are pros and cons of options in basic mode. -->
-        <v-alert v-if="isModeTooLow" border="left" colored-border type="warning" elevation="2" class="my-4 py-2">
+        <v-alert v-if="isModeTooLow" border="start" type="warning" elevation="2" class="my-4 py-2">
             <div class="d-flex my-0 py-0">
                 <span class="flex-grow-1 align-self-center my-0 py-0">
                     Some options have a more detailed description that is not displayed in Basic Mode.
                 </span>
-                <v-btn class="justify-self-end align-self-end my-0 py-0" @click="switchToProfessionalMode()">
+                <v-btn color="white" class="justify-self-end align-self-end my-0 py-0" @click="switchToProfessionalMode()">
                     Switch to Professional Mode
                 </v-btn>
             </div>
@@ -28,35 +26,22 @@
 
         <v-list v-if="mode === 'basic'" class="my-0 py-0">
             <v-list-item
-                dense
                 class="align-self-center mx-0 px-0 d-flex"
                 v-for="(item, idx) in adr.consideredOptions"
                 :key="item.id"
             >
-                <drop @dragenter="(event) => moveOption(event.data, idx)" class="my-0 py-0 flex-grow-1">
+                <drop @dragenter="(event: DnDEvent) => moveOption(event.data, idx)" class="my-0 py-0 flex-grow-1">
                     <v-card
                         flat
                         class="d-flex"
-                        :style="
-                            draggedOption === item
-                                ? {
-                                      borderLeft: '2px solid #1976D2',
-                                      marginLeft: '-2px'
-                                  }
-                                : {}
-                        "
-                        :color="isChosenOption(item) ? 'light-green lighten-5' : 'transparent'"
+                        :class="{ 'drag-active': draggedOption === item, 'chosen-option': isChosenOption(item) }"
                         @mouseenter="hoveredOption = item"
                         @mouseleave="hoveredOption = null"
                     >
-                        <!-- Left Icon for dragging -->
                         <div
                             data-cy="checkConsOptAdr"
-                            flat
-                            class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 mx-0 d-flex"
-                            style="width: 32px; min-width: 32px"
+                            class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 mx-0 d-flex cm-gutter"
                         >
-                            <!-- Show the drag-icon (dots) when the item is hovered or dragged -->
                             <drag
                                 v-show="hoveredOption === item || draggedOption === item"
                                 :data="item"
@@ -64,11 +49,9 @@
                                 @dragend="draggedOption = null"
                                 class="flex-grow-1"
                             >
-                                <template v-slot:drag-image>{{ item.content }}</template>
-                                <!-- Show the title while dragging. -->
+                                <template #drag-image>{{ item.title }}</template>
                                 <v-icon> mdi-drag-vertical </v-icon>
                             </drag>
-                            <!-- Else, show the chosen-option-icon, if it's the chosen option -->
                             <v-icon
                                 v-show="hoveredOption !== item && draggedOption !== item && isChosenOption(item)"
                                 color="success"
@@ -76,84 +59,57 @@
                             >
                                 mdi-check-decagram
                             </v-icon>
-                            <!-- Else, show nothing, but reserve space -->
                             <v-icon
                                 v-show="hoveredOption !== item && draggedOption !== item && !isChosenOption(item)"
                             ></v-icon>
                         </div>
 
-                        <!-- Text field -->
                         <v-card flat class="flex-grow-1">
-                            <codemirror :ref="'codemirror-' + item.id" v-model="item.title"> </codemirror>
+                            <EditorMadrCodemirror :ref="(el: CmRefEl) => setCmRef(item.id, el)" v-model="item.title" />
                         </v-card>
 
-                        <!-- Delete Icon on the right. -->
-                        <v-list-item-icon v-show="hoveredOption === item" class="align-center flex-shrink-0">
-                            <v-btn icon v-on:click="removeOption(item)">
+                        <div v-show="hoveredOption === item" class="align-center flex-shrink-0">
+                            <v-btn icon variant="text" density="comfortable" @click="removeOption(item)">
                                 <v-icon>mdi-delete</v-icon>
                             </v-btn>
-                        </v-list-item-icon>
+                        </div>
                     </v-card>
                 </drop>
             </v-list-item>
 
-            <!-- last item with '+'-Button -->
-            <v-list-item dense class="align-self-center mx-0 px-0 d-flex" :key="adr.highestOptionId">
-                <!-- Reserve space to fit the drag icon indent -->
-                <div
-                    class="align-center flex-shrink-0 flex-grow-0 my-0 py-0"
-                    style="width: 32px; min-width: 32px"
-                ></div>
-
-                <codemirror v-model="lastItem" @input="addLastItemIfNotEmpty()"></codemirror>
+            <v-list-item class="align-self-center mx-0 px-0 d-flex" :key="adr.highestOptionId">
+                <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 cm-gutter"></div>
+                <EditorMadrCodemirror :model-value="lastItem" @update:model-value="onLastInput" />
             </v-list-item>
         </v-list>
 
-        <!-- Professional mode -->
         <v-card data-cy="consOptPro" v-else flat>
             <div v-for="(item, i) in adr.consideredOptions" :key="item.id">
-                <drop @dragenter="(event) => moveOption(event.data, i)" class="my-0 py-0">
+                <drop @dragenter="(event: DnDEvent) => moveOption(event.data, i)" class="my-0 py-0">
                     <v-card
                         flat
-                        :class="['my-1', expandedOptions.includes(item) ? 'mb-8' : '']"
-                        :style="
-                            draggedOption === item
-                                ? {
-                                      borderLeft: '2px solid #1976D2',
-                                      marginLeft: '-2px'
-                                  }
-                                : {}
-                        "
+                        :class="['my-1', expandedOptions.includes(item) ? 'mb-8' : '', { 'drag-active': draggedOption === item }]"
                         @mouseenter="hoveredOption = item"
                         @mouseleave="hoveredOption = null"
                     >
-                        <!-- Title and Icons -->
                         <v-card
                             flat
                             class="d-flex"
-                            :color="isChosenOption(item) ? 'light-green lighten-5' : 'transparent'"
+                            :class="{ 'chosen-option': isChosenOption(item) }"
                             min-height="36px"
                         >
-                            <!-- Left Icons -->
-                            <div
-                                flat
-                                class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 d-flex"
-                                style="width: 32px; min-width: 32px"
-                            >
-                                <div class="mx-0 px-0 flex-grow-1 flex-shrink-1" style="min-width: 18px; width: 18px">
-                                    <!-- Show the drag-icon (dots) when the option is hovered or dragged -->
+                            <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 d-flex cm-gutter">
+                                <div class="mx-0 px-0 flex-grow-1 flex-shrink-1 option-drag-col">
                                     <drag
                                         v-show="hoveredOption === item || draggedOption === item"
                                         :key="item.id"
                                         :data="item"
                                         @dragstart="draggedOption = item"
-                                        @dragend="draggedOption = {}"
+                                        @dragend="draggedOption = null"
                                     >
-                                        <template v-slot:drag-image>{{ item.title }}</template>
-                                        <!-- Show the title while dragging. -->
+                                        <template #drag-image>{{ item.title }}</template>
                                         <v-icon> mdi-drag-vertical </v-icon>
                                     </drag>
-                                    <!-- Else, show the chosen-option-icon, if it's the chosen option -->
                                     <v-icon
                                         data-cy="checkConsOptAdr"
                                         v-show="
@@ -164,7 +120,6 @@
                                     >
                                         mdi-check-decagram
                                     </v-icon>
-                                    <!-- Else, show nothing, but reserve space -->
                                     <v-icon
                                         v-show="
                                             hoveredOption !== item && draggedOption !== item && !isChosenOption(item)
@@ -173,15 +128,13 @@
                                 </div>
                             </div>
 
-                            <!-- Option Title -->
                             <div class="flex-grow-1 d-flex">
-                                <codemirror
+                                <EditorMadrCodemirror
                                     v-if="editedOptions.includes(item)"
-                                    :ref="'codemirror-' + item.id"
+                                    :ref="(el: CmRefEl) => setCmRef(item.id, el)"
                                     :class="['my-0', 'py-0', 'mr-4']"
                                     v-model="item.title"
-                                >
-                                </codemirror>
+                                />
                                 <button v-else class="flex-grow-1 text-left" @click="toggleExpansionOfOption(item)">
                                     <div v-if="!expandedOptions.includes(item)">
                                         <span v-text="item.title"></span>
@@ -190,48 +143,39 @@
                                         <h6 class="mb-0" v-text="item.title"></h6>
                                     </div>
                                 </button>
-                                <!--<h6 class="flex-grow-1 align-self-center" v-text="item.title"></h6>-->
                             </div>
 
-                            <!-- Right Icons -->
                             <div
                                 v-show="hoveredOption === item || editedOptions.includes(item)"
-                                class="align-center flex-shrink-0 flex-grow-0 my-0 py-0"
-                                style="position: absolute right"
+                                class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 position-absolute"
                             >
                                 <v-btn
                                     icon
+                                    variant="text"
                                     class="mx-0 px-0 flex-grow-0 flex-shrink-0"
                                     @click="toggleEditingOfOption(item)"
                                 >
                                     <v-icon v-if="editedOptions.includes(item)">mdi-check</v-icon>
                                     <v-icon v-else>mdi-pencil</v-icon>
                                 </v-btn>
-                                <v-btn icon class="mx-1" v-on:click="removeOption(item)">
+                                <v-btn icon variant="text" class="mx-1" @click="removeOption(item)">
                                     <v-icon>mdi-delete</v-icon>
                                 </v-btn>
                             </div>
 
-                            <!-- Icon for expanding -->
-                            <div
-                                flat
-                                class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 d-flex"
-                                style="width: 32px; min-width: 32px"
-                            >
+                            <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 d-flex cm-gutter">
                                 <v-btn
                                     v-show="!expandedOptions.includes(item)"
-                                    text
-                                    class="mx-0 px-0 flex-grow-1 flex-shrink-1"
-                                    style="min-width: 0"
+                                    variant="text"
+                                    class="mx-0 px-0 flex-grow-1 flex-shrink-1 btn-tight"
                                     @click="expandedOptions.push(item)"
                                 >
                                     <v-icon>mdi-chevron-down</v-icon>
                                 </v-btn>
                                 <v-btn
                                     v-show="expandedOptions.includes(item)"
-                                    text
-                                    class="mx-0 px-0 flex-grow-1 flex-shrink-1"
-                                    style="min-width: 0"
+                                    variant="text"
+                                    class="mx-0 px-0 flex-grow-1 flex-shrink-1 btn-tight"
                                     @click="expandedOptions = expandedOptions.filter((val) => val !== item)"
                                 >
                                     <v-icon>mdi-chevron-up</v-icon>
@@ -239,7 +183,6 @@
                             </div>
                         </v-card>
 
-                        <!-- Expandable Description -->
                         <v-expand-transition>
                             <div v-show="expandedOptions.includes(item)" class="pl-12">
                                 <h6 class="py-4 pl-4">
@@ -252,43 +195,27 @@
                                     </v-row>
                                 </h6>
                                 <div class="pb-2 ml-4">
-                                    <codemirror
-                                        data-cy="descriptionConsOpt"
-                                        hint="Description of the option"
-                                        v-model="item.description"
-                                        color="grey lighten-3"
-                                    >
-                                    </codemirror>
+                                    <EditorMadrCodemirror data-cy="descriptionConsOpt" v-model="item.description" />
                                 </div>
 
                                 <div class="d-flex flex-wrap mx-0 px-0 pb-4 py-0 my-0">
-                                    <div class="flex-grow-1 mx-0 px-0 py-0 my-0" style="width: 50%; min-width: 600px">
+                                    <div class="flex-grow-1 mx-0 px-0 py-0 my-0 option-col">
                                         <h6 class="py-4 pl-4">
                                             <v-row class="mx-0">
                                                 Good, because ...
                                                 <HelpIcon> Give arguments supporting this option. </HelpIcon>
                                             </v-row>
                                         </h6>
-                                        <EditorMadrList
-                                            data-cy="goodConsOpt"
-                                            :list="item.pros"
-                                            class="ml-4 mr-0 px-0"
-                                            cm-color="grey lighten-3"
-                                        />
+                                        <EditorMadrList data-cy="goodConsOpt" :list="item.pros" class="ml-4 mr-0 px-0" />
                                     </div>
-                                    <div class="flex-grow-1 mx-0 px-0 py-0 my-0" style="width: 50%; min-width: 600px">
+                                    <div class="flex-grow-1 mx-0 px-0 py-0 my-0 option-col">
                                         <h6 class="py-4 pl-4">
                                             <v-row class="mx-0">
                                                 Bad, because ...
                                                 <HelpIcon> Give arguments against using this option. </HelpIcon>
                                             </v-row>
                                         </h6>
-                                        <EditorMadrList
-                                            data-cy="badConsOpt"
-                                            :list="item.cons"
-                                            class="ml-4 mr-0 px-0"
-                                            cm-color="grey lighten-3"
-                                        />
+                                        <EditorMadrList data-cy="badConsOpt" :list="item.cons" class="ml-4 mr-0 px-0" />
                                     </div>
                                 </div>
                                 <v-divider />
@@ -298,191 +225,149 @@
                 </drop>
             </div>
 
-            <!-- Last Item with '+'-Button -->
             <v-card class="my-1 mx-0" flat :key="adr.highestOptionId">
                 <v-card flat class="d-flex">
-                    <div style="width: 32px"></div>
-
-                    <codemirror
+                    <div class="cm-gutter"></div>
+                    <EditorMadrCodemirror
                         data-cy="considerOptTextAdr"
                         :class="['my-0', 'py-0', 'mr-0']"
-                        :value="lastItem"
-                        @input="
-                            (val) => {
-                                if (mode !== 'basic') {
-                                    lastItem = val;
-                                    addLastItemIfNotEmpty();
-                                }
-                            }
-                        "
-                    >
-                    </codemirror>
-                    <!--<div class="align-center flex-shrink-0 flex-grow-0 mx-1 my-0 py-0" style="width: 64px">
-          </div>-->
+                        :model-value="lastItem"
+                        @update:model-value="onLastInput"
+                    />
                 </v-card>
             </v-card>
         </v-card>
     </div>
 </template>
 
-<script>
-import { ArchitecturalDecisionRecord, createShortTitle } from "/src/plugins/classes";
-import { store } from "/src/plugins/store";
-
-import codemirror from "./EditorMadrCodemirror.vue";
+<script setup lang="ts">
+import { computed, nextTick, ref } from "vue";
+import type { ComponentPublicInstance } from "vue";
+import { store } from "@/plugins/store";
+import EditorMadrCodemirror from "./EditorMadrCodemirror.vue";
 import EditorMadrList from "./EditorMadrList.vue";
 import HelpIcon from "./HelpIcon.vue";
-import { Drag, Drop } from "vue-easy-dnd";
-import { matchOptionTitleMoreRelaxed } from "/src/plugins/parser";
-import { marked } from "marked";
+import { Drag, Drop, type DnDEvent } from "vue-easy-dnd";
+import { matchOptionTitleMoreRelaxed } from "@/plugins/parser";
+import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
+import type { Option } from "@/types/adr";
+import type { Mode } from "@/types/store";
 
-export default {
-    name: "EditorMadrConsideredOptions",
-    components: {
-        codemirror,
-        EditorMadrList,
-        HelpIcon,
-        Drag,
-        Drop
-    },
-    props: {
-        adr: {
-            type: ArchitecturalDecisionRecord
-        },
-        mode: {
-            type: String
-        }
-    },
-    data: () => ({
-        lastItem: "",
-        editedOptions: [], // Expanded options
-        expandedOptions: [], // Expanded options
-        hoveredOption: null, // Option, which the mouse hovers over (relevant to e.g. show Icons on hover)
-        draggedOption: null // Option, which is currently dragged
-    }),
-    computed: {
-        optionTitleList() {
-            return this.adr.consideredOptions.map((opt) => createShortTitle(opt.title));
-        },
-        isModeTooLow() {
-            return (
-                this.mode === "basic" &&
-                this.adr.consideredOptions.find(
-                    (opt) => opt.description.length > 0 || opt.pros.length > 0 || opt.cons.length > 0
-                )
-            );
-        }
-    },
-    watch: {},
-    mounted() {},
-    methods: {
-        /**
-         * Used in Drag'n'Drop
-         */
-        insertOption(event) {
-            this.adr.consideredOptions.splice(event.index, 0, event.data);
-        },
+type CmInstance = InstanceType<typeof EditorMadrCodemirror>;
+type CmRefEl = Element | ComponentPublicInstance | null;
 
-        /**
-         * Moves the option to another index.
-         * Requires the option to be already contained in the list of options.
-         */
-        moveOption(option, newIndex) {
-            if (this.adr.consideredOptions.includes(option)) {
-                this.adr.consideredOptions.splice(this.adr.consideredOptions.indexOf(option), 1);
-                this.adr.consideredOptions.splice(newIndex, 0, option);
+const props = defineProps<{ adr: ArchitecturalDecisionRecord; mode: Mode }>();
+
+const lastItem = ref("");
+const editedOptions = ref<Option[]>([]);
+const expandedOptions = ref<Option[]>([]);
+const hoveredOption = ref<Option | null>(null);
+const draggedOption = ref<Option | null>(null);
+const cmRefs = new Map<number, CmInstance>();
+
+function setCmRef(id: number, el: CmRefEl): void {
+    if (el) {
+        cmRefs.set(id, el as CmInstance);
+    } else {
+        cmRefs.delete(id);
+    }
+}
+
+const isModeTooLow = computed<boolean>(
+    () =>
+        props.mode === "basic" &&
+        props.adr.consideredOptions.some(
+            (opt) => opt.description.length > 0 || opt.pros.length > 0 || opt.cons.length > 0
+        )
+);
+
+function moveOption(option: Option, newIndex: number): void {
+    if (props.adr.consideredOptions.includes(option)) {
+        props.adr.consideredOptions.splice(props.adr.consideredOptions.indexOf(option), 1);
+        props.adr.consideredOptions.splice(newIndex, 0, option);
+    }
+}
+
+function onLastInput(val: string): void {
+    lastItem.value = val;
+    addLastItemIfNotEmpty();
+}
+
+function addLastItemIfNotEmpty(): void {
+    if (lastItem.value.trim() !== "") {
+        const newOption = addLastItemToOptions();
+        if (newOption) {
+            if (props.mode !== "basic") {
+                editedOptions.value.push(newOption);
+                expandedOptions.value.push(newOption);
             }
-        },
-
-        addLastItemIfNotEmpty() {
-            if (this.lastItem.trim() !== "") {
-                let newOption = this.addLastItemToOptions();
-                if (this.mode !== "basic") {
-                    this.editedOptions.push(newOption);
-                    this.expandedOptions.push(newOption);
-                }
-                this.$nextTick(() => {
-                    try {
-                        this.$refs["codemirror-" + newOption.id][0].focus();
-                    } catch (e) {
-                        console.log(
-                            "Failed to focus the option ",
-                            newOption,
-                            " after adding it to ",
-                            this.adr.consideredOptions
-                        );
-                        console.log(e);
-                    }
-                });
-            }
-        },
-
-        addLastItemToOptions() {
-            if (this.lastItem.trim() !== "") {
-                let option = this.adr.addOption({ title: this.lastItem });
-                this.lastItem = "";
-                return option;
-            }
-        },
-
-        /** Remove the option.
-         * @param {object} option
-         * @param {int} idx
-         */
-        removeOption(option, idx) {
-            if (idx) {
-                this.adr.consideredOptions.splice(idx, 1);
-            } else {
-                this.adr.consideredOptions.splice(this.adr.consideredOptions.indexOf(option), 1);
-            }
-        },
-
-        toggleExpansionOfOption(option) {
-            if (this.expandedOptions.includes(option)) {
-                this.expandedOptions = this.expandedOptions.filter((val) => val !== option);
-            } else {
-                this.expandedOptions.push(option);
-            }
-        },
-        toggleEditingOfOption(option) {
-            if (this.editedOptions.includes(option)) {
-                this.editedOptions = this.editedOptions.filter((val) => val !== option);
-            } else {
-                this.editedOptions.push(option);
-                this.$nextTick(() => {
-                    try {
-                        this.$refs["codemirror-" + option.id][0].focus();
-                    } catch (e) {
-                        console.log("Failed to focus the option ", option, " when starting to edit.");
-                        console.log(e);
-                    }
-                });
-            }
-        },
-
-        /**
-         * @param {object} option - an option object (i.e. has the attribute 'title')
-         * @returns true iff the option is the chosen option
-         */
-        isChosenOption(option) {
-            let res = matchOptionTitleMoreRelaxed(option.title, this.adr.decisionOutcome.chosenOption);
-            return res;
-        },
-
-        switchToProfessionalMode() {
-            store.setMode("professional");
-        },
-
-        htmlOf(value) {
-            return marked(value);
+            void nextTick(() => cmRefs.get(newOption.id)?.focus());
         }
     }
-};
+}
+
+function addLastItemToOptions(): Option | undefined {
+    if (lastItem.value.trim() !== "") {
+        const option = props.adr.addOption({ title: lastItem.value });
+        lastItem.value = "";
+        return option;
+    }
+    return undefined;
+}
+
+function removeOption(option: Option): void {
+    const idx = props.adr.consideredOptions.indexOf(option);
+    if (idx >= 0) {
+        props.adr.consideredOptions.splice(idx, 1);
+    }
+}
+
+function toggleExpansionOfOption(option: Option): void {
+    if (expandedOptions.value.includes(option)) {
+        expandedOptions.value = expandedOptions.value.filter((val) => val !== option);
+    } else {
+        expandedOptions.value.push(option);
+    }
+}
+
+function toggleEditingOfOption(option: Option): void {
+    if (editedOptions.value.includes(option)) {
+        editedOptions.value = editedOptions.value.filter((val) => val !== option);
+    } else {
+        editedOptions.value.push(option);
+        void nextTick(() => cmRefs.get(option.id)?.focus());
+    }
+}
+
+function isChosenOption(option: Option): boolean {
+    return matchOptionTitleMoreRelaxed(option.title, props.adr.decisionOutcome.chosenOption);
+}
+
+function switchToProfessionalMode(): void {
+    store.setMode("professional");
+}
 </script>
 
-<style>
-.optiontitle .CodeMirror * {
-    font-family: Arial, monospace;
-    font-weight: bold;
+<style scoped>
+/* Chosen-option highlight (replaces the old dynamic Vuetify `:color` of grey/light-green). */
+.chosen-option {
+    background-color: #f1f8e9;
+}
+
+/* Inner drag-handle column inside the option gutter. */
+.option-drag-col {
+    width: 18px;
+    min-width: 18px;
+}
+
+/* Let the chevron expand/collapse buttons shrink below Vuetify's default min width. */
+.btn-tight {
+    min-width: 0;
+}
+
+/* Pros/Cons columns sit side-by-side and wrap once they no longer fit. */
+.option-col {
+    width: 50%;
+    min-width: 600px;
 }
 </style>

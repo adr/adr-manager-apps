@@ -1,131 +1,108 @@
 <template>
-    <v-card
-        flat
-        class="flex-grow-1 py-1 pl-2 text-left flex-shrink-1"
-        :color="color"
-        v-observe-visibility="visibilityChanged"
-        v-resize
-        @resize="refresh()"
-    >
-        <codemirror
-            v-model="dValue"
-            :options="cmOptions"
-            v-on:input="(ev) => update(ev)"
-            ref="cm"
-            class="customizedcm"
-            @blur="$emit('blur')"
-            @focus="$emit('focus')"
-        ></codemirror>
-    </v-card>
+    <div ref="host" class="cm-host"></div>
 </template>
 
-<script>
-import _ from "lodash";
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, useTemplateRef, watch } from "vue";
+import { EditorState } from "@codemirror/state";
+import { EditorView, keymap, lineNumbers as cmLineNumbers } from "@codemirror/view";
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { markdown } from "@codemirror/lang-markdown";
+import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
 
-// require component
-import { codemirror } from "vue-codemirror";
-// require styles
-import "codemirror/lib/codemirror.css";
-// language
-import "codemirror/mode/markdown/markdown.js";
-// theme
-import "codemirror/theme/lesser-dark.css";
+const props = withDefaults(
+    defineProps<{
+        modelValue: string;
+        lineNumbers?: boolean;
+    }>(),
+    { lineNumbers: false }
+);
 
-export default {
-    name: "EditorMadrCodemirror",
-    components: {
-        codemirror
-    },
-    props: {
-        value: {
-            type: String,
-            default: " "
-        },
-        color: {
-            type: String,
-            default: "grey lighten-3"
-        }
-    },
-    data() {
-        return {
-            dValue: "",
-            cmOptions: {
-                value: "<p>hello</p>",
-                connect: "align",
-                lineWrapping: true,
-                mode: "text/x-markdown",
-                lineNumbers: false,
-                extraKeys: { Tab: false, "Shift-Tab": false }
-            },
+const emit = defineEmits<{
+    "update:modelValue": [string];
+    blur: [];
+    focus: [];
+}>();
 
-            isVisible: true,
-            /**Refreshes the code mirror to avoid update anomalies.
-             * This method is a data property, because it must be unique for every cm instance.
-             */
-            refresh: _.debounce(function () {
-                if (this.isVisible) {
-                    this.codemirror.refresh();
+const host = useTemplateRef<HTMLDivElement>("host");
+let view: EditorView | null = null;
+
+const theme = EditorView.theme({
+    "&": { backgroundColor: "transparent" },
+    ".cm-content": { fontFamily: "Arial, monospace", fontSize: "11pt" }
+});
+
+function buildExtensions() {
+    return [
+        history(),
+        markdown(),
+        syntaxHighlighting(defaultHighlightStyle),
+        EditorView.lineWrapping,
+        // CM6 does not capture Tab by default, so Tab moves focus (matching the old extraKeys config).
+        keymap.of([...defaultKeymap, ...historyKeymap]),
+        props.lineNumbers ? cmLineNumbers() : [],
+        theme,
+        EditorView.updateListener.of((u) => {
+            if (u.docChanged) {
+                emit("update:modelValue", u.state.doc.toString());
+            }
+            if (u.focusChanged) {
+                if (u.view.hasFocus) {
+                    emit("focus");
+                } else {
+                    emit("blur");
                 }
-            }, 100)
-        };
-    },
-    computed: {
-        codemirror() {
-            return this.$refs.cm.codemirror;
-        }
-    },
-    watch: {
-        value(newValue) {
-            if (this.dValue !== newValue) {
-                this.codemirror.setValue(newValue);
-                this.codemirror.clearHistory();
             }
-        }
-    },
-    updated() {
-        this.codemirror.refresh();
-    },
-    created() {
-        this.dValue = this.value;
-    },
-    mounted() {
-        this.dValue = this.value;
-        this.codemirror.setValue(this.value);
-    },
-    methods: {
-        /** Emit 'input' event.
-         */
-        update: _.debounce(function () {
-            this.$emit("input", this.dValue);
-        }, 0),
-        visibilityChanged(isVisible) {
-            this.isVisible = isVisible;
-            if (isVisible) {
-                this.codemirror.refresh();
-            }
-        },
+        })
+    ];
+}
 
-        /**
-         * Focuses the text field of this component.
-         * May be called by parent components.
-         */
-        focus() {
-            this.$nextTick(() => {
-                this.codemirror.focus();
-                this.codemirror.setCursor({
-                    line: 1,
-                    ch: 1
-                });
-            });
+onMounted(() => {
+    if (!host.value) {
+        return;
+    }
+    view = new EditorView({
+        state: EditorState.create({ doc: props.modelValue, extensions: buildExtensions() }),
+        parent: host.value
+    });
+});
+
+onBeforeUnmount(() => {
+    view?.destroy();
+    view = null;
+});
+
+// Apply external value changes (e.g. a parent reset) without feeding back into the editor.
+watch(
+    () => props.modelValue,
+    (val) => {
+        if (!view) {
+            return;
+        }
+        const current = view.state.doc.toString();
+        if (val !== current) {
+            view.dispatch({ changes: { from: 0, to: current.length, insert: val } });
         }
     }
-};
+);
+
+defineExpose({
+    /** Focus the editor and place the cursor near the start (matches the old setCursor behaviour). */
+    focus(): void {
+        if (!view) {
+            return;
+        }
+        view.focus();
+        const line = view.state.doc.line(Math.min(2, view.state.doc.lines));
+        view.dispatch({ selection: { anchor: Math.min(line.from + 1, line.to) } });
+    }
+});
 </script>
 
 <style scoped>
-.customizedcm >>> .CodeMirror {
-    background-color: transparent;
-    font-family: Arial, monospace;
-    font-size: 11pt;
+.cm-host {
+    height: 100%;
+    /* Matches the original `grey lighten-3` Vuetify card the CodeMirror used to sit in. */
+    background-color: #eeeeee;
 }
 </style>

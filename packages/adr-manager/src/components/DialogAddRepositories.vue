@@ -1,32 +1,34 @@
 <template>
-    <v-dialog v-bind:value="showDialog" v-on:input="(value) => {
-        showDialog = value;
-        $emit('input', value);
-    }
-        " width="700" :fullscreen="$vuetify.breakpoint.mobile" scrollable>
-        <template v-slot:activator="{ on, attrs }">
-            <slot name="activator" v-bind:on="on" v-bind:attrs="attrs"> </slot>
-            <v-overlay data-cy="loadReposBool" :value="showLoadingOverlay">
-                <v-progress-circular indeterminate size="64"></v-progress-circular>
-            </v-overlay>
+    <v-dialog v-model="show" width="700" :fullscreen="mobile" scrollable>
+        <template #activator="{ props }">
+            <slot name="activator" :props="props" />
         </template>
         <v-card class="d-flex flex-column">
             <v-card-title>
                 <v-row class="my-1">
                     <div>
                         <v-avatar color="primary" size="35" class="mx-1">
-                            <v-icon dark>mdi-folder-plus</v-icon>
+                            <v-icon color="white">mdi-folder-plus</v-icon>
                         </v-avatar>
                         <span class="dialogTitle"> Add Repositories </span>
                     </div>
-                    <v-text-field data-cy="search-field-for-adding-repository" v-model="searchText"
-                        class="pl-8 pr-4 pt-0 mt-0" hide-details clearable append-icon="mdi-magnify" placeholder="Search..."
-                        @input="searchRepositories" @click:clear="
-                            searchText = '';
-                        loadRepositoryList();
-                        " />
-                    <v-progress-linear :active="countLoadingPromises > 0" :indeterminate="countLoadingPromises > 0" absolute
-                        top />
+                    <v-text-field
+                        data-cy="search-field-for-adding-repository"
+                        v-model="searchText"
+                        class="pl-8 pr-4 pt-0 mt-0"
+                        hide-details
+                        clearable
+                        append-inner-icon="mdi-magnify"
+                        placeholder="Search..."
+                        @update:model-value="searchRepositories"
+                        @click:clear="onClearSearch"
+                    />
+                    <v-progress-linear
+                        :active="countLoadingPromises > 0"
+                        :indeterminate="countLoadingPromises > 0"
+                        absolute
+                        location="top"
+                    />
                 </v-row>
             </v-card-title>
 
@@ -39,267 +41,240 @@
                 <v-btn :disabled="!hasNextPage" @click="goToNextPage"> Next <v-icon>mdi-chevron-right</v-icon> </v-btn>
             </div>
 
-            <!-- Unstaged Repositories -->
             <v-card-text class="my-0">
-                <div data-cy="noRepo" v-if="unstagedRepositories.length === 0 && countLoadingPromises === 0"
-                    class="text-center">
+                <div
+                    data-cy="noRepo"
+                    v-if="unstagedRepositories.length === 0 && countLoadingPromises === 0"
+                    class="text-center"
+                >
                     Sorry, no repositories were found!
                 </div>
                 <v-list>
-                    <v-list-item data-cy="listRepo" v-for="(item, index) in unstagedRepositories" class="my-0 py-0"
-                        :key="`item-${index}`" :value="item" @click="stageRepostiory(item)">
-                        <v-list-item-content class="my-0 py-0">
-                            <v-list-item-title class="d-flex">
-                                {{ item.name }} <v-spacer></v-spacer>
-                                <v-card-subtitle class="py-0"> updated on {{ item.updated }} </v-card-subtitle>
-                            </v-list-item-title>
-                            <v-list-item-subtitle v-text="item.description"></v-list-item-subtitle>
-                        </v-list-item-content>
-
-                        <v-list-item-icon>
+                    <v-list-item
+                        data-cy="listRepo"
+                        v-for="(item, index) in unstagedRepositories"
+                        class="my-0 py-0"
+                        :key="`item-${index}`"
+                        :value="item"
+                        @click="stageRepostiory(item)"
+                    >
+                        <v-list-item-title class="d-flex">
+                            {{ item.name }} <v-spacer></v-spacer>
+                            <span class="text-caption text-medium-emphasis"> updated on {{ item.updated }} </span>
+                        </v-list-item-title>
+                        <v-list-item-subtitle>{{ item.description }}</v-list-item-subtitle>
+                        <template #append>
                             <v-icon>mdi-plus</v-icon>
-                        </v-list-item-icon>
+                        </template>
                     </v-list-item>
                 </v-list>
             </v-card-text>
 
-            <!-- Repositories staged to be added -->
             <v-divider class="my-0"></v-divider>
             <v-card-title>Repositories to be added</v-card-title>
-            <v-card-text class="my-0 flex-grow-0 flex-shrink-0" :style="{ 'max-height': '25%' }">
+            <v-card-text class="my-0 flex-grow-0 flex-shrink-0 staged-repos">
                 <v-list>
-                    <v-list-item v-for="(item, index) in repositoriesSelected" class="my-0 py-0" :key="`item-${index}`"
-                        :value="item" @click="unstageRepostiory(item)">
-                        <v-list-item-content class="my-0 py-0">
-                            <v-list-item-title v-text="item.name"></v-list-item-title>
-                            <v-list-item-subtitle v-text="item.description"></v-list-item-subtitle>
-                        </v-list-item-content>
-
-                        <v-list-item-icon>
+                    <v-list-item
+                        v-for="(item, index) in repositoriesSelected"
+                        class="my-0 py-0"
+                        :key="`staged-${index}`"
+                        :value="item"
+                        @click="unstageRepostiory(item)"
+                    >
+                        <v-list-item-title>{{ item.name }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ item.description }}</v-list-item-subtitle>
+                        <template #append>
                             <v-icon>mdi-close</v-icon>
-                        </v-list-item-icon>
+                        </template>
                     </v-list-item>
                 </v-list>
             </v-card-text>
             <v-divider></v-divider>
             <v-card-actions class="buttonPadding">
                 <v-spacer></v-spacer>
-                <v-btn data-cy="addRepoDialog" text color="success" :disabled="repositoriesSelected.length === 0" @click="() => {
-                    showDialog = false;
-                    addRepositories();
-                }
-                    ">
+                <v-btn
+                    data-cy="addRepoDialog"
+                    variant="text"
+                    color="success"
+                    :disabled="repositoriesSelected.length === 0"
+                    @click="onAddRepositories"
+                >
                     Add Repositories
                 </v-btn>
-                <v-btn text color="error" @click="showDialog = false"> Cancel </v-btn>
+                <v-btn variant="text" color="error" @click="show = false"> Cancel </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
+
+    <v-overlay v-model="showLoadingOverlay" data-cy="loadReposBool" class="align-center justify-center" persistent>
+        <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
 </template>
 
-<script>
-import { loadRepositoryList, searchRepositoryList, loadAllRepositoryContent } from "/src/plugins/api.js";
-import { store } from "/src/plugins/store.js";
-import _ from "lodash";
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { useDisplay } from "vuetify";
+import { loadRepositoryList, searchRepositoryList, loadAllRepositoryContent } from "@/plugins/api";
+import { store } from "@/plugins/store";
+import { useAlert } from "@/composables/useAlert";
+import { debounce } from "@/utils/debounce";
+import type { GitHubRepoSummary } from "@/types/github";
+import type { Repository } from "@/plugins/classes";
 
-export default {
-    name: "DialogAddRepositories",
-    props: {
-        // value is true, iff showDialog == true, iff the dialog is shown. (value-prop enables v-model)
-        value: {
-            type: Boolean,
-            required: false,
-            default: false
-        }
-    },
-    data: () => ({
-        repositoriesSelected: [],
-        repositoriesCurrentPage: [], // A list containing all repositories  (Raw Data fetched from GitHub)
-        showDialog: false, // Initial value is set by value-prob
-        showLoadingOverlay: false, // Flag for loading overlay when loading repoitory content
-        countLoadingPromises: 0, // counts loading repositories, needed for showing loading bar.
-        searchText: "",
-        page: 1,
-        perPage: 40
-    }),
-    computed: {
-        showPagination() {
-            return this.hasNextPage || this.hasPreviousPage;
-        },
-        notAddedRepositories() {
-            return this.filterUnaddedRepositories(this.repositoriesCurrentPage);
-        },
-        unstagedRepositories() {
-            return this.filterUnstagedRepositories(this.repositoriesCurrentPage)
-                .map((repo) => {
-                    let date = new Date(repo.updated_at);
-                    let displayedDate = date.toDateString().substr(4, 11);
-                    return {
-                        name: repo.full_name,
-                        description: repo.description,
-                        repoData: repo,
-                        updated: displayedDate
-                    };
-                })
-                .slice(0, this.perPage);
-        },
-        hasPreviousPage() {
-            return this.page > 1;
-        },
-        hasNextPage() {
-            return this.repositoriesCurrentPage.length >= this.perPage;
-        }
-    },
-    watch: {
-        /** Reload repositories in case something went wrong while mounting, a new repo was created on GitHub or something similar. */
-        showDialog(newValue) {
-            if (newValue === true) {
-                this.page = 1;
-                this.loadRepositoryList();
-            }
-        }
-    },
-    mounted() {
-        this.showDialog = this.value;
-        this.loadRepositoryList();
-    },
-    methods: {
-        /**
-         * Loads all (added and unadded) repositories the user is authorized to access into repositoriesCurrentPage.
-         */
-        async loadRepositoryList() {
-            this.countLoadingPromises++;
-            loadRepositoryList()
-                .then((res) => {
-                    if (!Array.isArray(res)) {
-                        throw "Could not load repository list.";
-                    }
-                    this.repositoriesCurrentPage = res;
-                    this.countLoadingPromises--;
-                })
-                .catch((error) => {
-                    // eslint-disable-next-line
-                    console.error(error);
-                });
-        },
+interface StagedRepo {
+    name: string;
+    description: string | null;
+    repoData: GitHubRepoSummary;
+    updated: string;
+}
 
-        /**
-         * Search for repositories which full name contains the search text.
-         */
-        searchRepositories: _.debounce(function () {
-            // quick solution to allow full repository URLs
-            if (typeof this.searchText === "string" && this.searchText.startsWith("https://")) {
-                console.log("Loading https:// repository");
-                this.loadRepositoryList();
-            }
-            if (typeof this.searchText !== "string" || this.searchText.trim() === "") {
-                this.loadRepositoryList();
-            } else {
-                this.countLoadingPromises++;
-                this.repositoriesCurrentPage = [];
-                searchRepositoryList(this.searchText, this.perPage, this.repositoriesCurrentPage)
-                    .then((repos) => {
-                        console.log("Loaded Repos", repos);
+const show = defineModel<boolean>({ default: false });
+const emit = defineEmits<{ "repo-added-name": [Repository[]] }>();
 
-                        if (!Array.isArray(repos)) {
-                            throw "Could not search repository list.";
-                        }
-                        // this.repositoriesCurrentPage = repos;
-                        this.countLoadingPromises--;
-                    })
-                    .catch((error) => {
-                        // eslint-disable-next-line
-                        console.error(error);
-                    });
-            }
-        }, 500),
+const { mobile } = useDisplay();
+const { alert } = useAlert();
 
-        /**
-         * Filters the list to only include only repos which are not staged yet.
-         */
-        filterUnstagedRepositories(repoList) {
-            return this.filterUnaddedRepositories(repoList).filter(
-                (repo) => !this.repositoriesSelected.map((repo) => repo.name).includes(repo.full_name)
-            );
-        },
+const repositoriesSelected = ref<StagedRepo[]>([]);
+const repositoriesCurrentPage = ref<GitHubRepoSummary[]>([]);
+const showLoadingOverlay = ref(false);
+const countLoadingPromises = ref(0);
+const searchText = ref("");
+const page = ref(1);
+const perPage = 40;
 
-        /**
-         * Filters the list to only include only repos which are not added yet.
-         */
-        filterUnaddedRepositories(repoList) {
-            return repoList.filter(
-                // Filter for unadded repositories
-                (repo) => !store.addedRepositories.map((repo) => repo.fullName).includes(repo.full_name)
-            );
-        },
+const hasPreviousPage = computed(() => page.value > 1);
+const hasNextPage = computed(() => repositoriesCurrentPage.value.length >= perPage);
+const showPagination = computed(() => hasNextPage.value || hasPreviousPage.value);
 
-        goToNextPage() {
-            if (this.hasNextPage) {
-                this.page++;
-                this.loadRepositoryList();
-            }
-        },
+const unstagedRepositories = computed<StagedRepo[]>(() =>
+    filterUnstagedRepositories(repositoriesCurrentPage.value)
+        .map((repo) => {
+            const date = new Date(repo.updated_at);
+            return {
+                name: repo.full_name,
+                description: repo.description,
+                repoData: repo,
+                updated: date.toDateString().substr(4, 11)
+            };
+        })
+        .slice(0, perPage)
+);
 
-        goToPreviousPage() {
-            if (this.hasPreviousPage) {
-                this.page--;
-                this.loadRepositoryList();
-            }
-        },
-
-        /**Stage a repository to be added.
-         * @param {object} repo - must be in unstagedRepositories
-         */
-        stageRepostiory(repo) {
-            this.repositoriesSelected.push(repo);
-        },
-
-        /**Unstage a repository to be added.
-         * @param {object} repo - must be in stagedRepositories
-         */
-        unstageRepostiory(repo) {
-            this.repositoriesSelected = this.repositoriesSelected.filter((item) => item !== repo);
-        },
-
-        /** Once the user has accepted his repo selection, load the selected repos and emit them.
-         * Called when the 'Add repositories'-Dialog is closed.
-         *
-         * @param repoList - A list of repository data (like it is fetched from GitHub)
-         */
-        addRepositories: async function () {
-            this.showLoadingOverlay = true;
-            console.log(this.repositoriesSelected)
-            loadAllRepositoryContent(
-                this.repositoriesSelected.map((repo) => ({
-                    fullName: repo.repoData.full_name,
-                    branch: repo.repoData.default_branch
-                }))
-            )
-                .then((repoObjectList) => {
-                    if (typeof repoObjectList !== "undefined") {
-                        this.showLoadingOverlay = false;
-                        this.$emit("repo-added-name", repoObjectList);
-                        store.addRepositories(repoObjectList);
-
-                        /* Reset the selected repositories. */
-                        this.repositoriesSelected = [];
-                        this.searchText = "";
-                    }
-                })
-                .catch((e) => {
-                    this.errorDialog();
-                    console.log(e);
-                    this.showLoadingOverlay = false;
-                });
-        },
-
-        errorDialog() {
-            this.$alert("Sorry, we couldn't load the repositories you requested!", "Error", "error", {
-                confirmButtonText: "Close"
-            });
-        }
+// Reload repositories when the dialog is (re)opened, in case something changed on GitHub.
+watch(show, (open) => {
+    if (open) {
+        page.value = 1;
+        void loadRepositories();
     }
-};
+});
+
+void loadRepositories();
+
+async function loadRepositories(): Promise<void> {
+    countLoadingPromises.value++;
+    try {
+        const res = await loadRepositoryList();
+        if (!Array.isArray(res)) {
+            throw new Error("Could not load repository list.");
+        }
+        repositoriesCurrentPage.value = res;
+        countLoadingPromises.value--;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function onClearSearch(): void {
+    searchText.value = "";
+    void loadRepositories();
+}
+
+const searchRepositories = debounce(() => {
+    if (searchText.value.startsWith("https://")) {
+        void loadRepositories();
+    }
+    if (searchText.value.trim() === "") {
+        void loadRepositories();
+    } else {
+        countLoadingPromises.value++;
+        repositoriesCurrentPage.value = [];
+        searchRepositoryList(searchText.value, perPage, repositoriesCurrentPage.value)
+            .then((repos) => {
+                if (!Array.isArray(repos)) {
+                    throw new Error("Could not search repository list.");
+                }
+                countLoadingPromises.value--;
+            })
+            .catch((error: unknown) => console.error(error));
+    }
+}, 500);
+
+function filterUnaddedRepositories(repoList: GitHubRepoSummary[]): GitHubRepoSummary[] {
+    return repoList.filter((repo) => !store.addedRepositories.map((r) => r.fullName).includes(repo.full_name));
+}
+
+function filterUnstagedRepositories(repoList: GitHubRepoSummary[]): GitHubRepoSummary[] {
+    return filterUnaddedRepositories(repoList).filter(
+        (repo) => !repositoriesSelected.value.map((r) => r.name).includes(repo.full_name)
+    );
+}
+
+function goToNextPage(): void {
+    if (hasNextPage.value) {
+        page.value++;
+        void loadRepositories();
+    }
+}
+
+function goToPreviousPage(): void {
+    if (hasPreviousPage.value) {
+        page.value--;
+        void loadRepositories();
+    }
+}
+
+function stageRepostiory(repo: StagedRepo): void {
+    repositoriesSelected.value.push(repo);
+}
+
+function unstageRepostiory(repo: StagedRepo): void {
+    repositoriesSelected.value = repositoriesSelected.value.filter((item) => item !== repo);
+}
+
+function onAddRepositories(): void {
+    show.value = false;
+    void addRepositories();
+}
+
+async function addRepositories(): Promise<void> {
+    showLoadingOverlay.value = true;
+    try {
+        const repoObjectList = await loadAllRepositoryContent(
+            repositoriesSelected.value.map((repo) => ({
+                fullName: repo.repoData.full_name,
+                branch: repo.repoData.default_branch
+            }))
+        );
+        showLoadingOverlay.value = false;
+        emit("repo-added-name", repoObjectList);
+        store.addRepositories(repoObjectList);
+        repositoriesSelected.value = [];
+        searchText.value = "";
+    } catch (e) {
+        errorDialog();
+        console.log(e);
+        showLoadingOverlay.value = false;
+    }
+}
+
+function errorDialog(): void {
+    void alert("Sorry, we couldn't load the repositories you requested!", "Error", "error");
+}
 </script>
 
-<style scoped></style>
+<style scoped>
+/* The "Repositories to be added" list stays compact so the search list keeps most of the dialog. */
+.staged-repos {
+    max-height: 25%;
+}
+</style>

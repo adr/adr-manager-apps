@@ -1,24 +1,19 @@
 <template>
-    <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-            <v-icon class="mx-1" v-on="on">mdi-help-circle-outline</v-icon>
+    <v-tooltip location="bottom">
+        <template #activator="{ props }">
+            <v-icon class="mx-1" v-bind="props">mdi-help-circle-outline</v-icon>
         </template>
-        <div style="max-width: 400px">
+        <div class="help-tooltip">
             <slot />
         </div>
     </v-tooltip>
 </template>
 
-<script>
-export default {
-    name: "helpIcon",
-    components: {},
-    data: () => ({
-        user: null,
-        repositories: []
-    }),
-    mounted() {},
-    destroyed() {},
-    methods: {}
-};
+<script setup lang="ts">
 </script>
+
+<style scoped>
+.help-tooltip {
+    max-width: 400px;
+}
+</style>

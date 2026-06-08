@@ -1,4 +1,3 @@
-// Define a grammar called Hello
 grammar MADR;
 
 start : 
@@ -62,20 +61,18 @@ list : (wslbs LIST_MARKER textLine?) + ;
 
 textLine : (any | WS) +? ;
 
-multilineText : (any | wslb) +? ; // Any (possibly multi-line) text
+multilineText : (any | wslb) +? ;
 
 any : ( WORD | CHARACTER | LIST_MARKER | HEADING_PREFIX | SUBSUBSUBHEADING_PREFIX) ;
 
 wslb : ( WS | NEWLINE ) ;
 wslbs : wslb *;
 
-/// Tokenization / Lexer rules
-
 WORD : CHARACTER+;
 CHARACTER : (~[\n\t\r\f ] ) ;
 
-WS : [\f\t ] ; // White Space
-NEWLINE : [\r]?[\n] ; // Line Breaks
+WS : [\f\t ] ;
+NEWLINE : [\r]?[\n] ;
 
 LIST_MARKER : NEWLINE ('* ' | '- ');
 STATUS_MARKER : LIST_MARKER 'Status: ';
@@ -84,11 +81,10 @@ DECIDERS_MARKER : LIST_MARKER 'Deciders: ';
 OPTIONAL_MAKER: '<!-- optional -->';
 TECHNICAL_STORY_MARKER : NEWLINE 'Technical Story: ';
 
-HEADING_PREFIX : '# ' ; // Start of a Heading
-SUBSUBHEADING_PREFIX : NEWLINE '### ' ; // Start of a Sub sub heading (e. g. an option section)
-SUBSUBSUBHEADING_PREFIX : '###' '#'+  ' ' ; // Start of a sub sub sub heading (no special meaning, should be accepted in multiline text)
+HEADING_PREFIX : '# ' ;
+SUBSUBHEADING_PREFIX : NEWLINE '### ' ;
+SUBSUBSUBHEADING_PREFIX : '###' '#'+  ' ' ;
 
-// Headings
 CONTEXT_AND_PROBLEM_STATEMENT : NEWLINE ( '## Context and Problem Statement' | '## Context and problem statement' );
 DECISION_DRIVERS_HEADING : NEWLINE ( '## Decision Drivers' | '## Decision drivers' ) ;
 CONSIDERED_OPTIONS_HEADING : NEWLINE ( '## Considered Options' | '## Considered options' ) ;

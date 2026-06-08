@@ -1,54 +1,38 @@
 <template>
     <div>
-        <v-btn @click="hasAuthId()">Connect to GitHub</v-btn>
+        <v-btn @click="hasAuthId">Connect to GitHub</v-btn>
     </div>
 </template>
 
-<script>
-import { signInWithPopup, GithubAuthProvider } from "firebase/auth";
-import { auth, GithubProvider } from "../plugins/firebase/client";
-export default {
-    name: "connectGitHub",
-    components: {},
-    data: () => ({
-        user: null,
-        repositories: []
-    }),
-    mounted() {
-        console.log("mounted");
-    },
-    destroyed() {
-        console.log("Bye from the git login github component!");
-    },
-    methods: {
-        hasAuthId() {
-            if (localStorage.getItem("authId") === null) {
-                this.signInWithGithub();
-            } else {
-                this.$router.push({
-                    name: "Editor",
-                    params: { id: this.user }
-                });
-            }
-        },
-        signInWithGithub: async function () {
-            GithubProvider.addScope("repo read:user gist workflow read:org");
-            return signInWithPopup(auth, GithubProvider)
-                .then((result) => {
-                    const credential = GithubAuthProvider.credentialFromResult(result);
-                    const token = credential.accessToken;
-                    const user = result.user;
-                    localStorage.setItem("authId", token);
-                    localStorage.setItem("user", user?.reloadUserInfo?.screenName);
-                    this.$router.push({
-                        name: "Editor",
-                        params: { id: this.user }
-                    });
-                })
-                .catch((error) => {
-                    console.error("SignIn Error", error);
-                });
-        }
+<script setup lang="ts">
+import { useRouter } from "vue-router";
+import { signInWithPopup, GithubAuthProvider, getAdditionalUserInfo } from "firebase/auth";
+import { auth, GithubProvider } from "@/plugins/firebase/client";
+import { lsGet, lsSet } from "@/plugins/storage";
+
+const router = useRouter();
+
+function hasAuthId(): void {
+    if (lsGet("authId") === null) {
+        void signInWithGithub();
+    } else {
+        void router.push({ name: "Editor" });
     }
-};
+}
+
+async function signInWithGithub(): Promise<void> {
+    GithubProvider.addScope("repo read:user gist workflow read:org");
+    try {
+        const result = await signInWithPopup(auth, GithubProvider);
+        const credential = GithubAuthProvider.credentialFromResult(result);
+        if (!credential?.accessToken) {
+            return;
+        }
+        lsSet("authId", credential.accessToken);
+        lsSet("user", getAdditionalUserInfo(result)?.username ?? "");
+        void router.push({ name: "Editor" });
+    } catch (error) {
+        console.error("SignIn Error", error);
+    }
+}
 </script>

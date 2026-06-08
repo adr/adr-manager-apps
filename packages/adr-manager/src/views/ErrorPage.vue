@@ -1,5 +1,5 @@
 <template>
-    <v-row text-align="center">
+    <v-row class="text-center">
         <v-col>
             <h2>Error 404</h2>
             <h3>page not found</h3>
@@ -7,8 +7,5 @@
     </v-row>
 </template>
 
-<script>
-export default {
-    name: "ErrorPage"
-};
+<script setup lang="ts">
 </script>

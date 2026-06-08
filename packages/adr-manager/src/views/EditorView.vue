@@ -1,6 +1,6 @@
 <template>
     <v-card class="editor text-center mx-auto d-flex flex-column" height="100%">
-        <v-toolbar dense color="primary" dark class="flex-grow-0">
+        <v-toolbar density="compact" color="primary" theme="dark" class="flex-grow-0">
             <img src="../assets/logo.png" alt="ADR-Manager" height="80%" />
             <v-spacer></v-spacer>
             <ToolbarMenuMode v-if="showEditor" class="mx-0 px-0 pt-0 mt-0 flex-grow-0" />
@@ -8,304 +8,257 @@
             <v-btn class="align-self-center" @click="logOut">Disconnect</v-btn>
         </v-toolbar>
 
-        <v-card-text class="mx-0 my-0 px-0 py-0" style="-webkit-flex-grow: 1; flex-grow: 1; position: relative">
-            <div v-if="!showFileExplorer" class="d-flex align-center justify-center" style="height: 75%; width: 100%">
+        <v-card-text class="mx-0 my-0 px-0 py-0 flex-grow-1 position-relative">
+            <div v-if="!showFileExplorer" class="d-flex align-center justify-center h-75 w-100">
                 <DialogAddRepositories>
-                    <template v-slot:activator="{ on, attrs }">
-                        <v-btn
-                            data-cy="addRepo"
-                            x-large
-                            class="align-center justify-center secondary"
-                            v-on="on"
-                            v-bind="attrs"
-                        >
+                    <template #activator="{ props }">
+                        <v-btn data-cy="addRepo" size="x-large" color="secondary" class="align-center justify-center" v-bind="props">
                             Add Repositories
                         </v-btn>
                     </template>
                 </DialogAddRepositories>
             </div>
-            <splitpanes v-else class="default-theme" style="height: 100%; width: 100%">
-                <pane
-                    size="30%"
-                    class="d-flex flex-column"
-                    style="-webkit-flex-grow: 1; flex-grow: 1; position: relative"
-                >
-                    <FileExplorer v-on:repo-name="updateBranches" v-on:active-branch="setActiveBranch" />
+            <splitpanes v-else class="default-theme h-100 w-100">
+                <pane :size="30" class="d-flex flex-column flex-grow-1 position-relative">
+                    <FileExplorer @repo-name="updateBranches" @active-branch="setActiveBranch" />
                 </pane>
 
                 <pane v-if="showEditor">
-                    <Editor style="height: 100%" />
+                    <Editor class="h-100" />
                 </pane>
             </splitpanes>
         </v-card-text>
 
-        <v-system-bar>
-            <div style="position: absolute">
-                {{ "Current ADR: " + adrPath }}
-            </div>
+        <v-sheet class="editor-statusbar d-flex align-center px-2 flex-grow-0">
+            <span class="text-truncate">{{ "Current ADR: " + adrPath }}</span>
             <v-spacer></v-spacer>
-            Current branch:
+            <span class="mr-1 flex-shrink-0">Current branch:</span>
             <select
                 data-cy="branchSelect"
                 @change="onSelectedBranch"
                 v-model="selected"
                 name="current-branch"
                 id="current-branch"
-                style="width: 20%"
+                class="branch-select"
                 @click="clickForBranches"
             >
                 <option data-cy="branchSelectOption" v-for="(branchName, index) in branchesName" :key="index">
                     {{ branchName }}
                 </option>
             </select>
-        </v-system-bar>
+        </v-sheet>
     </v-card>
 </template>
 
-<script>
-import { loadBranchesName, loadARepositoryContent } from "/src/plugins/api.js";
-import { store } from "/src/plugins/store.js";
+<script setup lang="ts">
+import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { loadBranchesName, loadARepositoryContent } from "@/plugins/api";
+import { store } from "@/plugins/store";
+import { useAlert } from "@/composables/useAlert";
 
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
 
-import DialogAddRepositories from "/src/components/DialogAddRepositories.vue";
-import ToolbarMenuMode from "/src/components/ToolbarMenuMode.vue";
-import FileExplorer from "/src/components/FileExplorer.vue";
-import Editor from "/src/components/Editor.vue";
+import DialogAddRepositories from "@/components/DialogAddRepositories.vue";
+import ToolbarMenuMode from "@/components/ToolbarMenuMode.vue";
+import FileExplorer from "@/components/FileExplorer.vue";
+import Editor from "@/components/Editor.vue";
 
-export default {
-    components: {
-        Splitpanes,
-        Pane,
-        ToolbarMenuMode,
-        Editor,
-        FileExplorer,
-        DialogAddRepositories
-    },
-    props: {
-        /**
-         * The full name of the repo, the branch and the adr name are passed by the router.
-         */
-        repoFullName: {
-            // the path of the current adr
-            type: String
-        },
-        branch: {
-            type: String
-        },
-        adr: {
-            // the name of the current adr, e. g. 0001-some-name.md
-            type: String
-        }
-    },
-    data: () => ({
-        selected: "",
-        oldSelected: "",
-        branchesName: [],
-        currentRepo: "",
-        boolClick: false
-    }),
-    computed: {
-        showFileExplorer() {
-            return store.addedRepositories.length > 0;
-        },
-        showEditor() {
-            return this.currentAdr !== undefined;
-        },
-        currentAdr() {
-            return store.currentlyEditedAdr;
-        },
-        adrPath() {
-            if (store.currentRepository && this.currentAdr !== undefined && this.currentAdr.path !== undefined) {
-                return store.currentRepository.fullName + "/" + this.currentAdr.path;
-            } else {
-                return "";
-            }
-        },
-        routeDataFromStore() {
-            return {
-                repoFullName:
-                    store.currentRepository && typeof store.currentRepository.fullName === "string"
-                        ? store.currentRepository.fullName
-                        : undefined,
-                branch:
-                    store.currentRepository && typeof store.currentRepository.activeBranch === "string"
-                        ? store.currentRepository.activeBranch
-                        : undefined,
-                adrName:
-                    store.currentlyEditedAdr && typeof store.currentlyEditedAdr.path === "string"
-                        ? store.currentlyEditedAdr.path.split("/").pop()
-                        : undefined
-            };
-        }
-    },
-    watch: {
-        /**
-         * If the relevant state in the store changes, adapt the route.
-         */
-        routeDataFromStore: {
-            handler(newRouteData) {
-                console.log("Watching", store.currentRepository);
-                console.log("Changed Store", newRouteData);
-                console.log("Current Route", this.$route.params);
-                this.branchesName = [];
-                this.boolClick = true;
-                this.branchesName.push(newRouteData.branch);
-                this.branchesName = this.branchesName.filter(function (elem, index, self) {
-                    return index === self.indexOf(elem);
-                });
-                this.branchesName = this.branchesName.filter(function (elem) {
-                    return elem != null;
-                });
-                this.selected = newRouteData.branch;
-                this.oldSelected = newRouteData.branch;
-                if (
-                    this.repoFullName !== newRouteData.repoFullName ||
-                    this.branch !== newRouteData.branch ||
-                    this.adr !== newRouteData.adrName
-                ) {
-                    this.$router.push({
-                        name: "Editor",
-                        params: {
-                            ...this.$route.params,
-                            organization: newRouteData.repoFullName
-                                ? newRouteData.repoFullName.split("/")[0]
-                                : undefined,
-                            repo: newRouteData.repoFullName ? newRouteData.repoFullName.split("/")[1] : undefined,
-                            branch: newRouteData.branch,
-                            adr: newRouteData.adrName
-                        }
-                    });
-                } else {
-                    console.log("Avoided routing to same route.");
-                }
-            }
-        },
+// Aliases so the existing kebab-case template tags keep working.
+const splitpanes = Splitpanes;
+const pane = Pane;
 
-        /**
-         * Params from route
-         */
-        repoFullName(newVal) {
-            // the path of the current adr
-            if (this.routeDataFromStore.repoFullName !== newVal) {
-                store.openAdrBy(newVal, this.adr);
-            }
-        },
-        branch(newVal) {
-            if (this.routeDataFromStore.branch !== newVal && store.currentRepository.branches.include(newVal)) {
-                store.setActiveBranch(newVal);
-            }
-        },
-        adr(newVal) {
-            if (this.routeDataFromStore.adrName !== newVal) {
-                store.openAdrBy(this.repoFullName, this.adr);
-            }
-        }
-    },
-    mounted() {
-        store.reload();
-        store.openAdrBy(this.repoFullName, this.adr);
-        this.$nextTick(() => {
-            console.log("Route Data from Store", this.routeDataFromStore);
-        });
-    },
-    methods: {
-        setActiveBranch(activeBranch) {
-            store.setActiveBranch(activeBranch);
-            this.oldSelected = activeBranch;
-            this.selected = activeBranch;
-        },
-        /**
-         * Display Confirm-Dialog when the user selects a new branch.
-         */
-        onSelectedBranch() {
-            // Check if current select is undefined/null to prevent the display of the dialog
-            // after a repository is removed.
-            if (this.selected != null) {
-                this.$confirm("Do you really want to change branch?")
-                    .then(() => {
-                        loadARepositoryContent(this.currentRepo, this.selected).then((repoObject) => {
-                            this.oldSelected = this.selected;
-                            if (typeof repoObject !== "undefined") {
-                                store.updateRepository(repoObject);
-                            }
-                        });
-                    })
-                    .catch(() => {
-                        this.selected = this.oldSelected;
-                        store.setActiveBranch(this.oldSelected);
-                    });
-            }
-        },
-        /**
-         * Method from api.js to retrieve branches of currentRepository from GitHub.
-         */
-        loadBranchesName() {
-            loadBranchesName(this.currentRepo.split("/")[1], this.currentRepo.split("/")[0]).then(
-                (branchesObjectList) => {
-                    let x = branchesObjectList.map((branches) => ({
-                        brancheName: branches.name
-                    }));
-                    this.branchesName = [];
-                    let i = "";
-                    for (i = 0; i < x.length; i++) {
-                        this.branchesName.push(x[i].brancheName);
-                    }
-                    this.branchesName = this.branchesName.filter(function (elem, index, self) {
-                        return index === self.indexOf(elem);
-                    });
-                }
-            );
-        },
-        /**
-         * We need to update the branches according to the event that is triggered. When the user removes a repository,
-         * we need to reset the branches to []. When the user clicks on the "current-branch-select" field, loadBranchesName
-         * is called to get the branches of the current repositories.
-         */
-        updateBranches(repoName) {
-            this.boolClick = false;
-            if (repoName === "") {
-                this.branchesName = [];
-            } else {
-                this.currentRepo = repoName;
-                this.loadBranchesName();
-            }
-        },
-        /**
-         * We need an event that can trigger the loadBranchesName() function. When a user clicks on the current-branch-select field,
-         * the loadBranchesName-method is triggered and the branches of the current repositories are retrieved and displayed.
-         */
-        clickForBranches() {
-            if (this.currentRepo !== "") {
-                if (this.branchesName.length === 1 && this.boolClick) {
-                    this.currentRepo = this.routeDataFromStore.repoFullName;
-                    this.loadBranchesName();
-                } else {
-                    console.log("Nothing to see here!");
-                }
-            } else if (this.routeDataFromStore.repoFullName != null) {
-                this.currentRepo = this.routeDataFromStore.repoFullName;
-                this.loadBranchesName();
-            }
-        },
+const props = defineProps<{ repoFullName?: string; branch?: string; adr?: string }>();
 
-        logOut() {
-            console.log("Logging out!");
-            //localStorage.removeItem('authId');
-            localStorage.clear();
-            store.setMode("basic");
-            this.$router.push("/");
-        },
-        logNotImplemented() {
-            console.log("Not implemented.");
+const router = useRouter();
+const { confirm } = useAlert();
+
+const selected = ref("");
+const oldSelected = ref("");
+const branchesName = ref<string[]>([]);
+const currentRepo = ref("");
+const boolClick = ref(false);
+
+const showFileExplorer = computed(() => store.addedRepositories.length > 0);
+const currentAdr = computed(() => store.currentlyEditedAdr);
+const showEditor = computed(() => currentAdr.value !== undefined);
+
+const adrPath = computed(() => {
+    if (store.currentRepository && currentAdr.value && currentAdr.value.path !== undefined) {
+        return store.currentRepository.fullName + "/" + currentAdr.value.path;
+    }
+    return "";
+});
+
+const routeDataFromStore = computed(() => ({
+    repoFullName:
+        store.currentRepository && typeof store.currentRepository.fullName === "string"
+            ? store.currentRepository.fullName
+            : undefined,
+    branch:
+        store.currentRepository && typeof store.currentRepository.activeBranch === "string"
+            ? store.currentRepository.activeBranch
+            : undefined,
+    adrName:
+        store.currentlyEditedAdr && typeof store.currentlyEditedAdr.path === "string"
+            ? store.currentlyEditedAdr.path.split("/").pop()
+            : undefined
+}));
+
+watch(routeDataFromStore, (newRouteData) => {
+    branchesName.value = [];
+    boolClick.value = true;
+    if (newRouteData.branch) {
+        branchesName.value.push(newRouteData.branch);
+    }
+    branchesName.value = branchesName.value.filter((elem, index, self) => index === self.indexOf(elem));
+    selected.value = newRouteData.branch ?? "";
+    oldSelected.value = newRouteData.branch ?? "";
+    if (
+        props.repoFullName !== newRouteData.repoFullName ||
+        props.branch !== newRouteData.branch ||
+        props.adr !== newRouteData.adrName
+    ) {
+        // Push to the named sub-route that actually declares these params (Router 4 discards
+        // params that the target route's path doesn't define).
+        const [organization, repo] = (newRouteData.repoFullName ?? "").split("/");
+        if (organization && repo && newRouteData.branch && newRouteData.adrName) {
+            void router.push({
+                name: "EditorWithSpecifiedAdr",
+                params: { organization, repo, branch: newRouteData.branch, adr: newRouteData.adrName }
+            });
+        } else if (organization && repo && newRouteData.branch) {
+            void router.push({
+                name: "EditorWithSpecifiedRepo",
+                params: { organization, repo, branch: newRouteData.branch }
+            });
+        } else {
+            void router.push({ name: "EditorUnspecified" });
         }
     }
-};
+});
+
+watch(
+    () => props.repoFullName,
+    (newVal) => {
+        if (newVal !== undefined && routeDataFromStore.value.repoFullName !== newVal) {
+            store.openAdrBy(newVal, props.adr);
+        }
+    }
+);
+
+watch(
+    () => props.branch,
+    (newVal) => {
+        if (
+            newVal !== undefined &&
+            routeDataFromStore.value.branch !== newVal &&
+            (store.currentRepository?.branches.some((b) => b.name === newVal) ?? false)
+        ) {
+            store.setActiveBranch(newVal);
+        }
+    }
+);
+
+watch(
+    () => props.adr,
+    (newVal) => {
+        if (routeDataFromStore.value.adrName !== newVal && props.repoFullName !== undefined) {
+            store.openAdrBy(props.repoFullName, props.adr);
+        }
+    }
+);
+
+onMounted(() => {
+    store.reload();
+    store.openAdrBy(props.repoFullName ?? "", props.adr);
+    void nextTick(() => {
+        console.log("Route Data from Store", routeDataFromStore.value);
+    });
+});
+
+function setActiveBranch(activeBranch: string): void {
+    store.setActiveBranch(activeBranch);
+    oldSelected.value = activeBranch;
+    selected.value = activeBranch;
+}
+
+function onSelectedBranch(): void {
+    if (selected.value != null) {
+        confirm("Do you really want to change branch?")
+            .then(() => {
+                void loadARepositoryContent(currentRepo.value, selected.value).then((repoObject) => {
+                    oldSelected.value = selected.value;
+                    store.updateRepository(repoObject);
+                });
+            })
+            .catch(() => {
+                selected.value = oldSelected.value;
+                store.setActiveBranch(oldSelected.value);
+            });
+    }
+}
+
+function loadBranchesNames(): void {
+    const [owner, name] = currentRepo.value.split("/");
+    void loadBranchesName(name ?? "", owner ?? "").then((branchesObjectList) => {
+        if (!branchesObjectList) {
+            return;
+        }
+        const names = branchesObjectList.map((branch) => branch.name);
+        branchesName.value = names.filter((elem, index, self) => index === self.indexOf(elem));
+    });
+}
+
+function updateBranches(repoName: string): void {
+    boolClick.value = false;
+    if (repoName === "") {
+        branchesName.value = [];
+    } else {
+        currentRepo.value = repoName;
+        loadBranchesNames();
+    }
+}
+
+function clickForBranches(): void {
+    if (currentRepo.value !== "") {
+        if (branchesName.value.length === 1 && boolClick.value) {
+            currentRepo.value = routeDataFromStore.value.repoFullName ?? "";
+            loadBranchesNames();
+        } else {
+            console.log("Nothing to see here!");
+        }
+    } else if (routeDataFromStore.value.repoFullName != null) {
+        currentRepo.value = routeDataFromStore.value.repoFullName;
+        loadBranchesNames();
+    }
+}
+
+function logOut(): void {
+    console.log("Logging out!");
+    localStorage.clear();
+    store.setMode("basic");
+    void router.push("/");
+}
 </script>
 
 <style>
 html {
     overflow: auto;
+}
+</style>
+
+<style scoped>
+/* Bottom status bar — matches the original light-grey v-system-bar. */
+.editor-statusbar {
+    min-height: 28px;
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.6);
+    background-color: #e0e0e0;
+}
+
+.branch-select {
+    width: 20%;
 }
 </style>

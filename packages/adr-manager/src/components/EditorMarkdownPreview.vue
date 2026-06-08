@@ -1,18 +1,17 @@
 <template>
-    <v-sheet flat class="compiled-markdown" v-html="compiledMarkdown" data-cy="markdownPreview"></v-sheet>
+    <v-sheet class="compiled-markdown" data-cy="markdownPreview" v-html="compiledMarkdown"></v-sheet>
 </template>
 
-<script>
+<script setup lang="ts">
+import { computed } from "vue";
 import { marked } from "marked";
 
-export default {
-    props: ["value"],
-    computed: {
-        compiledMarkdown: function () {
-            return marked(this.value);
-        }
-    }
-};
+const props = withDefaults(defineProps<{ value?: string }>(), { value: "" });
+
+const compiledMarkdown = computed<string>(() => {
+    const html = marked.parse(props.value);
+    return typeof html === "string" ? html : "";
+});
 </script>
 
 <style scoped>

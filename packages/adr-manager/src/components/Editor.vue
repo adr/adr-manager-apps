@@ -1,64 +1,49 @@
 <template>
     <v-card class="d-flex flex-column">
-        <v-card-text class="px-0 py-0 my-0" style="position: relative; height: 100%">
-            <v-tabs-items v-model="tab" style="position: absolute; height: 100%; width: 100%">
-                <v-tab-item :value="'MADR Editor'" style="height: 100%">
+        <v-card-text class="px-0 py-0 my-0 position-relative h-100">
+            <v-window v-model="tab" class="position-absolute h-100 w-100">
+                <v-window-item value="MADR Editor" class="h-100">
                     <splitpanes class="mx-auto default-theme">
-                        <pane style="height: 100%">
-                            <v-card-text class="mx-auto mx-0 my-0 px-0 py-0" style="height: 100%">
-                                <EditorMadr
-                                    style="height: 100%"
-                                    class="mx-auto mx-0 my-0 px-0 py-0"
-                                    v-model="adr"
-                                    v-on:input="updateAdrToMd"
-                                />
+                        <pane class="h-100">
+                            <v-card-text class="mx-auto mx-0 my-0 px-0 py-0 h-100">
+                                <EditorMadr class="mx-auto mx-0 my-0 px-0 py-0 h-100" :value="adr" @input="updateAdrToMd" />
                             </v-card-text>
                         </pane>
                         <pane class="mx-auto overflow-y-auto" v-if="alwaysShowMarkdownPreview">
                             <v-card class="mx-auto">
-                                <MarkdownPreview v-model="dValue"></MarkdownPreview>
+                                <MarkdownPreview :value="dValue" />
                             </v-card>
                         </pane>
                     </splitpanes>
-                </v-tab-item>
-                <!--end 'MADR Editor'-->
-                <v-tab-item data-cy="convert" :value="'Convert'" style="height: 100%">
-                    <EditorConvert :raw="dValue" v-on:accept="acceptAfterDiff" />
-                </v-tab-item>
-                <!--end 'Compare MD'-->
-                <v-tab-item
-                    data-cy="markdownPreview"
-                    :value="'Markdown Preview'"
-                    style="height: 100%"
-                    class="mx-auto overflow-y-auto"
-                >
-                    <MarkdownPreview v-model="dValue"></MarkdownPreview>
-                </v-tab-item>
-                <!--end 'Markdown Preview'-->
-                <v-tab-item data-cy="editorRaw" :value="'Raw Markdown'" style="height: 100%">
+                </v-window-item>
+
+                <v-window-item data-cy="convert" value="Convert" class="h-100">
+                    <EditorConvert :raw="dValue" @accept="acceptAfterDiff" />
+                </v-window-item>
+
+                <v-window-item data-cy="markdownPreview" value="Markdown Preview" class="mx-auto overflow-y-auto h-100">
+                    <MarkdownPreview :value="dValue" />
+                </v-window-item>
+
+                <v-window-item data-cy="editorRaw" value="Raw Markdown" class="h-100">
                     <splitpanes class="default-theme">
-                        <pane class="mx-auto overflow-y-hidden height: 100%">
-                            <EditorRaw
-                                v-model="dValue"
-                                v-on:input="updateMdToAdr"
-                                style="max-width: 100%; min-width: 100%; height: 100%"
-                            ></EditorRaw>
+                        <pane class="mx-auto overflow-y-hidden">
+                            <EditorRaw v-model="dValue" @input="updateMdToAdr" class="raw-editor" />
                         </pane>
                         <pane v-if="alwaysShowMarkdownPreview" class="mx-auto overflow-y-auto">
                             <v-card>
-                                <MarkdownPreview v-model="dValue"></MarkdownPreview>
+                                <MarkdownPreview :value="dValue" />
                             </v-card>
                         </pane>
                     </splitpanes>
-                </v-tab-item>
-                <!--end 'Raw Editor'-->
-            </v-tabs-items>
+                </v-window-item>
+            </v-window>
         </v-card-text>
 
-        <v-toolbar dense class="my-0 py-0">
-            <v-tabs v-model="tab" background-color="primary" dark dense class="pt-0 mt-0 align-self-end">
-                <v-spacer></v-spacer>
-                <v-tab v-for="(item, i) in displayedTabs" :key="i" :href="'#' + item">
+        <v-toolbar density="compact" color="primary" theme="dark" class="my-0 py-0 flex-grow-0">
+            <v-spacer></v-spacer>
+            <v-tabs v-model="tab" density="compact" class="pt-0 mt-0 align-self-end">
+                <v-tab v-for="(item, i) in displayedTabs" :key="i" :value="item">
                     {{ item }}
                 </v-tab>
             </v-tabs>
@@ -66,10 +51,11 @@
     </v-card>
 </template>
 
-<script>
-import { ArchitecturalDecisionRecord } from "/src/plugins/classes";
-import { md2adr, adr2md } from "/src/plugins/parser";
-import { store } from "/src/plugins/store";
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { ArchitecturalDecisionRecord } from "@/plugins/classes";
+import { md2adr, adr2md } from "@/plugins/parser";
+import { store } from "@/plugins/store";
 
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
@@ -78,105 +64,99 @@ import EditorMadr from "./EditorMadr.vue";
 import EditorConvert from "./EditorConvert.vue";
 import EditorRaw from "./EditorRaw.vue";
 import MarkdownPreview from "./EditorMarkdownPreview.vue";
+import type { AdrFile } from "@/types/adr";
 
-export default {
-    name: "Editor",
-    components: {
-        Splitpanes,
-        Pane,
-        EditorMadr,
-        EditorConvert,
-        EditorRaw,
-        MarkdownPreview
-    },
-    data: () => ({
-        adr: {},
-        dValue: "# Default ADR Editor heading",
-        tab: "MADR Editor",
-        tabs: ["MADR Editor", "Markdown Preview", "Raw Markdown"],
-        alwaysShowMarkdownPreview: false
-    }),
-    computed: {
-        editingAllowed() {
-            return Boolean(
-                this.tab === "MADR Editor" ||
-                    (typeof this.dValue === "string" && adr2md(md2adr(this.dValue)) === this.dValue)
-            );
-        },
-        displayedTabs() {
-            let dTabs = !this.editingAllowed
-                ? this.tabs.map((val) => {
-                      if (val === "MADR Editor") return "Convert";
-                      else return val;
-                  })
-                : this.tabs;
-            return dTabs;
-        }
-    },
+// Aliases so the existing kebab-case template tags keep working.
+const splitpanes = Splitpanes;
+const pane = Pane;
 
-    created() {
-        if (store.currentlyEditedAdr) {
-            this.openAdrFile(store.currentlyEditedAdr);
-        } else {
-            this.adr = new ArchitecturalDecisionRecord();
-            this.dValue = adr2md(this.adr);
-        }
-        store.$on("open-adr", this.openAdrFile);
-    },
+const emit = defineEmits<{
+    input: [string];
+    "adr-file": [ArchitecturalDecisionRecord];
+}>();
 
-    watch: {
-        dValue(newValue) {
-            store.updateMdOfCurrentAdr(newValue);
-            this.$emit("input", newValue);
-        }
-    },
-    methods: {
-        /**
-         * Opens the ADR.
-         *
-         * Checks for parsing issues.
-         * Opens the edited markdown of the parameter adr file.
-         *
-         * @param {object} adrFile - the adr file to be opened (must have an edited md attribute)
-         */
-        openAdrFile(adrFile) {
-            let md = adrFile.editedMd;
-            this.dValue = md;
-            let tmpAdr = md2adr(md);
-            let originalWithoutWhitespace = this.dValue.replace(/[ \r\n]/g, "").replace(/- /g, "* ");
-            let roundtrippedWithoutWhiteSpace = adr2md(tmpAdr)
-                .replace(/[ \r\n]/g, "")
-                .replace(/- /g, "* ");
-            if (originalWithoutWhitespace === roundtrippedWithoutWhiteSpace) {
-                // If the parser did a perfect job, update the ADR.
-                this.adr = tmpAdr;
-                if (this.tab === "Convert") {
-                    this.tab = "MADR Editor";
-                }
-            } else if (this.tab === "MADR Editor") {
-                // Else ask the user to review his ADR.
-                this.tab = "Convert";
-            }
-        },
-        updateAdrToMd(adr) {
-            if (this.tab === "MADR Editor") {
-                this.dValue = adr2md(adr);
-                this.$emit("adr-file", adr);
-            }
-        },
-        updateMdToAdr(md) {
-            if (this.tab !== "MADR Editor") {
-                this.adr = md2adr(md);
-            }
-        },
-        acceptAfterDiff(md) {
-            console.log("Accept in Editor - Switching Tab.");
-            this.updateMdToAdr(md);
-            this.tab = "MADR Editor";
-        },
-        logNotImplemented() {
-            console.log("Not implemented.");
+const adr = ref<ArchitecturalDecisionRecord>(new ArchitecturalDecisionRecord());
+const dValue = ref("# Default ADR Editor heading");
+const tab = ref("MADR Editor");
+const tabs = ["MADR Editor", "Markdown Preview", "Raw Markdown"];
+const alwaysShowMarkdownPreview = ref(false);
+
+const editingAllowed = computed(
+    () =>
+        tab.value === "MADR Editor" ||
+        (typeof dValue.value === "string" && adr2md(md2adr(dValue.value)) === dValue.value)
+);
+
+const displayedTabs = computed(() =>
+    !editingAllowed.value ? tabs.map((val) => (val === "MADR Editor" ? "Convert" : val)) : tabs
+);
+
+// Initial open (replaces the Options API created() hook).
+if (store.currentlyEditedAdr) {
+    openAdrFile(store.currentlyEditedAdr);
+} else {
+    adr.value = new ArchitecturalDecisionRecord();
+    dValue.value = adr2md(adr.value);
+}
+
+// Replaces the old store.$on("open-adr", openAdrFile) subscription.
+watch(
+    () => store.currentlyEditedAdr,
+    (adrFile) => {
+        if (adrFile) {
+            openAdrFile(adrFile);
         }
     }
-};
+);
+
+watch(dValue, (newValue) => {
+    store.updateMdOfCurrentAdr(newValue);
+    emit("input", newValue);
+});
+
+function openAdrFile(adrFile: AdrFile): void {
+    const md = adrFile.editedMd;
+    dValue.value = md;
+    const tmpAdr = md2adr(md);
+    const originalWithoutWhitespace = dValue.value.replace(/[ \r\n]/g, "").replace(/- /g, "* ");
+    const roundtrippedWithoutWhiteSpace = adr2md(tmpAdr)
+        .replace(/[ \r\n]/g, "")
+        .replace(/- /g, "* ");
+    if (originalWithoutWhitespace === roundtrippedWithoutWhiteSpace) {
+        adr.value = tmpAdr;
+        if (tab.value === "Convert") {
+            tab.value = "MADR Editor";
+        }
+    } else if (tab.value === "MADR Editor") {
+        tab.value = "Convert";
+    }
+}
+
+function updateAdrToMd(updated: ArchitecturalDecisionRecord): void {
+    if (tab.value === "MADR Editor") {
+        dValue.value = adr2md(updated);
+        emit("adr-file", updated);
+    }
+}
+
+function updateMdToAdr(md: string): void {
+    if (tab.value !== "MADR Editor") {
+        adr.value = md2adr(md);
+    }
+}
+
+function acceptAfterDiff(md: string): void {
+    console.log("Accept in Editor - Switching Tab.");
+    updateMdToAdr(md);
+    tab.value = "MADR Editor";
+}
 </script>
+
+<style scoped>
+/* The raw-markdown editor fills its pane (was an inline max/min-width + height). */
+.raw-editor {
+    max-width: 100%;
+    min-width: 100%;
+    height: 100%;
+}
+</style>

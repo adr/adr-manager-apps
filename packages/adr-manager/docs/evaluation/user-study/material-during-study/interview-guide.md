@@ -3,7 +3,6 @@
 The following sections contain the basic agenda for our semi-structured interviews.
 We will loosely follow these questions based on the participant's responses.
 
-<!-- before the think aloud study -->
 ## Demographic and Professional Background
 
 * Role (e.g. (lead) developer, (lead) architect, data engineer, etc.)
@@ -18,7 +17,6 @@ We will loosely follow these questions based on the participant's responses.
 * Which tools do you use to manage ADRs? (e.g. adr-tools + GitHub, local text editor like VSC, IntelliJ, Confluence, PowerPoint, etc.)
 
 
-<!-- after the think aloud study -->
 ## Functional Suitability
 
 * Which provided functionality needs to be improved?
@@ -29,7 +27,6 @@ We will loosely follow these questions based on the participant's responses.
 * How understandable was the user interface for you?
 * How efficiently usable was the user interface for you?
 * Which modes would you use most often? Would you switch between modes? 
-<!--or some question asking whether we need three vs. two vs. one mode-->
 
 ## Final Verdict
 
@@ -39,4 +36,3 @@ Please indicate your (dis)agreement to the following statements with these 5 lab
 * The functional suitability of the tool is fitting for its purpose.
 * The usability of the tool allows its convenient usage.
 * It is likely that I will use the tool in the future.
-

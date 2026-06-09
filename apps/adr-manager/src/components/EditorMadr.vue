@@ -24,16 +24,21 @@
                     </v-text-field>
                 </v-row>
 
-                <v-alert v-if="isModeTooLow" border="start" type="warning" elevation="2" class="my-4 py-2">
+                <v-alert
+                    v-if="isModeTooLow"
+                    border="start"
+                    border-color="warning"
+                    elevation="2"
+                    class="my-4 py-2 colored-border-alert"
+                >
+                    <template #prepend>
+                        <v-icon color="warning">$warning</v-icon>
+                    </template>
                     <div class="d-flex my-0 py-0">
                         <span class="flex-grow-1 align-self-center my-0 py-0">
                             Some fields of this ADR are not displayed in the current mode.
                         </span>
-                        <v-btn
-                            color="white"
-                            class="justify-self-end align-self-end my-0 py-0"
-                            @click="switchToMinimumRequiredMode()"
-                        >
+                        <v-btn class="justify-self-end align-self-end my-0 py-0" @click="switchToMinimumRequiredMode()">
                             Switch to {{ minimumRequiredModeForAdr(adr) }} Mode
                         </v-btn>
                     </div>
@@ -143,6 +148,15 @@ function switchToMinimumRequiredMode(): void {
     font-family: Roboto, sans-serif;
     font-size: 28px;
     font-weight: 500;
+    letter-spacing: normal;
+    line-height: 20px;
+    height: 32px;
+}
+
+/* Match the compact Vuetify 2 filled+dense field metrics. */
+.title-field :deep(.v-field__input) {
+    padding: 4px 12px 2px;
+    min-height: 40px;
 }
 
 /* Give the context CodeMirror a sensible minimum height. */

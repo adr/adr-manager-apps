@@ -1,7 +1,7 @@
 <template>
     <v-tooltip location="bottom">
         <template #activator="{ props }">
-            <v-icon class="mx-1" v-bind="props">mdi-help-circle-outline</v-icon>
+            <v-icon class="mx-1 help-icon" v-bind="props">mdi-help-circle-outline</v-icon>
         </template>
         <div class="help-tooltip">
             <slot />
@@ -14,5 +14,9 @@
 <style scoped>
 .help-tooltip {
     max-width: 400px;
+}
+
+.help-icon {
+    color: rgba(0, 0, 0, 0.54);
 }
 </style>

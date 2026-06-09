@@ -16,6 +16,7 @@
                         data-cy="search-field-for-adding-repository"
                         v-model="searchText"
                         class="pl-8 pr-4 pt-0 mt-0"
+                        variant="underlined"
                         hide-details
                         clearable
                         append-inner-icon="mdi-magnify"
@@ -59,8 +60,8 @@
                         @click="stageRepostiory(item)"
                     >
                         <v-list-item-title class="d-flex">
-                            {{ item.name }} <v-spacer></v-spacer>
-                            <span class="text-caption text-medium-emphasis"> updated on {{ item.updated }} </span>
+                            {{ item.name }}
+                            <span class="repo-updated"> updated on {{ item.updated }} </span>
                         </v-list-item-title>
                         <v-list-item-subtitle>{{ item.description }}</v-list-item-subtitle>
                         <template #append>
@@ -276,5 +277,12 @@ function errorDialog(): void {
 /* The "Repositories to be added" list stays compact so the search list keeps most of the dialog. */
 .staged-repos {
     max-height: 25%;
+}
+
+/* Styled like the Vuetify 2 v-card-subtitle that sat inline after the repo name. */
+.repo-updated {
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.6);
+    padding: 0 16px;
 }
 </style>

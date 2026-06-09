@@ -10,7 +10,7 @@
                     @mouseenter="hoveredItem = item"
                     @mouseleave="hoveredItem = null"
                 >
-                    <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 mx-0 d-flex cm-gutter">
+                    <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 mx-0 d-flex drag-gutter">
                         <drag
                             v-show="hoveredItem === item || draggedItem === item"
                             :data="item"
@@ -43,8 +43,8 @@
         </v-list-item>
 
         <v-list-item class="align-self-center mx-0 px-0 d-flex" :key="-list.length - 2">
-            <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 cm-gutter"></div>
-            <EditorMadrCodemirror :model-value="lastItem" @update:model-value="onLastInput" />
+            <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 drag-gutter"></div>
+            <EditorMadrCodemirror class="flex-grow-1" :model-value="lastItem" @update:model-value="onLastInput" />
         </v-list-item>
     </v-list>
 </template>
@@ -165,4 +165,10 @@ function moveItem(id: number, newIndex: number): void {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.v-list-item :deep(.v-list-item__content) {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+}
+</style>

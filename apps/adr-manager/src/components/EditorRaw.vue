@@ -4,6 +4,7 @@
             data-cy="markdownText"
             :model-value="modelValue"
             :line-numbers="true"
+            :field="false"
             @update:model-value="onInput"
         />
     </v-card>

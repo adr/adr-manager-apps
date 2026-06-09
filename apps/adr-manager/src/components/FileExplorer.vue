@@ -4,9 +4,11 @@
             <div class="h-100 w-100 position-absolute overflow-y-auto">
                 <v-list density="compact" v-model:opened="openedRepos" data-cy="repoNameList">
                     <v-list-group v-for="repo in folderTree" :key="repo.path" :value="repo.path">
-                        <template #activator="{ props }">
+                        <template #activator="{ props, isOpen }">
                             <v-list-item
                                 v-bind="props"
+                                :active="isOpen"
+                                color="primary"
                                 :prepend-icon="fileTypeIconMapping[repo.fileType] ?? ''"
                                 @click="sendRepo(repo)"
                             >
@@ -48,6 +50,7 @@
                                             ></v-btn>
                                         </template>
                                     </DialogRemoveRepository>
+                                    <v-icon :icon="isOpen ? 'mdi-chevron-up' : 'mdi-chevron-down'"></v-icon>
                                 </template>
                             </v-list-item>
                         </template>
@@ -58,6 +61,7 @@
                             :key="file.path"
                             :value="file.path"
                             :active="file.path === openAdrPath"
+                            color="primary"
                             @click="openFileByPath(file.path)"
                         >
                             <v-tooltip location="bottom" open-delay="500" :text="file.tooltip">
@@ -259,4 +263,19 @@ function findFileByPath(tree: FileNode[], path: string): FileNode | undefined {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+:deep(.v-list-item-title) {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 16px;
+}
+
+:deep(.v-list-item__append .v-btn .v-icon) {
+    color: rgba(0, 0, 0, 0.87);
+}
+
+:deep(.v-list-item__append .v-btn) {
+    width: 30px;
+    height: 30px;
+}
+</style>

@@ -5,7 +5,7 @@
             <v-spacer></v-spacer>
             <ToolbarMenuMode v-if="showEditor" class="mx-0 px-0 pt-0 mt-0 flex-grow-0" />
             <v-spacer></v-spacer>
-            <v-btn class="align-self-center" @click="logOut">Disconnect</v-btn>
+            <v-btn variant="elevated" class="align-self-center" @click="logOut">Disconnect</v-btn>
         </v-toolbar>
 
         <v-card-text class="mx-0 my-0 px-0 py-0 flex-grow-1 position-relative">
@@ -258,13 +258,19 @@ html {
 <style scoped>
 /* Bottom status bar — matches the original light-grey v-system-bar. */
 .editor-statusbar {
-    min-height: 28px;
-    font-size: 0.875rem;
+    height: 24px;
+    min-height: 24px;
+    font-size: 14px;
+    line-height: 21px;
     color: rgba(0, 0, 0, 0.6);
     background-color: #e0e0e0;
 }
 
 .branch-select {
     width: 20%;
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: #000;
 }
 </style>

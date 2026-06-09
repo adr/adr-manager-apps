@@ -1,21 +1,31 @@
 <template>
-    <div ref="host" class="cm-host"></div>
+    <div ref="host" class="cm-host" :class="{ 'cm-field': field }"></div>
 </template>
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, useTemplateRef, watch } from "vue";
-import { EditorState } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers as cmLineNumbers } from "@codemirror/view";
+import { EditorState, RangeSetBuilder } from "@codemirror/state";
+import {
+    Decoration,
+    EditorView,
+    ViewPlugin,
+    keymap,
+    lineNumbers as cmLineNumbers,
+    type DecorationSet,
+    type ViewUpdate
+} from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
-import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
 
 const props = withDefaults(
     defineProps<{
         modelValue: string;
         lineNumbers?: boolean;
+        field?: boolean;
     }>(),
-    { lineNumbers: false }
+    { lineNumbers: false, field: true }
 );
 
 const emit = defineEmits<{
@@ -27,21 +37,68 @@ const emit = defineEmits<{
 const host = useTemplateRef<HTMLDivElement>("host");
 let view: EditorView | null = null;
 
-const theme = EditorView.theme({
+/* Token colors of the CodeMirror 5 default theme used by the original app. */
+const cm5Highlight = HighlightStyle.define([
+    { tag: tags.heading, color: "#00f", fontWeight: "bold", textDecoration: "none" },
+    { tag: tags.list, color: "#05a" },
+    { tag: tags.quote, color: "#090" },
+    { tag: tags.link, color: "#00c", textDecoration: "underline" },
+    { tag: tags.url, color: "#00c" },
+    { tag: tags.emphasis, fontStyle: "italic" },
+    { tag: tags.strong, fontWeight: "bold" }
+]);
+
+/* CodeMirror 5 colored whole list lines (cm-variable-2), not just the bullet. */
+const listLineDeco = Decoration.line({ class: "cm-list-line" });
+const listLines = ViewPlugin.fromClass(
+    class {
+        decorations: DecorationSet;
+        constructor(v: EditorView) {
+            this.decorations = buildListLines(v);
+        }
+        update(u: ViewUpdate) {
+            if (u.docChanged || u.viewportChanged) {
+                this.decorations = buildListLines(u.view);
+            }
+        }
+    },
+    { decorations: (v) => v.decorations }
+);
+
+function buildListLines(v: EditorView): DecorationSet {
+    const builder = new RangeSetBuilder<Decoration>();
+    for (const { from, to } of v.visibleRanges) {
+        for (let pos = from; pos <= to; ) {
+            const line = v.state.doc.lineAt(pos);
+            if (/^\s*([*+-]|\d+\.)\s/.test(line.text)) {
+                builder.add(line.from, line.from, listLineDeco);
+            }
+            pos = line.to + 1;
+        }
+    }
+    return builder.finish();
+}
+
+const fieldTheme = EditorView.theme({
     "&": { backgroundColor: "transparent" },
     ".cm-content": { fontFamily: "Arial, monospace", fontSize: "11pt" }
+});
+
+const rawTheme = EditorView.theme({
+    "&": { backgroundColor: "transparent" }
 });
 
 function buildExtensions() {
     return [
         history(),
         markdown(),
-        syntaxHighlighting(defaultHighlightStyle),
+        syntaxHighlighting(cm5Highlight),
+        listLines,
         EditorView.lineWrapping,
         // CM6 does not capture Tab by default, so Tab moves focus (matching the old extraKeys config).
         keymap.of([...defaultKeymap, ...historyKeymap]),
         props.lineNumbers ? cmLineNumbers() : [],
-        theme,
+        props.field ? fieldTheme : rawTheme,
         EditorView.updateListener.of((u) => {
             if (u.docChanged) {
                 emit("update:modelValue", u.state.doc.toString());
@@ -102,7 +159,16 @@ defineExpose({
 <style scoped>
 .cm-host {
     height: 100%;
-    /* Matches the original `grey lighten-3` Vuetify card the CodeMirror used to sit in. */
+    text-align: left;
+}
+
+/* Matches the original `grey lighten-3` Vuetify card the field CodeMirrors sat in. */
+.cm-field {
+    padding: 4px 0 4px 8px;
     background-color: #eeeeee;
+}
+
+.cm-host :deep(.cm-list-line) {
+    color: #05a;
 }
 </style>

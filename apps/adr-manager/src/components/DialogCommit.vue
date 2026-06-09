@@ -36,6 +36,7 @@
                             <div v-for="(newFile, indexNew) in newFiles" :key="indexNew">
                                 <div data-cy="newFileCheckBoxOuter">
                                     <v-checkbox
+                                        color="primary"
                                         data-cy="newFileCheckBox"
                                         :model-value="newFile.fileSelected"
                                         @update:model-value="
@@ -59,6 +60,7 @@
                             <div v-for="(changedFile, indexChange) in changedFiles" :key="indexChange">
                                 <div>
                                     <v-checkbox
+                                        color="primary"
                                         :model-value="changedFile.fileSelected"
                                         @update:model-value="
                                             (value) => checkboxAction(value ?? false, changedFile.path, changedFiles)
@@ -83,6 +85,7 @@
                             <div v-for="(deletedFile, index) in deletedFiles" :key="index">
                                 <div>
                                     <v-checkbox
+                                        color="primary"
                                         data-cy="deletedFileCheckBox"
                                         :model-value="deletedFile.fileSelected"
                                         @update:model-value="
@@ -118,6 +121,7 @@
                 <v-textarea
                     data-cy="textFieldCommitMessage"
                     label="Commit message"
+                    variant="underlined"
                     auto-grow
                     rows="1"
                     v-model="comMessage"

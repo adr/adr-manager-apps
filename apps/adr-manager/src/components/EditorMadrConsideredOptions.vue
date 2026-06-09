@@ -13,16 +13,21 @@
                 </HelpIcon>
             </h3>
         </v-row>
-        <v-alert v-if="isModeTooLow" border="start" type="warning" elevation="2" class="my-4 py-2">
+        <v-alert
+            v-if="isModeTooLow"
+            border="start"
+            border-color="warning"
+            elevation="2"
+            class="my-4 py-2 colored-border-alert"
+        >
+            <template #prepend>
+                <v-icon color="warning">$warning</v-icon>
+            </template>
             <div class="d-flex my-0 py-0">
                 <span class="flex-grow-1 align-self-center my-0 py-0">
                     Some options have a more detailed description that is not displayed in Basic Mode.
                 </span>
-                <v-btn
-                    color="white"
-                    class="justify-self-end align-self-end my-0 py-0"
-                    @click="switchToProfessionalMode()"
-                >
+                <v-btn class="justify-self-end align-self-end my-0 py-0" @click="switchToProfessionalMode()">
                     Switch to Professional Mode
                 </v-btn>
             </div>
@@ -44,7 +49,7 @@
                     >
                         <div
                             data-cy="checkConsOptAdr"
-                            class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 mx-0 d-flex cm-gutter"
+                            class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 mx-0 d-flex drag-gutter"
                         >
                             <drag
                                 v-show="hoveredOption === item || draggedOption === item"
@@ -82,7 +87,7 @@
             </v-list-item>
 
             <v-list-item class="align-self-center mx-0 px-0 d-flex" :key="adr.highestOptionId">
-                <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 cm-gutter"></div>
+                <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 drag-gutter"></div>
                 <EditorMadrCodemirror :model-value="lastItem" @update:model-value="onLastInput" />
             </v-list-item>
         </v-list>
@@ -106,7 +111,7 @@
                             :class="{ 'chosen-option': isChosenOption(item) }"
                             min-height="36px"
                         >
-                            <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 d-flex cm-gutter">
+                            <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 d-flex drag-gutter">
                                 <div class="mx-0 px-0 flex-grow-1 flex-shrink-1 option-drag-col">
                                     <drag
                                         v-show="hoveredOption === item || draggedOption === item"
@@ -140,10 +145,14 @@
                                 <EditorMadrCodemirror
                                     v-if="editedOptions.includes(item)"
                                     :ref="(el: CmRefEl) => setCmRef(item.id, el)"
-                                    :class="['my-0', 'py-0', 'mr-4']"
+                                    :class="['my-0', 'py-0', 'mr-4', 'option-title']"
                                     v-model="item.title"
                                 />
-                                <button v-else class="flex-grow-1 text-left" @click="toggleExpansionOfOption(item)">
+                                <button
+                                    v-else
+                                    class="flex-grow-1 text-left option-display"
+                                    @click="toggleExpansionOfOption(item)"
+                                >
                                     <div v-if="!expandedOptions.includes(item)">
                                         <span v-text="item.title"></span>
                                     </div>
@@ -171,7 +180,7 @@
                                 </v-btn>
                             </div>
 
-                            <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 d-flex cm-gutter">
+                            <div class="align-center flex-shrink-0 flex-grow-0 my-0 py-0 d-flex drag-gutter">
                                 <v-btn
                                     v-show="!expandedOptions.includes(item)"
                                     variant="text"
@@ -239,7 +248,7 @@
 
             <v-card class="my-1 mx-0" flat :key="adr.highestOptionId">
                 <v-card flat class="d-flex">
-                    <div class="cm-gutter"></div>
+                    <div class="drag-gutter"></div>
                     <EditorMadrCodemirror
                         data-cy="considerOptTextAdr"
                         :class="['my-0', 'py-0', 'mr-0']"
@@ -364,6 +373,28 @@ function switchToProfessionalMode(): void {
 /* Chosen-option highlight (replaces the old dynamic Vuetify `:color` of grey/light-green). */
 .chosen-option {
     background-color: #f1f8e9;
+}
+
+/* Vuetify 4 wraps list-item slots in a content div, so stretch it like the old direct flex row. */
+.v-list-item :deep(.v-list-item__content) {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+/* The option title button is plain text in the original (Bootstrap restores native button chrome). */
+.option-display {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+}
+
+/* Editing an option title renders bold, like the original `.optiontitle .CodeMirror *` rule. */
+.option-title :deep(.cm-content) {
+    font-weight: bold;
 }
 
 /* Inner drag-handle column inside the option gutter. */

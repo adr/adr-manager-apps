@@ -1,3 +1,160 @@
+#app {
+    font-family: Roboto, sans-serif;
+    line-height: 1.5;
+}
+
+#app ul,
+#app ol {
+    padding-left: 24px;
+}
+
+/*
+ * Bootstrap 4 (loaded for parity with production) defines these utility classes with
+ * !important, while Vuetify's equivalents do not. Vuetify 2 also used !important, so in
+ * production Vuetify won the cascade. Re-assert the Vuetify values here.
+ */
+.bg-primary {
+    background-color: rgb(var(--v-theme-primary)) !important;
+    color: rgb(var(--v-theme-on-primary)) !important;
+}
+.bg-secondary {
+    background-color: rgb(var(--v-theme-secondary)) !important;
+    color: rgb(var(--v-theme-on-secondary)) !important;
+}
+.bg-success {
+    background-color: rgb(var(--v-theme-success)) !important;
+    color: rgb(var(--v-theme-on-success)) !important;
+}
+.bg-warning {
+    background-color: rgb(var(--v-theme-warning)) !important;
+    color: rgb(var(--v-theme-on-warning)) !important;
+}
+.bg-info {
+    background-color: rgb(var(--v-theme-info)) !important;
+    color: rgb(var(--v-theme-on-info)) !important;
+}
+
+.mt-3 {
+    margin-top: 12px !important;
+}
+.mr-3 {
+    margin-right: 12px !important;
+}
+.mb-3 {
+    margin-bottom: 12px !important;
+}
+.ml-3 {
+    margin-left: 12px !important;
+}
+.mx-3 {
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+}
+.my-3 {
+    margin-top: 12px !important;
+    margin-bottom: 12px !important;
+}
+.mt-4 {
+    margin-top: 16px !important;
+}
+.mr-4 {
+    margin-right: 16px !important;
+}
+.mb-4 {
+    margin-bottom: 16px !important;
+}
+.ml-4 {
+    margin-left: 16px !important;
+}
+.mx-4 {
+    margin-left: 16px !important;
+    margin-right: 16px !important;
+}
+.my-4 {
+    margin-top: 16px !important;
+    margin-bottom: 16px !important;
+}
+.mt-5 {
+    margin-top: 20px !important;
+}
+.mr-5 {
+    margin-right: 20px !important;
+}
+.mb-5 {
+    margin-bottom: 20px !important;
+}
+.ml-5 {
+    margin-left: 20px !important;
+}
+.mx-5 {
+    margin-left: 20px !important;
+    margin-right: 20px !important;
+}
+.my-5 {
+    margin-top: 20px !important;
+    margin-bottom: 20px !important;
+}
+.pt-3 {
+    padding-top: 12px !important;
+}
+.pr-3 {
+    padding-right: 12px !important;
+}
+.pb-3 {
+    padding-bottom: 12px !important;
+}
+.pl-3 {
+    padding-left: 12px !important;
+}
+.px-3 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+.py-3 {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+}
+.pt-4 {
+    padding-top: 16px !important;
+}
+.pr-4 {
+    padding-right: 16px !important;
+}
+.pb-4 {
+    padding-bottom: 16px !important;
+}
+.pl-4 {
+    padding-left: 16px !important;
+}
+.px-4 {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+}
+.py-4 {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+}
+.pt-5 {
+    padding-top: 20px !important;
+}
+.pr-5 {
+    padding-right: 20px !important;
+}
+.pb-5 {
+    padding-bottom: 20px !important;
+}
+.pl-5 {
+    padding-left: 20px !important;
+}
+.px-5 {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+.py-5 {
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+}
+
 a {
     text-decoration: none;
 }
@@ -5,14 +162,147 @@ a:hover {
     text-decoration: underline;
 }
 
+.v-btn {
+    font-weight: 500;
+}
+
 .v-btn:not(.v-tab) {
     text-transform: uppercase;
     letter-spacing: 1.25px;
 }
 
-.cm-gutter {
+.v-btn--size-default {
+    font-size: 0.875rem;
+}
+
+.v-btn--variant-elevated {
+    box-shadow:
+        0 3px 1px -2px rgba(0, 0, 0, 0.2),
+        0 2px 2px 0 rgba(0, 0, 0, 0.14),
+        0 1px 5px 0 rgba(0, 0, 0, 0.12);
+}
+
+.v-btn--variant-elevated:not([class*="bg-"]) {
+    background-color: #f5f5f5;
+    color: rgba(0, 0, 0, 0.87);
+}
+
+.v-btn--variant-elevated.v-theme--dark:not([class*="bg-"]) {
+    background-color: #272727;
+    color: #fff;
+}
+
+.v-btn--disabled.v-btn--variant-text {
+    color: rgba(0, 0, 0, 0.26) !important;
+}
+
+.v-tab.v-btn {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 1.25px;
+}
+
+.v-theme--dark.v-tab.v-btn:not(.v-tab--selected) {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.v-tab.v-btn:hover {
+    text-decoration: underline;
+}
+
+.v-toolbar--density-default > .v-toolbar__content {
+    padding: 4px 16px;
+}
+
+.v-toolbar--density-compact > .v-toolbar__content {
+    padding: 0 16px;
+}
+
+.v-toolbar.bg-primary {
+    box-shadow:
+        0 2px 4px -1px rgba(0, 0, 0, 0.2),
+        0 4px 5px 0 rgba(0, 0, 0, 0.14),
+        0 1px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 959.98px) {
+    .v-toolbar--density-default > .v-toolbar__content {
+        height: 56px !important;
+    }
+}
+
+.v-tooltip > .v-overlay__content {
+    background: rgba(97, 97, 97, 0.9) !important;
+    color: #fff !important;
+    font-size: 14px;
+    line-height: 22px;
+    padding: 5px 16px;
+    border-radius: 4px;
+}
+
+.v-chip--variant-outlined {
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+.v-field--focused:not(.v-field--error) .v-field__outline::after {
+    border-color: rgb(var(--v-theme-primary));
+}
+
+.v-field--focused:not(.v-field--error) .v-label.v-field-label {
+    color: rgb(var(--v-theme-primary));
+}
+
+.v-card-title {
+    padding: 16px 24px 10px;
+    font-size: 20px;
+}
+
+.v-card-text {
+    padding: 0 24px;
+    font-size: 0.875rem;
+    letter-spacing: 0.0071428571em;
+    line-height: 1.375rem;
+}
+
+.v-menu > .v-overlay__content {
+    border-radius: 4px;
+    box-shadow:
+        0 5px 5px -3px rgba(0, 0, 0, 0.2),
+        0 8px 10px 1px rgba(0, 0, 0, 0.14),
+        0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.v-menu > .v-overlay__content > .v-list {
+    box-shadow: none;
+}
+
+.v-dialog > .v-overlay__content > .v-card {
+    box-shadow:
+        0 11px 15px -7px rgba(0, 0, 0, 0.2),
+        0 24px 38px 3px rgba(0, 0, 0, 0.14),
+        0 9px 46px 8px rgba(0, 0, 0, 0.12);
+}
+
+.cm-editor .cm-scroller {
+    line-height: 22px;
+}
+
+.cm-gutters {
+    background-color: #f7f7f7;
+    border-right: 1px solid #ddd;
+}
+
+.cm-lineNumbers .cm-gutterElement {
+    color: #999;
+}
+
+.drag-gutter {
     width: 32px;
     min-width: 32px;
+}
+
+.drag-gutter .v-icon {
+    color: rgba(0, 0, 0, 0.54);
 }
 
 .drag-active {

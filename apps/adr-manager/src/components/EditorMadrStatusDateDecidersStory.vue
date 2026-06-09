@@ -8,7 +8,12 @@
             </v-col>
             <v-col class="mx-0 my-0 px-0 py-0">
                 <label>Status:</label>
-                <v-menu v-model="showStatusDropdown" :close-on-content-click="false" location="bottom end">
+                <v-menu
+                    v-model="showStatusDropdown"
+                    :close-on-content-click="false"
+                    location="bottom end"
+                    min-width="191"
+                >
                     <template #activator="{ props }">
                         <v-chip data-cy="statusPro" variant="outlined" :color="statusColor" v-bind="props">
                             {{ displayedStatus }}
@@ -111,10 +116,10 @@ const statusColor = computed<string | undefined>(() => {
 
 const statusSuggestions = computed(() => statusPresets.filter((item) => item.name !== props.adr.status));
 
-// Focus the status text field shortly after the menu opens (immediate focus does not work).
+// Focus the status text field shortly after the menu opens (the menu grabs focus first).
 watch(showStatusDropdown, (open) => {
     if (open) {
-        setTimeout(() => statusField.value?.focus(), 100);
+        setTimeout(() => statusField.value?.focus(), 250);
     }
 });
 
@@ -132,6 +137,14 @@ function focusDecidersTextField(): void {
 label {
     font-weight: bold;
     margin-right: 5px;
+}
+
+/* The deciders chip hosts a bare input that the Vuetify 2 reset used to strip. */
+.v-chip input {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: inherit;
 }
 
 /* Keeps the "Technical Story:" label column narrow so the editor gets the rest of the row. */

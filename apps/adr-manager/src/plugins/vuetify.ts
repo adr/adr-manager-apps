@@ -7,6 +7,7 @@ import { aliases, mdi } from "vuetify/iconsets/mdi";
 const palette = {
     primary: "#1976D2",
     secondary: "#424242",
+    accent: "#82B1FF",
     success: "#4CAF50",
     error: "#FF5252",
     warning: "#FB8C00",

@@ -18,30 +18,32 @@ allowBuilds:
   keytar: false
   protobufjs: false
   vue-demi: false
+  # Postinstall only bakes FIREBASE_WEBAPP_CONFIG autoinit config; we pass config explicitly.
+  "@firebase/util": false
 
 # Single source of truth for dependency versions shared across packages.
 # Reference these from a package.json with the "catalog:" protocol.
 catalog:
   # Pinned exactly so every package builds against the identical compiler/runtime.
-  typescript: 5.9.3
+  typescript: 6.0.3
   vue: 3.5.35
   # Shared tooling (caret ranges; pnpm resolves the newest installable).
-  "@types/node": ^22.0.0
-  sass: ^1.77.0
-  antlr4: ^4.13.0
-  prettier: ^3.4.0
-  concurrently: ^9.0.0
+  "@types/node": ^22.19.19
+  sass: ^1.100.0
+  antlr4: ^4.13.2
+  prettier: ^3.8.3
+  concurrently: ^10.0.3
   # Build toolchain (Vite for browser bundles, esbuild for the extension host).
-  vite: ^6.0.0
-  "@vitejs/plugin-vue": ^6.0.0
-  esbuild: ^0.25.0
+  vite: ^8.0.16
+  "@vitejs/plugin-vue": ^6.0.7
+  esbuild: ^0.28.0
   # ESLint stack (flat config, shared by @adr-manager/eslint-config).
-  eslint: ^10.0.0
-  typescript-eslint: ^8.0.0
-  "@eslint/js": ^10.0.0
-  eslint-plugin-vue: ^10.9.0
-  vue-eslint-parser: ^10.3.0
-  globals: ^17.0.0
-  eslint-config-prettier: ^10.0.0
+  eslint: ^10.4.1
+  typescript-eslint: ^8.60.1
+  "@eslint/js": ^10.0.1
+  eslint-plugin-vue: ^10.9.2
+  vue-eslint-parser: ^10.4.1
+  globals: ^17.6.0
+  eslint-config-prettier: ^10.1.8
   # Test runner (all packages).
-  vitest: ^3.0.0
+  vitest: ^4.1.8

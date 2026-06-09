@@ -29,8 +29,8 @@ const ctx = await esbuild.context({
   external: ["vscode"],
   format: "cjs",
   platform: "node",
-  // engines.vscode ^1.67.0 -> Electron with Node 16.
-  target: "node16",
+  // engines.vscode ^1.120.0 -> Electron with Node 22.
+  target: "node22",
   minify: production,
   sourcemap: !production,
   sourcesContent: false,

@@ -2,9 +2,8 @@
     "extends": "@adr-manager/tsconfig/vue.json",
     "compilerOptions": {
         "types": ["vite/client", "vitest/globals"],
-        "baseUrl": ".",
         "paths": {
-            "@/*": ["src/*"]
+            "@/*": ["./src/*"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "env.d.ts", "tests/**/*.ts"],

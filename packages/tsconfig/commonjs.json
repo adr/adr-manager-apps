@@ -5,7 +5,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "ESNext",
-    "moduleResolution": "node",
+    // TS 6 deprecates "node" (node10) resolution; "bundler" matches the esbuild-bundled host.
+    "moduleResolution": "bundler",
     "lib": ["ES2020", "DOM"],
     "sourceMap": true,
     "allowJs": true

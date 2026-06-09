@@ -10,7 +10,7 @@
     "url": "https://github.com/adr/vscode-adr-manager.git"
   },
   "engines": {
-    "vscode": "^1.67.0"
+    "vscode": "^1.120.0"
   },
   "categories": [
     "Other"
@@ -163,7 +163,7 @@
     "@adr-manager/prettier-config": "workspace:*",
     "@adr-manager/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "@types/vscode": "^1.67.0",
+    "@types/vscode": "^1.120.0",
     "@vitejs/plugin-vue": "catalog:",
     "concurrently": "catalog:",
     "esbuild": "catalog:",
@@ -176,13 +176,13 @@
   },
   "dependencies": {
     "@adr-manager/core": "workspace:*",
-    "@types/vscode-webview": "^1.57.0",
-    "@vscode/codicons": "^0.0.31",
-    "@vueform/toggle": "^2.1.1",
-    "@vuelidate/core": "^2.0.0",
-    "@vuelidate/validators": "^2.0.0",
+    "@types/vscode-webview": "^1.57.5",
+    "@vscode/codicons": "^0.0.45",
+    "@vueform/toggle": "^2.1.4",
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4",
     "antlr4": "catalog:",
     "vue": "catalog:",
-    "vue-draggable-next": "^2.1.1"
+    "vue-draggable-next": "^2.3.0"
   }
 }

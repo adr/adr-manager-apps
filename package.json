@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "@adr-manager/prettier-config": "workspace:*",
-    "@changesets/cli": "^2.27.0",
-    "@vscode/vsce": "^3.2.1",
+    "@changesets/cli": "^2.31.0",
+    "@vscode/vsce": "^3.9.2",
     "concurrently": "catalog:",
     "prettier": "catalog:"
   }

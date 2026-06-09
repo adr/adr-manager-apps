@@ -1,8 +1,5 @@
 {
   "extends": "@adr-manager/tsconfig/vue.json",
-  "compilerOptions": {
-    "baseUrl": "."
-  },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "tests/**/*.ts", "vitest.config.ts"],
   "exclude": ["node_modules", "src/parser/MADRLexer.js", "src/parser/MADRParser.js", "src/parser/MADRListener.js"]
 }

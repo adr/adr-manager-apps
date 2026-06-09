@@ -46,7 +46,7 @@ const config = (page) => ({
   build: {
     outDir: "dist/web",
     emptyOutDir: false,
-    minify: production ? "esbuild" : false,
+    minify: production,
     sourcemap: false,
     chunkSizeWarningLimit: 1500,
     lib: {

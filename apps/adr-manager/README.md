@@ -80,7 +80,7 @@ Then run the tests with the credentials set as environment variables:
 CYPRESS_OAUTH_E2E_AUTH_ID=<auth-id> CYPRESS_USER=<github-user> pnpm e2e:web
 ```
 
-Alternatively, create `packages/adr-manager/cypress.env.json` and fill it with the following content:
+Alternatively, create `apps/adr-manager/cypress.env.json` and fill it with the following content:
 
 ```json
 {

@@ -3,7 +3,7 @@ name: Web · Tests
 on:
   push:
     paths:
-      - "packages/adr-manager/**"
+      - "apps/adr-manager/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/web-tests.yml"
   workflow_dispatch:

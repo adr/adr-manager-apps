@@ -3,7 +3,7 @@ name: Extension · CI
 on:
   push:
     paths:
-      - "packages/vscode-adr-manager/**"
+      - "apps/vscode-adr-manager/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/extension-ci.yml"
   workflow_dispatch:
@@ -25,4 +25,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: vsix
-          path: packages/vscode-adr-manager/*.vsix
+          path: apps/vscode-adr-manager/*.vsix

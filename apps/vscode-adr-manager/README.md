@@ -119,12 +119,12 @@ See the [root README](../../README.md) for prerequisites and the full developmen
 The commands below are run from the repository root:
 
 - `pnpm watch:ext` watches the extension host bundle (webpack) and the webview bundles (Rollup) in parallel.
-- `pnpm build:ext` builds the extension into `packages/vscode-adr-manager/dist`.
+- `pnpm build:ext` builds the extension into `apps/vscode-adr-manager/dist`.
 - `pnpm test:ext` runs the extension tests.
 - `pnpm lint:ext` lints the extension.
 - `pnpm vsix` packages the extension as a VSIX file.
 
-To debug the extension, open the `packages/vscode-adr-manager` folder in VS Code and press `F5` to launch an Extension Development Host using the `Run Extension` launch configuration.
+To debug the extension, open the `apps/vscode-adr-manager` folder in VS Code and press `F5` to launch an Extension Development Host using the `Run Extension` launch configuration.
 
 ## Known Issues
 

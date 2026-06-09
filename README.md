@@ -17,8 +17,8 @@ The apps share a common core and tooling, and are developed, tested, versioned, 
 
 | Package                        | Path                                                         | Description                                                                                                                                           |
 | ------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `adr-manager`                  | [`packages/adr-manager`](packages/adr-manager)               | Web app (Vue 3, Vuetify, Vite, TypeScript, CodeMirror 6) for managing MADRs in GitHub repositories via GitHub OAuth                                   |
-| `vscode-adr-manager`           | [`packages/vscode-adr-manager`](packages/vscode-adr-manager) | VS Code extension for managing MADRs in single-root, multi-root, and folder-based workspaces, with commands, context menus, snippets, and diagnostics |
+| `adr-manager`                  | [`apps/adr-manager`](apps/adr-manager)               | Web app (Vue 3, Vuetify, Vite, TypeScript, CodeMirror 6) for managing MADRs in GitHub repositories via GitHub OAuth                                   |
+| `vscode-adr-manager`           | [`apps/vscode-adr-manager`](apps/vscode-adr-manager) | VS Code extension for managing MADRs in single-root, multi-root, and folder-based workspaces, with commands, context menus, snippets, and diagnostics |
 | `@adr-manager/core`            | [`packages/core`](packages/core)                             | Shared MADR parser (ANTLR4), ADR domain model, and utilities used by both apps                                                                        |
 | `@adr-manager/eslint-config`   | [`packages/eslint-config`](packages/eslint-config)           | Shared ESLint flat configs (`base`, `vue`, `node`)                                                                                                    |
 | `@adr-manager/prettier-config` | [`packages/prettier-config`](packages/prettier-config)       | Shared Prettier configuration                                                                                                                         |
@@ -28,8 +28,8 @@ The two apps are the deliverables. The `@adr-manager/*` packages are private wor
 
 Package-specific usage details live in the package docs:
 
-- [Web app README](packages/adr-manager/README.md)
-- [VS Code extension README](packages/vscode-adr-manager/README.md) and [CHANGELOG](packages/vscode-adr-manager/CHANGELOG.md)
+- [Web app README](apps/adr-manager/README.md)
+- [VS Code extension README](apps/vscode-adr-manager/README.md) and [CHANGELOG](apps/vscode-adr-manager/CHANGELOG.md)
 
 ## Architecture
 
@@ -74,8 +74,8 @@ You need a GitHub account with access to a repository that contains MADRs, norma
 
 There are two ways to run the extension locally:
 
-- **Debug with F5**: open the `packages/vscode-adr-manager` folder in VS Code (the `Run Extension` launch configuration lives in that folder) and press `F5`. This builds the extension and opens an Extension Development Host.
-- **Watch mode**: run `pnpm watch:ext` from the workspace root. This watches the extension host bundle (webpack) and the webview bundles (Rollup) in parallel and writes output to `packages/vscode-adr-manager/dist`.
+- **Debug with F5**: open the `apps/vscode-adr-manager` folder in VS Code (the `Run Extension` launch configuration lives in that folder) and press `F5`. This builds the extension and opens an Extension Development Host.
+- **Watch mode**: run `pnpm watch:ext` from the workspace root. This watches the extension host bundle (webpack) and the webview bundles (Rollup) in parallel and writes output to `apps/vscode-adr-manager/dist`.
 
 In the Extension Development Host, open a folder that contains an ADR directory and run `Open ADR Manager` from the Command Palette.
 The extension defaults to `docs/decisions` for the ADR directory. Change it with the `adrManager.adrDirectory` setting or the `Change ADR Directory` command.
@@ -84,18 +84,18 @@ The extension defaults to `docs/decisions` for the ADR directory. Change it with
 
 ```bash
 pnpm build      # build every package
-pnpm build:web  # web app only: vue-tsc type check + Vite build -> packages/adr-manager/dist
-pnpm build:ext  # extension only: webpack + Rollup -> packages/vscode-adr-manager/dist
+pnpm build:web  # web app only: vue-tsc type check + Vite build -> apps/adr-manager/dist
+pnpm build:ext  # extension only: webpack + Rollup -> apps/vscode-adr-manager/dist
 ```
 
 Package the extension as a VSIX file and install it into VS Code:
 
 ```bash
 pnpm vsix
-code --install-extension packages/vscode-adr-manager/vscode-adr-manager-<version>.vsix
+code --install-extension apps/vscode-adr-manager/vscode-adr-manager-<version>.vsix
 ```
 
-Replace `<version>` with the version from `packages/vscode-adr-manager/package.json`.
+Replace `<version>` with the version from `apps/vscode-adr-manager/package.json`.
 
 ## Testing and code quality
 
@@ -119,7 +119,7 @@ pnpm dev:web   # in a separate terminal
 CYPRESS_OAUTH_E2E_AUTH_ID=<auth-id> CYPRESS_USER=<github-user> pnpm e2e:web
 ```
 
-Alternatively, create `packages/adr-manager/cypress.env.json`:
+Alternatively, create `apps/adr-manager/cypress.env.json`:
 
 ```json
 {
@@ -137,7 +137,7 @@ Releases are coordinated with [Changesets](https://github.com/changesets/changes
 1. Add a changeset alongside any change that should be released: `pnpm changeset`.
 2. On every push to `main`, the `Release` workflow opens or updates a **Version Packages (joint release)** PR that applies pending changesets (version bumps and changelogs, via `pnpm version-packages`).
 3. Merging that PR publishes the bumped versions to `main`. Neither package is published to npm. Instead:
-   - the web app deploys to GitHub Pages automatically (`Web · Build & Publish` pushes `packages/adr-manager/dist` to the `gh-pages` branch), and
+   - the web app deploys to GitHub Pages automatically (`Web · Build & Publish` pushes `apps/adr-manager/dist` to the `gh-pages` branch), and
    - the extension is published to the VS Code Marketplace by manually running the `Extension · Publish` workflow (`vsce publish`, requires the `VSCE_PAT` secret).
 
 | Workflow                | Trigger                                     | What it does                                               |

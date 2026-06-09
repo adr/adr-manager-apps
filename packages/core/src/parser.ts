@@ -214,7 +214,6 @@ class MADRGenerator extends MADRListener {
   }
 }
 
-/** Error listener that records syntax errors during parsing. */
 class MADRErrorListener extends ErrorListener<unknown> {
   syntaxErrors: ParseError[] = [];
 

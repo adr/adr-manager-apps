@@ -1,11 +1,7 @@
 import { createShortTitle as coreCreateShortTitle } from "@adr-manager/core";
 
-// Case-conversion and clean-up helpers now live in the shared core package.
 export { cleanUpString, snakeCase2naturalCase, naturalCase2snakeCase, naturalCase2titleCase } from "@adr-manager/core";
 
-/**
- * Returns a shortened title. The extension strips backticks (the web app keeps them).
- */
 export function createShortTitle(title: string): string {
   return coreCreateShortTitle(title, { stripBackticks: true });
 }

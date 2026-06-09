@@ -1,6 +1,3 @@
-/**
- * Helper for clean-up: trims a string, or returns "" for non-strings.
- */
 export function cleanUpString(value: string | undefined | null): string {
   return typeof value === "string" ? value.trim() : "";
 }

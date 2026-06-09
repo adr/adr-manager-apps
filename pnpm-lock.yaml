@@ -56,12 +56,18 @@ importers:
 
   .:
     devDependencies:
+      '@adr-manager/prettier-config':
+        specifier: workspace:*
+        version: link:packages/prettier-config
       '@changesets/cli':
         specifier: ^2.27.0
         version: 2.31.0(@types/node@22.19.19)
       '@vscode/vsce':
         specifier: ^3.2.1
         version: 3.9.1
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.3
 
   packages/adr-manager:
     dependencies:

@@ -1,31 +1,21 @@
-/* Global app styling that matches the original (Vuetify 2) look in Vuetify 4. */
-
-/* The app was built against Bootstrap's link reset (no underline by default, underline on hover).
-   Bootstrap was removed because it clashed with Vuetify 4's utility classes, so restore the reset. */
 a {
-    text-decoration: none;
+  text-decoration: none;
 }
 a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
-/* Vuetify 2 rendered buttons UPPERCASE with letter-spacing; Vuetify 4 does not.
-   Tabs intentionally stay normal-case (the original used text-transform: none on tabs). */
 .v-btn:not(.v-tab) {
-    text-transform: uppercase;
-    letter-spacing: 1.25px;
+  text-transform: uppercase;
+  letter-spacing: 1.25px;
 }
 
-/* Shared by the list editors (EditorMadrList / EditorMadrConsideredOptions). */
-
-/* Fixed-width gutter holding the drag handle / chosen-option check icon. */
 .cm-gutter {
-    width: 32px;
-    min-width: 32px;
+  width: 32px;
+  min-width: 32px;
 }
 
-/* Left border shown on the row currently being dragged over (replaces a dynamic inline style). */
 .drag-active {
-    border-left: 2px solid #1976d2;
-    margin-left: -2px;
+  border-left: 2px solid #1976d2;
+  margin-left: -2px;
 }

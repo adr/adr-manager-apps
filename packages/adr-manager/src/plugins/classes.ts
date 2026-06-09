@@ -1,7 +1,6 @@
 import type { AdrFile } from "@/types/adr";
 import type { Branch, RepositoryInit, RepositoryChanges, StoredRepository } from "@/types/repository";
 
-// The ADR domain model and short-title helper now live in the shared core package.
 export { ArchitecturalDecisionRecord, createShortTitle } from "@adr-manager/core";
 
 export class Repository {

@@ -146,7 +146,6 @@ export class ArchitecturalDecisionRecord {
     this.decisionOutcome = fields.decisionOutcome ?? this.decisionOutcome;
     this.links = fields.links ?? this.links;
     if (fields.consideredOptions && fields.consideredOptions.length) {
-      // Reset and re-add the considered options (also resets highestOptionId).
       this.highestOptionId = 0;
       this.consideredOptions = [];
       for (const option of fields.consideredOptions) {

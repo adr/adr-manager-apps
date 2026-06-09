@@ -7,6 +7,7 @@
   "engines": {
     "node": ">=22.13"
   },
+  "prettier": "@adr-manager/prettier-config",
   "scripts": {
     "build": "pnpm -r --if-present build",
     "build:web": "pnpm --filter adr-manager build",
@@ -19,12 +20,15 @@
     "e2e:web": "pnpm --filter adr-manager e2e:test",
     "lint:ext": "pnpm --filter vscode-adr-manager lint",
     "vsix": "pnpm --filter vscode-adr-manager exec vsce package --no-dependencies",
-    "format": "pnpm --filter adr-manager format",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown",
     "changeset": "changeset",
     "version-packages": "changeset version"
   },
   "devDependencies": {
+    "@adr-manager/prettier-config": "workspace:*",
     "@changesets/cli": "^2.27.0",
-    "@vscode/vsce": "^3.2.1"
+    "@vscode/vsce": "^3.2.1",
+    "prettier": "catalog:"
   }
 }

@@ -1,121 +1,112 @@
-# ADR-Manager ![General cypress report](https://github.com/adr/adr-manager/workflows/General%20cypress%20report/badge.svg?branch=cypress-integration) [![GitHub license](https://img.shields.io/github/license/adr/adr-manager)](https://github.com/adr/adr-manager/blob/main/LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/adr/adr-manager)](https://github.com/adr/adr-manager/commits/main) [![GitHub issues](https://img.shields.io/github/issues/adr/adr-manager)](https://github.com/adr/adr-manager/issues) [![GitHub stars](https://img.shields.io/github/stars/adr/adr-manager)](https://github.com/adr/adr-manager/stargazers)
+# ADR Manager (web app)
 
 > A web-based application for the efficient creation and management of [architectural decision records (ADRs)](https://adr.github.io) in Markdown (MADR)
+
+This is the `adr-manager` web app package of the [`adr-manager-apps`](../../README.md) monorepo.
+For installation, build, test, and release instructions that apply to the whole repository, see the [root README](../../README.md).
+This document covers what is specific to the web app.
 
 ## Description
 
 [MADR](https://adr.github.io/madr/) is a Markdown template for quickly capturing architectural decisions.
 It offers a naming scheme and template to keep the layout of recorded decisions consistent.
 Each decision is stored in a separate file.
-The ADR Manager currently only supports the management of MADRs stored in the folder `docs/adr` in GitHub repositories.
+The web app supports the management of MADRs stored in the folder `docs/adr` in GitHub repositories.
+
+The web app is built with Vue 3, Vuetify, Vite, TypeScript, and CodeMirror 6, and it shares the MADR parser and ADR domain model with the VS Code extension through the [`@adr-manager/core`](../core) package.
 
 ## Quick Start
 
-You can find the tool at https://adr.github.io/adr-manager.
+You can find the tool at <https://adr.github.io/adr-manager-apps/>.
 
 ## Supported Browsers
 
-Currently, the tool has been successfully tested in Chrome, Firefox, and Opera.
+The tool has been successfully tested in Chrome, Firefox, and Opera.
 
-### Usage
+## Usage
 
 1. After opening the tool, connect to GitHub. The tool needs your permission to access your GitHub repositories and email address.
-2. Add a GitHub repository. If your account does not have access to a repository with MADRs, you can simply fork one, e.g., <https://github.com/JabRef/jabref> or <https://github.com/adr/adr-log>.
-3. Now, you can edit any files in `docs/adr` of the GitHub repository.
+2. Add a GitHub repository. If your account does not have access to a repository with MADRs, you can simply fork one, for example <https://github.com/JabRef/jabref> or <https://github.com/adr/adr-log>.
+3. Now you can edit any files in `docs/adr` of the GitHub repository.
    Edit existing ADRs or create new ones.
    One of the most important features is the MADR Editor that allows you to quickly draft a MADR while ensuring a consistent format.
    ![This is the MADR editor in advanced mode.](docs/img/editor-screenshot.png)
-4. Do not forget to push your changes to GitHub, once you are done with editing the files.
+4. Do not forget to push your changes to GitHub once you are done with editing the files.
 
 Some technical notes:
 
-- The `authID` (which enables the connection to GitHub) and changes to ADRs are stored in the local storage.
+- The `authId` (which enables the connection to GitHub) and changes to ADRs are stored in local storage.
   That way they are not lost when you reload the page or restart the browser.
   However, changes will be lost when you either
-  - Clear local storage or
-  - Press the `Disconnect` button.
+  - clear local storage or
+  - press the `Disconnect` button.
 - The general idea is that you directly push your changes to GitHub after editing.
 - During development, we may remove permissions for the OAuth App from time to time.
-  Do not be surprised, if you have to give permissions repeatedly.
+  Do not be surprised if you have to give permissions repeatedly.
 
 ## Development
 
-### Prerequisites
+Common workflow (install, lint, format, releases) lives in the [root README](../../README.md).
+The commands below are run from the repository root and cover what is specific to the web app.
 
-- Node.js and npm
-- A GitHub account with access to a repository with MADRs
+### Dev server
 
-### Installation
+```bash
+pnpm dev:web
+```
 
-To run the project locally, follow these steps:
+The Vite dev server runs at `http://localhost:8000/adr-manager-apps/` (the `/adr-manager-apps/` base path matches the GitHub Pages deployment).
+The main manager route is `http://localhost:8000/adr-manager-apps/#/manager`.
 
-1. Clone this repository.
-2. Install dependencies with `npm install`.
-3. Compile and start the application with `npm start`.
+Even when you run it locally, you need to connect to GitHub to use any functionality.
+You need a GitHub account with access to a repository that contains MADRs, normally under `docs/adr`.
 
-Note that, even when you run it locally, you need to connect to GitHub to use any functionality.
+### End-to-end tests
 
-### Using End-2-End Tests Locally
+We use [Cypress](https://www.cypress.io/) for end-to-end testing.
+The Cypress tests need the web app dev server running and a valid GitHub OAuth session.
+The CI pipeline provides the necessary OAuth `authId` as an environment variable.
+Locally you need to provide one yourself.
 
-We use [Cypress](https://www.cypress.io/) for e2e testing.
-The CI pipeline provides the necessary Oauth `authId` as an ENV variable.
-Locally, however, you'll need to provide one yourself.
-You can either set `CYPRESS_OAUTH_E2E_AUTH_ID` and `CYPRESS_USER` containing the `authId` and `user` or create a `cypress.env.json` file and fill it with the following content:
+Run the dev server in one terminal:
+
+```bash
+pnpm dev:web
+```
+
+Then run the tests with the credentials set as environment variables:
+
+```bash
+CYPRESS_OAUTH_E2E_AUTH_ID=<auth-id> CYPRESS_USER=<github-user> pnpm e2e:web
+```
+
+Alternatively, create `packages/adr-manager/cypress.env.json` and fill it with the following content:
 
 ```json
 {
-  "OAUTH_E2E_AUTH_ID": "*********",
-  "USER": "***********"
+  "OAUTH_E2E_AUTH_ID": "<auth-id>",
+  "USER": "<github-user>"
 }
 ```
 
-The value of `OAUTH_E2E_AUTH_ID` and `USER` needs to be a valid `authId` and `user` from an active OAuth session, which you can obtain in the local storage (Chrome developer console -> Application -> Storage -> Local Storage -> `http://localhost:8080` -> `authId`, `user`)
+The value of `OAUTH_E2E_AUTH_ID` and `USER` needs to be a valid `authId` and `user` from an active OAuth session.
+To get a local `authId`, sign in through the running web app, open the browser developer tools, and inspect local storage for `http://localhost:8000` (`authId`, `user`).
 The involved GitHub account also needs to have developer access to the repo `adr/adr-test-repository-empty`.
-Lastly, don't forget to start the app before running the e2e tests (`npm start`).
 
-### Useful Commands
+### Backend setup
 
-The following commands are useful for development:
-
-```bash
-# install dependencies
-npm install
-
-# build and start with hot-reload for development
-npm start
-
-# build and minify for production
-npm run build
-
-# run unit tests
-npm test
-
-# run e2e tests
-npm run e2e:test
-
-# open cypress GUI for e2e tests
-npx cypress open
-
-# run a single e2e test
-npx cypress run --spec ./cypress/e2e/adrManagerTest/<file-name>
-
-# format code with prettier (do this before you commit and push)
-npm run format
-```
-
-### Backend Setup
-
-The project uses [OAuth] for the authentication to GitHub.
+The project uses OAuth for the authentication to GitHub.
 If you do not want to use this instance, you can easily set up your own by following these steps:
 
 1. Create an OAuth application on GitHub (see [here](https://docs.github.com/en/github-ae@latest/developers/apps/creating-an-oauth-app)).
-   - Copy the Client ID and Client Secret of the app (you'll need them later).
-2. Create a Github app on Firebase and in its configurations, set the Client ID and Client Secret as copied from the above Github app
+   - Copy the Client ID and Client Secret of the app (you will need them later).
+2. Create a GitHub app on Firebase and in its configuration set the Client ID and Client Secret as copied from the above GitHub app.
 
-- Set the callback URL in Github Oauth app configuration to the one provided by Firebase.
+- Set the callback URL in the GitHub OAuth app configuration to the one provided by Firebase.
 
-## Project Context
+## Project context
 
-This project was started as an undergraduate research project at the Institute of Software Engineering of the University of Stuttgart, Germany.
+The web-based ADR Manager started as an undergraduate research project at the Institute of Software Engineering of the University of Stuttgart, Germany.
 It was also submitted to the [ICSE Score Contest 2021](https://conf.researchr.org/home/icse-2021/score-2021).
-Since then, it has been given over to the [ADR organization on GitHub](https://github.com/adr), where it is maintained and extended.
+Since then it has been given over to the [ADR organization on GitHub](https://github.com/adr), where it is maintained and extended.
+See the [root README](../../README.md) for the full acknowledgements.

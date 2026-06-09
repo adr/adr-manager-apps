@@ -1,13 +1,12 @@
-// See https://go.microsoft.com/fwlink/?LinkId=733558
-// for the documentation about the tasks.json format
+// Watchers for the F5 (Run Extension) flow. The compound "watch" task is the default
+// build task referenced by launch.json and fans out to the three background watchers.
 {
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "npm",
-      "script": "watch",
-      "problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"],
-      "isBackground": true,
+      "label": "watch",
+      "dependsOn": ["watch:host", "watch:web", "watch:tsc"],
+      "dependsOrder": "parallel",
       "presentation": {
         "reveal": "never",
         "group": "watchers"
@@ -16,6 +15,71 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "watch:host",
+      "type": "npm",
+      "script": "watch:host",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never",
+        "group": "watchers"
+      },
+      "problemMatcher": {
+        "owner": "esbuild",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "^✘ \\[ERROR\\] (.+)$",
+            "message": 1
+          },
+          {
+            "regexp": "^    (.+):(\\d+):(\\d+):$",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "\\[watch\\] build started",
+          "endsPattern": "\\[watch\\] build finished"
+        }
+      }
+    },
+    {
+      "label": "watch:web",
+      "type": "npm",
+      "script": "watch:web",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never",
+        "group": "watchers"
+      },
+      "problemMatcher": {
+        "owner": "vite",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^✘ \\[ERROR\\] (.+)$",
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "\\[watch\\] webviews build started",
+          "endsPattern": "\\[watch\\] webviews build finished"
+        }
+      }
+    },
+    {
+      "label": "watch:tsc",
+      "type": "npm",
+      "script": "watch:tsc",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "never",
+        "group": "watchers"
+      },
+      "problemMatcher": "$tsc-watch"
     }
   ]
 }

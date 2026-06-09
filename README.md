@@ -58,6 +58,14 @@ If pnpm reports blocked dependency build scripts, review and approve them with `
 
 ## Development
 
+Run both apps at once (Vite dev server plus the extension watchers):
+
+```bash
+pnpm dev
+```
+
+Or run them individually as described below.
+
 ### Web app
 
 ```bash
@@ -75,7 +83,7 @@ You need a GitHub account with access to a repository that contains MADRs, norma
 There are two ways to run the extension locally:
 
 - **Debug with F5**: open the `apps/vscode-adr-manager` folder in VS Code (the `Run Extension` launch configuration lives in that folder) and press `F5`. This builds the extension and opens an Extension Development Host.
-- **Watch mode**: run `pnpm watch:ext` from the workspace root. This watches the extension host bundle (webpack) and the webview bundles (Rollup) in parallel and writes output to `apps/vscode-adr-manager/dist`.
+- **Watch mode**: run `pnpm watch:ext` from the workspace root. This watches the extension host bundle (esbuild), the webview bundles (Vite), and the type checker (tsc) in parallel and writes output to `apps/vscode-adr-manager/dist`.
 
 In the Extension Development Host, open a folder that contains an ADR directory and run `Open ADR Manager` from the Command Palette.
 The extension defaults to `docs/decisions` for the ADR directory. Change it with the `adrManager.adrDirectory` setting or the `Change ADR Directory` command.
@@ -85,7 +93,7 @@ The extension defaults to `docs/decisions` for the ADR directory. Change it with
 ```bash
 pnpm build      # build every package
 pnpm build:web  # web app only: vue-tsc type check + Vite build -> apps/adr-manager/dist
-pnpm build:ext  # extension only: webpack + Rollup -> apps/vscode-adr-manager/dist
+pnpm build:ext  # extension only: esbuild (host) + Vite (webviews) -> apps/vscode-adr-manager/dist
 ```
 
 Package the extension as a VSIX file and install it into VS Code:
@@ -99,16 +107,16 @@ Replace `<version>` with the version from `apps/vscode-adr-manager/package.json`
 
 ## Testing and code quality
 
-| Command                               | What it runs                                               |
-| ------------------------------------- | ---------------------------------------------------------- |
-| `pnpm test`                           | All package test suites                                    |
-| `pnpm test:web`                       | Web app unit tests (Vitest)                                |
-| `pnpm test:ext`                       | Extension tests (Jest, `pretest` compiles and lints first) |
-| `pnpm e2e:web`                        | Web app end-to-end tests (Cypress)                         |
-| `pnpm lint:ext`                       | Extension linting (ESLint)                                 |
-| `pnpm --filter adr-manager lint`      | Web app linting (ESLint)                                   |
-| `pnpm --filter adr-manager typecheck` | Web app type check (vue-tsc)                               |
-| `pnpm format` / `pnpm format:check`   | Prettier write / check across the whole repository         |
+| Command                             | What it runs                                                      |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| `pnpm test`                         | All package test suites (Vitest)                                  |
+| `pnpm test:web`                     | Web app unit tests                                                |
+| `pnpm test:ext`                     | Extension tests (`pretest` typechecks, compiles, and lints first) |
+| `pnpm e2e:web`                      | Web app end-to-end tests (Cypress)                                |
+| `pnpm lint`                         | Linting (ESLint) in every package with a `lint` script            |
+| `pnpm typecheck`                    | Type checks in every package with a `typecheck` script            |
+| `pnpm lint:ext`                     | Extension linting (ESLint)                                        |
+| `pnpm format` / `pnpm format:check` | Prettier write / check across the whole repository                |
 
 ### End-to-end tests
 
@@ -140,13 +148,14 @@ Releases are coordinated with [Changesets](https://github.com/changesets/changes
    - the web app deploys to GitHub Pages automatically (`Web · Build & Publish` pushes `apps/adr-manager/dist` to the `gh-pages` branch), and
    - the extension is published to the VS Code Marketplace by manually running the `Extension · Publish` workflow (`vsce publish`, requires the `VSCE_PAT` secret).
 
-| Workflow                | Trigger                                     | What it does                                               |
-| ----------------------- | ------------------------------------------- | ---------------------------------------------------------- |
-| `Extension · CI`        | Push touching the extension, manual         | Compiles, lints, tests, and uploads a VSIX artifact        |
-| `Web · Tests`           | Push touching the web app, manual           | Vitest unit tests and Cypress e2e tests (Chrome)           |
-| `Release`               | Push to `main`                              | Opens/updates the Changesets "Version Packages" PR         |
-| `Web · Build & Publish` | Push to `main` touching the web app, manual | Builds the web app and deploys it to the `gh-pages` branch |
-| `Extension · Publish`   | Manual                                      | Publishes the extension to the VS Code Marketplace         |
+| Workflow                | Trigger                                                        | What it does                                               |
+| ----------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
+| `Repo · Checks`         | Every push, manual                                             | Prettier check, type checks, and linting across the repo   |
+| `Extension · CI`        | Push touching the extension or shared packages, manual         | Compiles, lints, tests, and uploads a VSIX artifact        |
+| `Web · Tests`           | Push touching the web app or shared packages, manual           | Vitest unit tests and Cypress e2e tests (Chrome)           |
+| `Release`               | Push to `main`                                                 | Opens/updates the Changesets "Version Packages" PR         |
+| `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual | Builds the web app and deploys it to the `gh-pages` branch |
+| `Extension · Publish`   | Manual                                                         | Publishes the extension to the VS Code Marketplace         |
 
 ## Repository structure
 
@@ -154,13 +163,15 @@ Releases are coordinated with [Changesets](https://github.com/changesets/changes
 .
 |-- .changeset/                  # changesets config and pending release notes
 |-- .github/workflows/           # CI, release, and publish pipelines
-|-- packages/
+|-- apps/
 |   |-- adr-manager/             # web app (src, tests, cypress)
-|   |-- vscode-adr-manager/      # VS Code extension (src, webviews in web/)
+|   `-- vscode-adr-manager/      # VS Code extension (src, webviews in web/)
+|-- packages/
 |   |-- core/                    # shared MADR parser and ADR domain model
 |   |-- eslint-config/           # shared ESLint flat configs
 |   |-- prettier-config/         # shared Prettier config
 |   `-- tsconfig/                # shared TypeScript configs
+|-- .nvmrc                       # Node version used by CI (and nvm users)
 |-- package.json                 # root orchestration scripts
 |-- pnpm-workspace.yaml          # workspace layout, dependency catalog, install hardening
 `-- README.md
@@ -182,6 +193,8 @@ For a full validation pass, run:
 ```bash
 pnpm build
 pnpm test
+pnpm typecheck
+pnpm lint
 pnpm format:check
 ```
 

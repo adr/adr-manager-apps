@@ -12,9 +12,12 @@
     "build": "pnpm -r --if-present build",
     "build:web": "pnpm --filter adr-manager build",
     "build:ext": "pnpm --filter vscode-adr-manager package",
+    "dev": "concurrently -n web,ext -c blue,magenta \"pnpm dev:web\" \"pnpm watch:ext\"",
     "dev:web": "pnpm --filter adr-manager dev",
     "watch:ext": "pnpm --filter vscode-adr-manager watch",
     "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
     "test:web": "pnpm --filter adr-manager test",
     "test:ext": "pnpm --filter vscode-adr-manager test",
     "e2e:web": "pnpm --filter adr-manager e2e:test",
@@ -29,6 +32,7 @@
     "@adr-manager/prettier-config": "workspace:*",
     "@changesets/cli": "^2.27.0",
     "@vscode/vsce": "^3.2.1",
+    "concurrently": "catalog:",
     "prettier": "catalog:"
   }
 }

@@ -1,45 +1,7 @@
-import { cleanPathString, createShortTitle } from "../plugins/utils";
-import { naturalCase2snakeCase, snakeCase2naturalCase } from "../plugins/utils";
-import { matchesMadrTitleFormat } from "../plugins/utils";
-
-describe("Creating Short Title Function Test", () => {
-  test("Markdown link followed by text", () => {
-    expect(
-      createShortTitle("[MADR](https://adr.github.io/madr/) 2.1.2 – The Markdown Architectural Decision Records")
-    ).toBe("MADR 2.1.2");
-  });
-
-  test("Markdown link preceded by text", () => {
-    expect(createShortTitle("Include in [adr-tools](https://github.com/npryce/adr-tools)")).toBe(
-      "Include in adr-tools"
-    );
-  });
-
-  test("Wrong balancing of brackets", () => {
-    expect(createShortTitle("Include in [adr-tools](https://github.com/npryce/adr-tools")).toBe(
-      "Include in [adr-tools](https://github.com/npryce/adr-tools"
-    );
-  });
-
-  test("Single closing brace", () => {
-    expect(createShortTitle("Con. Opt 1)")).toBe("Con. Opt 1)");
-  });
-});
-
-describe("Change Casings Tests", () => {
-  /**
-   * Tests of the utility functions snakeCase2naturalCase and naturalCase2snakeCase
-   */
-  test("Test snakeCase2naturalCase", () => {
-    const result = snakeCase2naturalCase("0005-use-dashes-in-file-names.md");
-    expect(result).toBe("0005 Use Dashes In File Names.md");
-  });
-
-  test("Test naturalCase2snakeCase", () => {
-    const result = naturalCase2snakeCase("0005 Use dashes in File names.md");
-    expect(result).toBe("0005-use-dashes-in-file-names.md");
-  });
-});
+// Tests for the extension-specific utilities. The shared parser/title/casing
+// logic is tested in @adr-manager/core (packages/core/tests).
+import { describe, expect, test } from "vitest";
+import { cleanPathString, matchesMadrTitleFormat, validateDirectoryName } from "../plugins/utils";
 
 describe("Test MADR Title Format Match", () => {
   test("Valid MADR titles", () => {
@@ -88,7 +50,7 @@ describe("Test Cleaning Path Strings", () => {
       "/backslash/at/the/end/"
     ];
     for (let i = 0; i < uncleanedPaths.length; i++) {
-      expect(cleanPathString(uncleanedPaths[i])).toBe(cleanedPaths[i]);
+      expect(cleanPathString(uncleanedPaths[i]!)).toBe(cleanedPaths[i]);
     }
   });
   test("Replace multiple forward slashes with single forward slash", () => {
@@ -101,7 +63,38 @@ describe("Test Cleaning Path Strings", () => {
       "/multiple/forward/slashes/at/the/end/"
     ];
     for (let i = 0; i < uncleanedPaths.length; i++) {
-      expect(cleanPathString(uncleanedPaths[i])).toBe(cleanedPaths[i]);
+      expect(cleanPathString(uncleanedPaths[i]!)).toBe(cleanedPaths[i]);
     }
+  });
+});
+
+describe("Test Directory Name Validation", () => {
+  test("Valid directory names", () => {
+    const validNames = ["docs", "decision records", "0001-decisions", "docs.adr"];
+    validNames.forEach((name) => {
+      expect(validateDirectoryName(name)).toBe(true);
+    });
+  });
+
+  test("Invalid directory names", () => {
+    const invalidNames = [
+      " starts-with-whitespace",
+      "ends-with-whitespace ",
+      "ends-with-dot.",
+      "contains/slash",
+      "contains\\backslash",
+      'contains"quote',
+      "contains|pipe",
+      "contains?question",
+      "contains*asterisk",
+      "contains:colon"
+    ];
+    invalidNames.forEach((name) => {
+      expect(validateDirectoryName(name)).toBe(false);
+    });
+  });
+
+  test("Undefined is rejected", () => {
+    expect(validateDirectoryName(undefined)).toBe(false);
   });
 });

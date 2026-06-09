@@ -5,6 +5,7 @@ on:
     branches: [main, publish]
     paths:
       - "apps/adr-manager/**"
+      - "packages/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/web-publish.yml"
   workflow_dispatch:
@@ -23,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22.19.0"
+          node-version-file: ".nvmrc"
       - uses: pnpm/action-setup@v6
         with:
           cache: true

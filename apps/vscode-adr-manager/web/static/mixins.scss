@@ -32,19 +32,16 @@
   height: $size;
 }
 
+// Each image URL appears exactly once: the bundler inlines url(...) assets as base64,
+// so a repeated URL would embed the image multiple times. The light group comes last so
+// it wins over the high-contrast (dark) group when both classes are present.
 @mixin dynamic-logo() {
-  &.vscode-light .logo {
-    content: url("../assets/header-light-theme.png");
-  }
-
-  &.vscode-dark.vscode-high-contrast .logo {
-    content: url("../assets/header-dark-theme.png");
-  }
-
+  &.vscode-dark.vscode-high-contrast .logo,
   &.vscode-high-contrast .logo {
     content: url("../assets/header-dark-theme.png");
   }
 
+  &.vscode-light .logo,
   &.vscode-high-contrast-light .logo {
     content: url("../assets/header-light-theme.png");
   }

@@ -113,12 +113,12 @@ As of now, this extension contributes the following settings:
 
 ## Development
 
-This extension is developed in the [`adr-manager-apps`](../../README.md) monorepo and shares the MADR parser and ADR domain model with the web app through the [`@adr-manager/core`](../core) package.
+This extension is developed in the [`adr-manager-apps`](../../README.md) monorepo and shares the MADR parser and ADR domain model with the web app through the [`@adr-manager/core`](../../packages/core) package.
 See the [root README](../../README.md) for prerequisites and the full development workflow.
 
 The commands below are run from the repository root:
 
-- `pnpm watch:ext` watches the extension host bundle (webpack) and the webview bundles (Rollup) in parallel.
+- `pnpm watch:ext` watches the extension host bundle (esbuild), the webview bundles (Vite), and the type checker (tsc) in parallel.
 - `pnpm build:ext` builds the extension into `apps/vscode-adr-manager/dist`.
 - `pnpm test:ext` runs the extension tests.
 - `pnpm lint:ext` lints the extension.

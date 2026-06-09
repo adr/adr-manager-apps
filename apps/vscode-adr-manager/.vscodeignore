@@ -1,11 +1,14 @@
 .vscode/**
 src/**
+web/**
+scripts/**
 docs/**
-webpack.config.js
 .gitignore
-.yarnrc
+.prettierignore
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
+eslint.config.js
+vitest.config.ts
 **/*.map
 **/*.ts

@@ -10,7 +10,6 @@ import {
 import { adr2md, md2adr } from "./plugins/parser";
 import { cleanPathString, matchesMadrTitleFormat, naturalCase2snakeCase } from "./plugins/utils";
 import { WebPanel } from "./WebPanel";
-const _ = require("lodash");
 
 /**
  * Returns the workspace folders opened in the current VS Code instance.
@@ -580,8 +579,7 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
           if (!(await adrDirectoryExists(childRootFolderUri))) {
             await createAdrDirectory(childRootFolderUri);
           }
-          const fileName = `${_.padStart(
-            (await getHighestAdrNumber(childRootFolderUri)) + 1,
+          const fileName = `${String((await getHighestAdrNumber(childRootFolderUri)) + 1).padStart(
             4,
             "0"
           )}-${naturalCase2snakeCase(title)}.md`;
@@ -608,8 +606,7 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
         if (!(await adrDirectoryExists(getWorkspaceFolders()[0].uri))) {
           await createAdrDirectory(getWorkspaceFolders()[0].uri);
         }
-        const fileName = `${_.padStart(
-          (await getHighestAdrNumber(getWorkspaceFolders()[0].uri)) + 1,
+        const fileName = `${String((await getHighestAdrNumber(getWorkspaceFolders()[0].uri)) + 1).padStart(
           4,
           "0"
         )}-${naturalCase2snakeCase(title)}.md`;
@@ -632,8 +629,7 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
         if (!(await adrDirectoryExists(destinationFolder.uri))) {
           await createAdrDirectory(destinationFolder.uri);
         }
-        const fileName = `${_.padStart(
-          (await getHighestAdrNumber(destinationFolder.uri)) + 1,
+        const fileName = `${String((await getHighestAdrNumber(destinationFolder.uri)) + 1).padStart(
           4,
           "0"
         )}-${naturalCase2snakeCase(title)}.md`;

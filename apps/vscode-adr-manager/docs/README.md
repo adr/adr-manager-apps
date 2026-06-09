@@ -10,7 +10,7 @@ In the following, the main structure and most important files will be briefly de
     * `WebPanel.ts`: This TypeScript file is used to handle the webview panel for rendering different custom HTML content and handling message passing between the extension and the webview.
 
 * `web`: Stores all files relevant to Vue for specifying what to render in the webview, i.e. components, views etc.
-    * `pages`: Because we don't have access to a router, we can simulate that using different TypeScript files that specify different views to mount to the DOM. Each TypeScript file stored in this directory will be compiled into separate JavaScript files using [rollup.js](https://rollupjs.org/guide/en/) that will be used to render the webview by specifying a specific key when fetching the HTML content for the webview.
+    * `pages`: Because we don't have access to a router, we can simulate that using different TypeScript files that specify different views to mount to the DOM. Each TypeScript file stored in this directory will be compiled into a separate JavaScript bundle using [Vite](https://vite.dev/) (see `scripts/build-webviews.mjs`) that will be used to render the webview by specifying a specific key when fetching the HTML content for the webview.
 
 * `package.json`: Besides the usual things like dependencies or scripts, this JSON file defines extension-specific settings like the extension ID or the so-called [Contribution Points](https://code.visualstudio.com/api/references/contribution-points), e.g., activation events for the extension, VS Code commands, custom menus, snippets etc.
 

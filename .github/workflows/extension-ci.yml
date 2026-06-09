@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "apps/vscode-adr-manager/**"
+      - "packages/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/extension-ci.yml"
   workflow_dispatch:
@@ -14,13 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "pnpm"
+          node-version-file: ".nvmrc"
+      - uses: pnpm/action-setup@v6
+        with:
+          cache: true
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter vscode-adr-manager test # `pretest` auto-runs compile-tests + compile + lint
+      - run: pnpm --filter vscode-adr-manager test # `pretest` auto-runs typecheck + compile + lint
       - run: pnpm vsix
       - uses: actions/upload-artifact@v4
         with:

@@ -322,9 +322,10 @@ export class WebPanel {
     // URI to load styles into webview
     const STYLE_WEB_URI = webview.asWebviewUri(STYLE_URI);
 
-    // Codicons web URI
+    // Codicons web URI. The font is copied into dist/web/codicons by the webview build
+    // because the packaged VSIX contains no node_modules.
     const CODICONS_WEB_URI = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "node_modules", "@vscode/codicons", "dist", "codicon.css")
+      vscode.Uri.joinPath(this._extensionUri, "dist/web/codicons", "codicon.css")
     );
 
     // Use a NONCE to only allow specific scripts to be run

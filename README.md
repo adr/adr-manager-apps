@@ -15,14 +15,14 @@ The apps share a common core and tooling, and are developed, tested, versioned, 
 
 ## Packages
 
-| Package                        | Path                                                         | Description                                                                                                                                           |
-| ------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `adr-manager`                  | [`apps/adr-manager`](apps/adr-manager)               | Web app (Vue 3, Vuetify, Vite, TypeScript, CodeMirror 6) for managing MADRs in GitHub repositories via GitHub OAuth                                   |
-| `vscode-adr-manager`           | [`apps/vscode-adr-manager`](apps/vscode-adr-manager) | VS Code extension for managing MADRs in single-root, multi-root, and folder-based workspaces, with commands, context menus, snippets, and diagnostics |
-| `@adr-manager/core`            | [`packages/core`](packages/core)                             | Shared MADR parser (ANTLR4), ADR domain model, and utilities used by both apps                                                                        |
-| `@adr-manager/eslint-config`   | [`packages/eslint-config`](packages/eslint-config)           | Shared ESLint flat configs (`base`, `vue`, `node`)                                                                                                    |
-| `@adr-manager/prettier-config` | [`packages/prettier-config`](packages/prettier-config)       | Shared Prettier configuration                                                                                                                         |
-| `@adr-manager/tsconfig`        | [`packages/tsconfig`](packages/tsconfig)                     | Shared TypeScript configs (`base`, `vue`, `node`, `commonjs`)                                                                                         |
+| Package                        | Path                                                   | Description                                                                                                                                           |
+| ------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `adr-manager`                  | [`apps/adr-manager`](apps/adr-manager)                 | Web app (Vue 3, Vuetify, Vite, TypeScript, CodeMirror 6) for managing MADRs in GitHub repositories via GitHub OAuth                                   |
+| `vscode-adr-manager`           | [`apps/vscode-adr-manager`](apps/vscode-adr-manager)   | VS Code extension for managing MADRs in single-root, multi-root, and folder-based workspaces, with commands, context menus, snippets, and diagnostics |
+| `@adr-manager/core`            | [`packages/core`](packages/core)                       | Shared MADR parser (ANTLR4), ADR domain model, and utilities used by both apps                                                                        |
+| `@adr-manager/eslint-config`   | [`packages/eslint-config`](packages/eslint-config)     | Shared ESLint flat configs (`base`, `vue`, `node`)                                                                                                    |
+| `@adr-manager/prettier-config` | [`packages/prettier-config`](packages/prettier-config) | Shared Prettier configuration                                                                                                                         |
+| `@adr-manager/tsconfig`        | [`packages/tsconfig`](packages/tsconfig)               | Shared TypeScript configs (`base`, `vue`, `node`, `commonjs`)                                                                                         |
 
 The two apps are the deliverables. The `@adr-manager/*` packages are private workspace packages and are not published anywhere.
 

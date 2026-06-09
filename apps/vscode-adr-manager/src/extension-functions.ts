@@ -2,10 +2,10 @@
 import * as vscode from "vscode";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import {
-	adrTemplatemarkdownContent,
-	EXTENSION_URI,
-	initialMarkdownContent,
-	readmeMarkdownContent,
+  adrTemplatemarkdownContent,
+  EXTENSION_URI,
+  initialMarkdownContent,
+  readmeMarkdownContent
 } from "./plugins/constants";
 import { adr2md, md2adr } from "./plugins/parser";
 import { cleanPathString, matchesMadrTitleFormat, naturalCase2snakeCase } from "./plugins/utils";
@@ -17,10 +17,10 @@ const _ = require("lodash");
  * @returns The current workspace folders of the VS Code instance, or an empty WorkspaceFolder array if there is no folder open
  */
 export function getWorkspaceFolders(): readonly vscode.WorkspaceFolder[] {
-	if (isWorkspaceOpened()) {
-		return vscode.workspace.workspaceFolders!;
-	}
-	return [];
+  if (isWorkspaceOpened()) {
+    return vscode.workspace.workspaceFolders!;
+  }
+  return [];
 }
 
 /**
@@ -29,7 +29,7 @@ export function getWorkspaceFolders(): readonly vscode.WorkspaceFolder[] {
  * @returns The ADR Directory specified by the user
  */
 export function getAdrDirectoryString(): string {
-	return vscode.workspace.getConfiguration("adrManager").get("adrDirectory") ?? "docs/decisions";
+  return vscode.workspace.getConfiguration("adrManager").get("adrDirectory") ?? "docs/decisions";
 }
 
 /**
@@ -38,7 +38,7 @@ export function getAdrDirectoryString(): string {
  * @returns The ADR Directory specified by the user
  */
 export function treatAsMultiRoot(): boolean {
-	return vscode.workspace.getConfiguration("adrManager").get("treatSingleRootAsMultiRoot") ?? true;
+  return vscode.workspace.getConfiguration("adrManager").get("treatSingleRootAsMultiRoot") ?? true;
 }
 
 /**
@@ -47,7 +47,7 @@ export function treatAsMultiRoot(): boolean {
  * @returns The preferred editor mode when adding a new ADR
  */
 export function getAddEditorMode(): string {
-	return vscode.workspace.getConfiguration("adrManager.editorMode").get("addAdrEditorMode") ?? "basic";
+  return vscode.workspace.getConfiguration("adrManager.editorMode").get("addAdrEditorMode") ?? "basic";
 }
 
 /**
@@ -56,7 +56,7 @@ export function getAddEditorMode(): string {
  * @returns The preferred editor mode when editing an existing ADR
  */
 export function getViewEditorMode(): string {
-	return vscode.workspace.getConfiguration("adrManager.editorMode").get("viewAdrEditorMode") ?? "sufficient";
+  return vscode.workspace.getConfiguration("adrManager.editorMode").get("viewAdrEditorMode") ?? "sufficient";
 }
 
 /**
@@ -65,7 +65,7 @@ export function getViewEditorMode(): string {
  * @returns The ADR Directory specified by the user
  */
 export function isDiagnosticsEnabled(): boolean {
-	return vscode.workspace.getConfiguration("adrManager").get("showDiagnostics") ?? true;
+  return vscode.workspace.getConfiguration("adrManager").get("showDiagnostics") ?? true;
 }
 
 /**
@@ -74,12 +74,12 @@ export function isDiagnosticsEnabled(): boolean {
  * @param mdString The Markdown string of the ADR to be edited
  */
 export async function determineViewEditorMode(mdString: string): Promise<string> {
-	const adr = md2adr(mdString);
-	if (isProfessionalAdr(adr)) {
-		return "professional";
-	} else {
-		return "basic";
-	}
+  const adr = md2adr(mdString);
+  if (isProfessionalAdr(adr)) {
+    return "professional";
+  } else {
+    return "basic";
+  }
 }
 
 /**
@@ -88,19 +88,19 @@ export async function determineViewEditorMode(mdString: string): Promise<string>
  * @returns True iff the specified ADR object has any non-empty optional fields
  */
 function isProfessionalAdr(adr: ArchitecturalDecisionRecord) {
-	return (
-		adr.status ||
-		adr.deciders ||
-		adr.date ||
-		adr.technicalStory ||
-		adr.decisionDrivers.length ||
-		adr.consideredOptions.some((option) => {
-			return option.pros.length || option.cons.length;
-		}) ||
-		adr.decisionOutcome.positiveConsequences.length ||
-		adr.decisionOutcome.negativeConsequences.length ||
-		adr.links.length
-	);
+  return (
+    adr.status ||
+    adr.deciders ||
+    adr.date ||
+    adr.technicalStory ||
+    adr.decisionDrivers.length ||
+    adr.consideredOptions.some((option) => {
+      return option.pros.length || option.cons.length;
+    }) ||
+    adr.decisionOutcome.positiveConsequences.length ||
+    adr.decisionOutcome.negativeConsequences.length ||
+    adr.links.length
+  );
 }
 
 /**
@@ -108,7 +108,7 @@ function isProfessionalAdr(adr: ArchitecturalDecisionRecord) {
  * @returns True iff a folder is opened in the current workspace of the VS Code instance
  */
 export function isWorkspaceOpened(): boolean {
-	return vscode.workspace.workspaceFolders !== undefined && vscode.workspace.workspaceFolders.length > 0;
+  return vscode.workspace.workspaceFolders !== undefined && vscode.workspace.workspaceFolders.length > 0;
 }
 
 /**
@@ -116,7 +116,7 @@ export function isWorkspaceOpened(): boolean {
  * @returns True iff there is exactly one root folder opened in the current workspace
  */
 export function isSingleRootWorkspace(): boolean {
-	return isWorkspaceOpened() && getWorkspaceFolders().length === 1;
+  return isWorkspaceOpened() && getWorkspaceFolders().length === 1;
 }
 
 /**
@@ -127,14 +127,14 @@ export function isSingleRootWorkspace(): boolean {
  *			the root folder of multiple root folders
  */
 export async function containsOnlyRootFolders(folderUri: vscode.Uri): Promise<boolean> {
-	const directory = await vscode.workspace.fs.readDirectory(folderUri);
-	for (const [name, type] of directory) {
-		// skip ".DS_Store" files which may cause problems with macOS users
-		if (type !== vscode.FileType.Directory && name !== ".DS_Store") {
-			return false;
-		}
-	}
-	return true;
+  const directory = await vscode.workspace.fs.readDirectory(folderUri);
+  for (const [name, type] of directory) {
+    // skip ".DS_Store" files which may cause problems with macOS users
+    if (type !== vscode.FileType.Directory && name !== ".DS_Store") {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -146,16 +146,16 @@ export async function containsOnlyRootFolders(folderUri: vscode.Uri): Promise<bo
  * 			an empty array if the specified folder does not only have other folders inside of it
  */
 export async function getAllChildRootFolders(rootFolderUri: vscode.Uri): Promise<vscode.Uri[]> {
-	const childRootFolderUris: vscode.Uri[] = [];
-	if (await containsOnlyRootFolders(rootFolderUri)) {
-		const rootFolderDirectory = await vscode.workspace.fs.readDirectory(rootFolderUri);
-		for (const [name, type] of rootFolderDirectory) {
-			if (type === vscode.FileType.Directory) {
-				childRootFolderUris.push(vscode.Uri.joinPath(rootFolderUri, name));
-			}
-		}
-	}
-	return childRootFolderUris;
+  const childRootFolderUris: vscode.Uri[] = [];
+  if (await containsOnlyRootFolders(rootFolderUri)) {
+    const rootFolderDirectory = await vscode.workspace.fs.readDirectory(rootFolderUri);
+    for (const [name, type] of rootFolderDirectory) {
+      if (type === vscode.FileType.Directory) {
+        childRootFolderUris.push(vscode.Uri.joinPath(rootFolderUri, name));
+      }
+    }
+  }
+  return childRootFolderUris;
 }
 
 /**
@@ -167,16 +167,16 @@ export async function getAllChildRootFolders(rootFolderUri: vscode.Uri): Promise
  * 			an empty array if the specified folder does not only have other folders inside of it
  */
 export async function getAllChildRootFoldersAsStrings(rootFolderUri: vscode.Uri): Promise<string[]> {
-	const childRootFolderStrings: string[] = [];
-	if (await containsOnlyRootFolders(rootFolderUri)) {
-		const rootFolderDirectory = await vscode.workspace.fs.readDirectory(rootFolderUri);
-		for (const [name, type] of rootFolderDirectory) {
-			if (type === vscode.FileType.Directory) {
-				childRootFolderStrings.push(name);
-			}
-		}
-	}
-	return childRootFolderStrings;
+  const childRootFolderStrings: string[] = [];
+  if (await containsOnlyRootFolders(rootFolderUri)) {
+    const rootFolderDirectory = await vscode.workspace.fs.readDirectory(rootFolderUri);
+    for (const [name, type] of rootFolderDirectory) {
+      if (type === vscode.FileType.Directory) {
+        childRootFolderStrings.push(name);
+      }
+    }
+  }
+  return childRootFolderStrings;
 }
 
 /**
@@ -185,23 +185,23 @@ export async function getAllChildRootFoldersAsStrings(rootFolderUri: vscode.Uri)
  * @param rootFolderUri The URI of the root folder where the ADR Directory should be initialized
  */
 export async function initializeAdrDirectory(rootFolderUri: vscode.Uri) {
-	if (!(await adrDirectoryExists(rootFolderUri))) {
-		const adrFolderUri = vscode.Uri.joinPath(rootFolderUri, getAdrDirectoryString());
-		await vscode.workspace.fs.createDirectory(adrFolderUri);
-		await fillAdrDirectory(adrFolderUri);
-		vscode.window.showInformationMessage("ADR Directory initialized.");
-	} else {
-		const selection = await vscode.window.showInformationMessage(
-			"The ADR Directory already exists. Do you want to fill the directory with boilerplate Markdown files?",
-			"Yes",
-			"Cancel"
-		);
-		if (selection === "Yes") {
-			const adrFolderUri = vscode.Uri.joinPath(rootFolderUri, getAdrDirectoryString());
-			await fillAdrDirectory(adrFolderUri);
-			vscode.window.showInformationMessage("ADR Directory initialized.");
-		}
-	}
+  if (!(await adrDirectoryExists(rootFolderUri))) {
+    const adrFolderUri = vscode.Uri.joinPath(rootFolderUri, getAdrDirectoryString());
+    await vscode.workspace.fs.createDirectory(adrFolderUri);
+    await fillAdrDirectory(adrFolderUri);
+    vscode.window.showInformationMessage("ADR Directory initialized.");
+  } else {
+    const selection = await vscode.window.showInformationMessage(
+      "The ADR Directory already exists. Do you want to fill the directory with boilerplate Markdown files?",
+      "Yes",
+      "Cancel"
+    );
+    if (selection === "Yes") {
+      const adrFolderUri = vscode.Uri.joinPath(rootFolderUri, getAdrDirectoryString());
+      await fillAdrDirectory(adrFolderUri);
+      vscode.window.showInformationMessage("ADR Directory initialized.");
+    }
+  }
 }
 
 /**
@@ -211,34 +211,34 @@ export async function initializeAdrDirectory(rootFolderUri: vscode.Uri) {
  *
  */
 export async function adrDirectoryExists(folderUri: vscode.Uri) {
-	if (isWorkspaceOpened()) {
-		const subDirectories = cleanPathString(getAdrDirectoryString()).split("/");
-		let currentUri = folderUri;
-		let currentDirectoryFound = true;
+  if (isWorkspaceOpened()) {
+    const subDirectories = cleanPathString(getAdrDirectoryString()).split("/");
+    let currentUri = folderUri;
+    let currentDirectoryFound = true;
 
-		// Iterate through subdirectories
-		for (let i = 0; i < subDirectories.length; i++) {
-			if (currentDirectoryFound) {
-				currentDirectoryFound = false;
-				const currentDirectory = await vscode.workspace.fs.readDirectory(currentUri);
-				for (const [name, type] of currentDirectory) {
-					if (type === vscode.FileType.Directory && name === subDirectories[i]) {
-						currentDirectoryFound = true;
-						if (i === subDirectories.length - 1) {
-							return true; // last subdirectory found
-						} else {
-							break; // check next subdirectory
-						}
-					}
-				}
-				currentUri = vscode.Uri.joinPath(currentUri, subDirectories[i]);
-			} else {
-				return false;
-			}
-		}
-	}
+    // Iterate through subdirectories
+    for (let i = 0; i < subDirectories.length; i++) {
+      if (currentDirectoryFound) {
+        currentDirectoryFound = false;
+        const currentDirectory = await vscode.workspace.fs.readDirectory(currentUri);
+        for (const [name, type] of currentDirectory) {
+          if (type === vscode.FileType.Directory && name === subDirectories[i]) {
+            currentDirectoryFound = true;
+            if (i === subDirectories.length - 1) {
+              return true; // last subdirectory found
+            } else {
+              break; // check next subdirectory
+            }
+          }
+        }
+        currentUri = vscode.Uri.joinPath(currentUri, subDirectories[i]);
+      } else {
+        return false;
+      }
+    }
+  }
 
-	return false;
+  return false;
 }
 
 /**
@@ -246,12 +246,12 @@ export async function adrDirectoryExists(folderUri: vscode.Uri) {
  * @param folderUri The root folder URI where the ADR Directory will be created
  */
 async function createAdrDirectory(folderUri: vscode.Uri) {
-	if (await adrDirectoryExists(folderUri)) {
-		return;
-	}
+  if (await adrDirectoryExists(folderUri)) {
+    return;
+  }
 
-	const adrDirectoryUri = vscode.Uri.joinPath(folderUri, getAdrDirectoryString());
-	await vscode.workspace.fs.createDirectory(adrDirectoryUri);
+  const adrDirectoryUri = vscode.Uri.joinPath(folderUri, getAdrDirectoryString());
+  await vscode.workspace.fs.createDirectory(adrDirectoryUri);
 }
 
 /**
@@ -259,9 +259,9 @@ async function createAdrDirectory(folderUri: vscode.Uri) {
  * @param folderUri The URI of the directory to be filled
  */
 export async function fillAdrDirectory(folderUri: vscode.Uri) {
-	await createMarkdownFile(folderUri, "0000-use-markdown-architectural-decision-records.md", initialMarkdownContent);
-	await createMarkdownFile(folderUri, "README.md", readmeMarkdownContent);
-	await createMarkdownFile(folderUri, "adr-template.md", adrTemplatemarkdownContent);
+  await createMarkdownFile(folderUri, "0000-use-markdown-architectural-decision-records.md", initialMarkdownContent);
+  await createMarkdownFile(folderUri, "README.md", readmeMarkdownContent);
+  await createMarkdownFile(folderUri, "adr-template.md", adrTemplatemarkdownContent);
 }
 
 /**
@@ -271,7 +271,7 @@ export async function fillAdrDirectory(folderUri: vscode.Uri) {
  * @param content The content of the Markdown file
  */
 export async function createMarkdownFile(folderUri: vscode.Uri, name: string, content: string) {
-	await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(folderUri, name), new TextEncoder().encode(content));
+  await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(folderUri, name), new TextEncoder().encode(content));
 }
 
 /**
@@ -279,13 +279,13 @@ export async function createMarkdownFile(folderUri: vscode.Uri, name: string, co
  * @returns A string array of all folder names currently opened in the workspace
  */
 export function getWorkspaceFolderNames(): string[] {
-	const names: string[] = [];
-	if (isWorkspaceOpened()) {
-		getWorkspaceFolders().forEach((folder) => {
-			names.push(folder.name);
-		});
-	}
-	return names;
+  const names: string[] = [];
+  if (isWorkspaceOpened()) {
+    getWorkspaceFolders().forEach((folder) => {
+      names.push(folder.name);
+    });
+  }
+  return names;
 }
 
 /**
@@ -293,38 +293,34 @@ export function getWorkspaceFolderNames(): string[] {
  * @returns A Promise which resolves in a string array of all potential MADR strings in the whole workspace
  */
 export async function getAllMDs(): Promise<
-	{ adr: string; fullPath: string; relativePath: string; fileName: string }[]
+  { adr: string; fullPath: string; relativePath: string; fileName: string }[]
 > {
-	let mds: { adr: string; fullPath: string; relativePath: string; fileName: string }[] = [];
-	if (isWorkspaceOpened()) {
-		const workspaceFolders = getWorkspaceFolders();
-		// Check if single-root folder is root folder of other root folders
-		if (isSingleRootWorkspace() && treatAsMultiRoot() && (await containsOnlyRootFolders(workspaceFolders[0].uri))) {
-			const childRootFolderUris = await getAllChildRootFolders(workspaceFolders[0].uri);
-			for (let i = 0; i < childRootFolderUris.length; i++) {
-				if (await adrDirectoryExists(childRootFolderUris[i])) {
-					mds = [
-						...mds,
-						...(await getMDsFromFolder(
-							vscode.Uri.joinPath(childRootFolderUris[i], getAdrDirectoryString())
-						)),
-					];
-				}
-			}
-		} else {
-			for (let i = 0; i < workspaceFolders.length; i++) {
-				if (await adrDirectoryExists(workspaceFolders[i].uri)) {
-					mds = [
-						...mds,
-						...(await getMDsFromFolder(
-							vscode.Uri.joinPath(workspaceFolders[i].uri, getAdrDirectoryString())
-						)),
-					];
-				}
-			}
-		}
-	}
-	return mds;
+  let mds: { adr: string; fullPath: string; relativePath: string; fileName: string }[] = [];
+  if (isWorkspaceOpened()) {
+    const workspaceFolders = getWorkspaceFolders();
+    // Check if single-root folder is root folder of other root folders
+    if (isSingleRootWorkspace() && treatAsMultiRoot() && (await containsOnlyRootFolders(workspaceFolders[0].uri))) {
+      const childRootFolderUris = await getAllChildRootFolders(workspaceFolders[0].uri);
+      for (let i = 0; i < childRootFolderUris.length; i++) {
+        if (await adrDirectoryExists(childRootFolderUris[i])) {
+          mds = [
+            ...mds,
+            ...(await getMDsFromFolder(vscode.Uri.joinPath(childRootFolderUris[i], getAdrDirectoryString())))
+          ];
+        }
+      }
+    } else {
+      for (let i = 0; i < workspaceFolders.length; i++) {
+        if (await adrDirectoryExists(workspaceFolders[i].uri)) {
+          mds = [
+            ...mds,
+            ...(await getMDsFromFolder(vscode.Uri.joinPath(workspaceFolders[i].uri, getAdrDirectoryString())))
+          ];
+        }
+      }
+    }
+  }
+  return mds;
 }
 
 /**
@@ -333,22 +329,22 @@ export async function getAllMDs(): Promise<
  * @returns A Promise which resolves in a string array of potential MADRs
  */
 export async function getMDsFromFolder(
-	folderUri: vscode.Uri
+  folderUri: vscode.Uri
 ): Promise<{ adr: string; fullPath: string; relativePath: string; fileName: string }[]> {
-	const adrs: { adr: string; fullPath: string; relativePath: string; fileName: string }[] = [];
-	const directory = await vscode.workspace.fs.readDirectory(folderUri);
-	for (const [name, type] of directory) {
-		if (type === vscode.FileType.File && matchesMadrTitleFormat(name)) {
-			const content = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folderUri, name));
-			adrs.push({
-				adr: new TextDecoder().decode(content),
-				fullPath: vscode.Uri.joinPath(folderUri, name).path,
-				relativePath: getAdrPathRelativeFromRootFolder(vscode.Uri.joinPath(folderUri, name)),
-				fileName: name,
-			});
-		}
-	}
-	return adrs;
+  const adrs: { adr: string; fullPath: string; relativePath: string; fileName: string }[] = [];
+  const directory = await vscode.workspace.fs.readDirectory(folderUri);
+  for (const [name, type] of directory) {
+    if (type === vscode.FileType.File && matchesMadrTitleFormat(name)) {
+      const content = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folderUri, name));
+      adrs.push({
+        adr: new TextDecoder().decode(content),
+        fullPath: vscode.Uri.joinPath(folderUri, name).path,
+        relativePath: getAdrPathRelativeFromRootFolder(vscode.Uri.joinPath(folderUri, name)),
+        fileName: name
+      });
+    }
+  }
+  return adrs;
 }
 
 /**
@@ -357,35 +353,35 @@ export async function getMDsFromFolder(
  * @param fields The fields of the new short ADR
  */
 export function createBasicAdr(fields: {
-	yaml: string;
-	title: string;
-	contextAndProblemStatement: string;
-	consideredOptions: {
-		title: string;
-		description: string;
-		pros: string[];
-		cons: string[];
-	}[];
-	chosenOption: string;
-	explanation: string;
+  yaml: string;
+  title: string;
+  contextAndProblemStatement: string;
+  consideredOptions: {
+    title: string;
+    description: string;
+    pros: string[];
+    cons: string[];
+  }[];
+  chosenOption: string;
+  explanation: string;
 }) {
-	const adrFields = {
-		yaml: fields.yaml,
-		title: fields.title,
-		contextAndProblemStatement: fields.contextAndProblemStatement,
-		consideredOptions: fields.consideredOptions,
-		decisionOutcome: {
-			chosenOption: fields.chosenOption,
-			explanation: fields.explanation,
-			positiveConsequences: [],
-			negativeConsequences: [],
-		},
-	};
-	const newAdr = getAdrObjectFromFields(adrFields);
+  const adrFields = {
+    yaml: fields.yaml,
+    title: fields.title,
+    contextAndProblemStatement: fields.contextAndProblemStatement,
+    consideredOptions: fields.consideredOptions,
+    decisionOutcome: {
+      chosenOption: fields.chosenOption,
+      explanation: fields.explanation,
+      positiveConsequences: [],
+      negativeConsequences: []
+    }
+  };
+  const newAdr = getAdrObjectFromFields(adrFields);
 
-	// Convert ADR object to Markdown and save it in the ADR Directory
-	const newMD = adr2md(newAdr);
-	saveMarkdownToAdrDirectory(newMD, newAdr.title);
+  // Convert ADR object to Markdown and save it in the ADR Directory
+  const newMD = adr2md(newAdr);
+  saveMarkdownToAdrDirectory(newMD, newAdr.title);
 }
 
 /**
@@ -394,32 +390,32 @@ export function createBasicAdr(fields: {
  * @param fields The fields of the new short ADR
  */
 export function createProfessionalAdr(fields: {
-	yaml: string;
-	title: string;
-	date: string;
-	status: string;
-	deciders: string;
-	technicalStory: string;
-	contextAndProblemStatement: string;
-	consideredOptions: {
-		title: string;
-		description: string;
-		pros: string[];
-		cons: string[];
-	}[];
-	decisionOutcome: {
-		chosenOption: string;
-		explanation: string;
-		positiveConsequences: string[];
-		negativeConsequences: string[];
-	};
-	links: string[];
+  yaml: string;
+  title: string;
+  date: string;
+  status: string;
+  deciders: string;
+  technicalStory: string;
+  contextAndProblemStatement: string;
+  consideredOptions: {
+    title: string;
+    description: string;
+    pros: string[];
+    cons: string[];
+  }[];
+  decisionOutcome: {
+    chosenOption: string;
+    explanation: string;
+    positiveConsequences: string[];
+    negativeConsequences: string[];
+  };
+  links: string[];
 }) {
-	const newAdr = getAdrObjectFromFields(fields);
+  const newAdr = getAdrObjectFromFields(fields);
 
-	// Convert ADR object to Markdown and save it in the ADR Directory
-	const newMD = adr2md(newAdr);
-	saveMarkdownToAdrDirectory(newMD, newAdr.title);
+  // Convert ADR object to Markdown and save it in the ADR Directory
+  const newMD = adr2md(newAdr);
+  saveMarkdownToAdrDirectory(newMD, newAdr.title);
 }
 
 /**
@@ -427,54 +423,54 @@ export function createProfessionalAdr(fields: {
  * @param fields The fields of the edited short ADR
  */
 export async function saveAdr(fields: {
-	yaml?: string;
-	title?: string;
-	date?: string;
-	status?: string;
-	deciders?: string;
-	technicalStory?: string;
-	contextAndProblemStatement?: string;
-	decisionDrivers?: string[];
-	consideredOptions?: {
-		title: string;
-		description: string;
-		pros: string[];
-		cons: string[];
-	}[];
-	decisionOutcome?: {
-		chosenOption: string;
-		explanation: string;
-		positiveConsequences: string[];
-		negativeConsequences: string[];
-	};
-	links?: string[];
-	fullPath: string;
+  yaml?: string;
+  title?: string;
+  date?: string;
+  status?: string;
+  deciders?: string;
+  technicalStory?: string;
+  contextAndProblemStatement?: string;
+  decisionDrivers?: string[];
+  consideredOptions?: {
+    title: string;
+    description: string;
+    pros: string[];
+    cons: string[];
+  }[];
+  decisionOutcome?: {
+    chosenOption: string;
+    explanation: string;
+    positiveConsequences: string[];
+    negativeConsequences: string[];
+  };
+  links?: string[];
+  fullPath: string;
 }): Promise<vscode.Uri | undefined> {
-	// Update, convert ADR object to Markdown and save
-	const fileUri = vscode.Uri.file(fields.fullPath);
-	if (fileUri) {
-		const adr = md2adr(new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri)));
-		adr.update({
-			yaml: fields.yaml,
-			title: fields.title,
-			date: fields.date,
-			status: fields.status,
-			deciders: fields.deciders,
-			technicalStory: fields.technicalStory,
-			contextAndProblemStatement: fields.contextAndProblemStatement,
-			decisionDrivers: fields.decisionDrivers,
-			consideredOptions: fields.consideredOptions,
-			decisionOutcome: fields.decisionOutcome,
-			links: fields.links,
-		});
-		const newUri = getRenamedUri(fileUri, adr.title);
-		await vscode.workspace.fs.rename(fileUri, newUri);
-		await vscode.workspace.fs.writeFile(newUri, new TextEncoder().encode(adr2md(adr)));
-		return newUri;
-	} else {
-		vscode.window.showWarningMessage("ADR could not be found in the workspace.");
-		return undefined;
-	}
+  // Update, convert ADR object to Markdown and save
+  const fileUri = vscode.Uri.file(fields.fullPath);
+  if (fileUri) {
+    const adr = md2adr(new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri)));
+    adr.update({
+      yaml: fields.yaml,
+      title: fields.title,
+      date: fields.date,
+      status: fields.status,
+      deciders: fields.deciders,
+      technicalStory: fields.technicalStory,
+      contextAndProblemStatement: fields.contextAndProblemStatement,
+      decisionDrivers: fields.decisionDrivers,
+      consideredOptions: fields.consideredOptions,
+      decisionOutcome: fields.decisionOutcome,
+      links: fields.links
+    });
+    const newUri = getRenamedUri(fileUri, adr.title);
+    await vscode.workspace.fs.rename(fileUri, newUri);
+    await vscode.workspace.fs.writeFile(newUri, new TextEncoder().encode(adr2md(adr)));
+    return newUri;
+  } else {
+    vscode.window.showWarningMessage("ADR could not be found in the workspace.");
+    return undefined;
+  }
 }
 
 /**
@@ -483,51 +479,51 @@ export async function saveAdr(fields: {
  * @returns A new ADR object with the specified required fields
  */
 export function getAdrObjectFromFields(fields: {
-	yaml?: string;
-	title: string;
-	date?: string;
-	status?: string;
-	deciders?: string;
-	technicalStory?: string;
-	contextAndProblemStatement: string;
-	decisionDrivers?: string[];
-	consideredOptions: {
-		title: string;
-		description: string;
-		pros: string[];
-		cons: string[];
-	}[];
-	decisionOutcome: {
-		chosenOption: string;
-		explanation: string;
-		positiveConsequences?: string[];
-		negativeConsequences?: string[];
-	};
-	links?: string[];
+  yaml?: string;
+  title: string;
+  date?: string;
+  status?: string;
+  deciders?: string;
+  technicalStory?: string;
+  contextAndProblemStatement: string;
+  decisionDrivers?: string[];
+  consideredOptions: {
+    title: string;
+    description: string;
+    pros: string[];
+    cons: string[];
+  }[];
+  decisionOutcome: {
+    chosenOption: string;
+    explanation: string;
+    positiveConsequences?: string[];
+    negativeConsequences?: string[];
+  };
+  links?: string[];
 }): ArchitecturalDecisionRecord {
-	// Create ADR object
-	const newAdr = new ArchitecturalDecisionRecord({
-		yaml: fields.yaml ?? "",
-		title: fields.title,
-		date: fields.date ?? "",
-		status: fields.status ?? "",
-		deciders: fields.deciders ?? "",
-		technicalStory: fields.technicalStory ?? "",
-		contextAndProblemStatement: fields.contextAndProblemStatement,
-		decisionDrivers: fields.decisionDrivers || [],
-		consideredOptions: fields.consideredOptions,
-		decisionOutcome: {
-			chosenOption: fields.decisionOutcome.chosenOption,
-			explanation: fields.decisionOutcome.explanation,
-			positiveConsequences: fields.decisionOutcome.positiveConsequences || [],
-			negativeConsequences: fields.decisionOutcome.negativeConsequences || [],
-		},
-		links: fields.links || [],
-	});
+  // Create ADR object
+  const newAdr = new ArchitecturalDecisionRecord({
+    yaml: fields.yaml ?? "",
+    title: fields.title,
+    date: fields.date ?? "",
+    status: fields.status ?? "",
+    deciders: fields.deciders ?? "",
+    technicalStory: fields.technicalStory ?? "",
+    contextAndProblemStatement: fields.contextAndProblemStatement,
+    decisionDrivers: fields.decisionDrivers || [],
+    consideredOptions: fields.consideredOptions,
+    decisionOutcome: {
+      chosenOption: fields.decisionOutcome.chosenOption,
+      explanation: fields.decisionOutcome.explanation,
+      positiveConsequences: fields.decisionOutcome.positiveConsequences || [],
+      negativeConsequences: fields.decisionOutcome.negativeConsequences || []
+    },
+    links: fields.links || []
+  });
 
-	newAdr.cleanUp({ aggressive: true });
+  newAdr.cleanUp({ aggressive: true });
 
-	return newAdr;
+  return newAdr;
 }
 
 /**
@@ -538,9 +534,9 @@ export function getAdrObjectFromFields(fields: {
  * @returns A new URI with the replaced file name
  */
 function getRenamedUri(fileUri: vscode.Uri, newName: string): vscode.Uri {
-	const uriWithoutTitleInFileName = fileUri.path.substring(0, fileUri.path.lastIndexOf("/") + 6);
-	const newUriString = uriWithoutTitleInFileName.concat(naturalCase2snakeCase(newName), ".md");
-	return vscode.Uri.file(newUriString);
+  const uriWithoutTitleInFileName = fileUri.path.substring(0, fileUri.path.lastIndexOf("/") + 6);
+  const newUriString = uriWithoutTitleInFileName.concat(naturalCase2snakeCase(newName), ".md");
+  return vscode.Uri.file(newUriString);
 }
 
 /**
@@ -549,18 +545,18 @@ function getRenamedUri(fileUri: vscode.Uri, newName: string): vscode.Uri {
  * @returns An array of strings which each represent an option
  */
 export function getOptionStringsFromConsideredOptions(
-	options: {
-		title: string;
-		description: string;
-		pros: string[];
-		cons: string[];
-	}[]
+  options: {
+    title: string;
+    description: string;
+    pros: string[];
+    cons: string[];
+  }[]
 ): string[] {
-	const optionStrings: string[] = [];
-	for (const option of options) {
-		optionStrings.push(option.title);
-	}
-	return optionStrings;
+  const optionStrings: string[] = [];
+  for (const option of options) {
+    optionStrings.push(option.title);
+  }
+  return optionStrings;
 }
 
 /**
@@ -569,92 +565,92 @@ export function getOptionStringsFromConsideredOptions(
  * @param title The title of the ADR
  */
 async function saveMarkdownToAdrDirectory(md: string, title: string) {
-	if (!isWorkspaceOpened()) {
-		vscode.window.showErrorMessage("Please open a workspace folder to initialize ADR Directory");
-	} else {
-		if (isSingleRootWorkspace()) {
-			// Check if single-root folder is root folder of other root folders
-			if (treatAsMultiRoot() && (await containsOnlyRootFolders(getWorkspaceFolders()[0].uri))) {
-				const childRootFolder = await vscode.window.showQuickPick(
-					getAllChildRootFoldersAsStrings(getWorkspaceFolders()[0].uri),
-					{ title: "Choose the folder to save the ADR to:" }
-				);
-				if (childRootFolder) {
-					const childRootFolderUri = vscode.Uri.joinPath(getWorkspaceFolders()[0].uri, childRootFolder);
-					if (!(await adrDirectoryExists(childRootFolderUri))) {
-						await createAdrDirectory(childRootFolderUri);
-					}
-					const fileName = `${_.padStart(
-						(await getHighestAdrNumber(childRootFolderUri)) + 1,
-						4,
-						"0"
-					)}-${naturalCase2snakeCase(title)}.md`;
-					const fileUri = vscode.Uri.joinPath(
-						getWorkspaceFolders()[0].uri,
-						childRootFolder,
-						getAdrDirectoryString(),
-						fileName
-					);
-					await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
-					WebPanel.createOrShow(EXTENSION_URI, "main");
-					// Show success message and potentially open file in separate editor
-					const open = await vscode.window.showInformationMessage(
-						"ADR created. Do you want to open the Markdown file?",
-						"Yes",
-						"Cancel"
-					);
-					if (open === "Yes") {
-						vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fileUri));
-					}
-				}
-			} else {
-				// "Real" single-root workspace
-				if (!(await adrDirectoryExists(getWorkspaceFolders()[0].uri))) {
-					await createAdrDirectory(getWorkspaceFolders()[0].uri);
-				}
-				const fileName = `${_.padStart(
-					(await getHighestAdrNumber(getWorkspaceFolders()[0].uri)) + 1,
-					4,
-					"0"
-				)}-${naturalCase2snakeCase(title)}.md`;
-				const fileUri = vscode.Uri.joinPath(getWorkspaceFolders()[0].uri, getAdrDirectoryString(), fileName);
-				await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
-				// Show success message and potentially open file in separate editor
-				const open = await vscode.window.showInformationMessage(
-					"ADR created successfully. Do you want to open the Markdown file?",
-					"Yes",
-					"Cancel"
-				);
-				if (open === "Yes") {
-					vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fileUri));
-				}
-			}
-		} else {
-			// Multi-root workspace
-			const destinationFolder = await vscode.window.showWorkspaceFolderPick();
-			if (destinationFolder) {
-				if (!(await adrDirectoryExists(destinationFolder.uri))) {
-					await createAdrDirectory(destinationFolder.uri);
-				}
-				const fileName = `${_.padStart(
-					(await getHighestAdrNumber(destinationFolder.uri)) + 1,
-					4,
-					"0"
-				)}-${naturalCase2snakeCase(title)}.md`;
-				const fileUri = vscode.Uri.joinPath(destinationFolder.uri, getAdrDirectoryString(), fileName);
-				await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
-				// Show success message and potentially open file in separate editor
-				const open = await vscode.window.showInformationMessage(
-					"ADR created. Do you want to open the Markdown file?",
-					"Yes",
-					"Cancel"
-				);
-				if (open === "Yes") {
-					vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fileUri));
-				}
-			}
-		}
-	}
+  if (!isWorkspaceOpened()) {
+    vscode.window.showErrorMessage("Please open a workspace folder to initialize ADR Directory");
+  } else {
+    if (isSingleRootWorkspace()) {
+      // Check if single-root folder is root folder of other root folders
+      if (treatAsMultiRoot() && (await containsOnlyRootFolders(getWorkspaceFolders()[0].uri))) {
+        const childRootFolder = await vscode.window.showQuickPick(
+          getAllChildRootFoldersAsStrings(getWorkspaceFolders()[0].uri),
+          { title: "Choose the folder to save the ADR to:" }
+        );
+        if (childRootFolder) {
+          const childRootFolderUri = vscode.Uri.joinPath(getWorkspaceFolders()[0].uri, childRootFolder);
+          if (!(await adrDirectoryExists(childRootFolderUri))) {
+            await createAdrDirectory(childRootFolderUri);
+          }
+          const fileName = `${_.padStart(
+            (await getHighestAdrNumber(childRootFolderUri)) + 1,
+            4,
+            "0"
+          )}-${naturalCase2snakeCase(title)}.md`;
+          const fileUri = vscode.Uri.joinPath(
+            getWorkspaceFolders()[0].uri,
+            childRootFolder,
+            getAdrDirectoryString(),
+            fileName
+          );
+          await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
+          WebPanel.createOrShow(EXTENSION_URI, "main");
+          // Show success message and potentially open file in separate editor
+          const open = await vscode.window.showInformationMessage(
+            "ADR created. Do you want to open the Markdown file?",
+            "Yes",
+            "Cancel"
+          );
+          if (open === "Yes") {
+            vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fileUri));
+          }
+        }
+      } else {
+        // "Real" single-root workspace
+        if (!(await adrDirectoryExists(getWorkspaceFolders()[0].uri))) {
+          await createAdrDirectory(getWorkspaceFolders()[0].uri);
+        }
+        const fileName = `${_.padStart(
+          (await getHighestAdrNumber(getWorkspaceFolders()[0].uri)) + 1,
+          4,
+          "0"
+        )}-${naturalCase2snakeCase(title)}.md`;
+        const fileUri = vscode.Uri.joinPath(getWorkspaceFolders()[0].uri, getAdrDirectoryString(), fileName);
+        await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
+        // Show success message and potentially open file in separate editor
+        const open = await vscode.window.showInformationMessage(
+          "ADR created successfully. Do you want to open the Markdown file?",
+          "Yes",
+          "Cancel"
+        );
+        if (open === "Yes") {
+          vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fileUri));
+        }
+      }
+    } else {
+      // Multi-root workspace
+      const destinationFolder = await vscode.window.showWorkspaceFolderPick();
+      if (destinationFolder) {
+        if (!(await adrDirectoryExists(destinationFolder.uri))) {
+          await createAdrDirectory(destinationFolder.uri);
+        }
+        const fileName = `${_.padStart(
+          (await getHighestAdrNumber(destinationFolder.uri)) + 1,
+          4,
+          "0"
+        )}-${naturalCase2snakeCase(title)}.md`;
+        const fileUri = vscode.Uri.joinPath(destinationFolder.uri, getAdrDirectoryString(), fileName);
+        await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
+        // Show success message and potentially open file in separate editor
+        const open = await vscode.window.showInformationMessage(
+          "ADR created. Do you want to open the Markdown file?",
+          "Yes",
+          "Cancel"
+        );
+        if (open === "Yes") {
+          vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fileUri));
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -662,21 +658,19 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
  * @returns The highest ADR number of the ADR Directory in the specified root folder.
  */
 async function getHighestAdrNumber(folderUri: vscode.Uri): Promise<number> {
-	const adrFolderUri = vscode.Uri.joinPath(folderUri, getAdrDirectoryString());
-	const allAdrs = await getMDsFromFolder(adrFolderUri);
-	const titleNumbers = allAdrs.map((md) => {
-		return Number.parseInt(
-			md.fileName.substring(md.fileName.lastIndexOf("/") + 1, md.fileName.lastIndexOf("/") + 5)
-		);
-	});
-	const highestNumber = titleNumbers.sort(function (a, b) {
-		return a - b;
-	})[titleNumbers.length - 1];
-	if (!highestNumber && highestNumber !== 0) {
-		return -1;
-	} else {
-		return highestNumber;
-	}
+  const adrFolderUri = vscode.Uri.joinPath(folderUri, getAdrDirectoryString());
+  const allAdrs = await getMDsFromFolder(adrFolderUri);
+  const titleNumbers = allAdrs.map((md) => {
+    return Number.parseInt(md.fileName.substring(md.fileName.lastIndexOf("/") + 1, md.fileName.lastIndexOf("/") + 5));
+  });
+  const highestNumber = titleNumbers.sort(function (a, b) {
+    return a - b;
+  })[titleNumbers.length - 1];
+  if (!highestNumber && highestNumber !== 0) {
+    return -1;
+  } else {
+    return highestNumber;
+  }
 }
 
 /**
@@ -688,14 +682,14 @@ async function getHighestAdrNumber(folderUri: vscode.Uri): Promise<number> {
  * @returns The path of the file relative to the root folder as a string
  */
 function getAdrPathRelativeFromRootFolder(adrUri: vscode.Uri): string {
-	const filePath = adrUri.path;
-	for (const folder of getWorkspaceFolders()) {
-		if (filePath.match(folder.uri.path)) {
-			return filePath.replace(folder.uri.path.substring(0, folder.uri.path.lastIndexOf("/") + 1), "");
-		}
-	}
+  const filePath = adrUri.path;
+  for (const folder of getWorkspaceFolders()) {
+    if (filePath.match(folder.uri.path)) {
+      return filePath.replace(folder.uri.path.substring(0, folder.uri.path.lastIndexOf("/") + 1), "");
+    }
+  }
 
-	return filePath;
+  return filePath;
 }
 
 /**
@@ -704,13 +698,13 @@ function getAdrPathRelativeFromRootFolder(adrUri: vscode.Uri): string {
  * @returns The number of the specified ADR file, or an empty string if the file is not an ADR
  */
 export async function getAdrNumberFromUri(fileUri: vscode.Uri): Promise<string> {
-	const content = await vscode.workspace.fs.readFile(fileUri);
-	const md = new TextDecoder().decode(content);
-	if (!md2adr(md).conforming) {
-		return "";
-	} else {
-		const splitArray = fileUri.toString().split("/");
-		const fileName = splitArray[splitArray.length - 1];
-		return fileName.substring(0, 4);
-	}
+  const content = await vscode.workspace.fs.readFile(fileUri);
+  const md = new TextDecoder().decode(content);
+  if (!md2adr(md).conforming) {
+    return "";
+  } else {
+    const splitArray = fileUri.toString().split("/");
+    const fileName = splitArray[splitArray.length - 1];
+    return fileName.substring(0, 4);
+  }
 }

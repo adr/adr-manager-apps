@@ -4,7 +4,9 @@
   "private": true,
   "description": "Shared Prettier config for the ADR Manager monorepo",
   "main": "index.json",
-  "files": ["index.json"],
+  "files": [
+    "index.json"
+  ],
   "exports": {
     ".": "./index.json"
   },

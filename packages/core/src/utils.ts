@@ -80,12 +80,7 @@ export function snakeCase2naturalCase(snake: string): string {
  * Example: "Add status Field" -> "add-status-field"
  */
 export function naturalCase2snakeCase(natural: string): string {
-  return natural
-    .trim()
-    .toLowerCase()
-    .replace(/  +/g, " ")
-    .split(" ")
-    .join("-");
+  return natural.trim().toLowerCase().replace(/  +/g, " ").split(" ").join("-");
 }
 
 /**
@@ -95,8 +90,26 @@ export function naturalCase2snakeCase(natural: string): string {
 export function naturalCase2titleCase(natural: string): string {
   // Minor words left lowercase unless first/last in the string.
   const lowers = [
-    "A", "An", "The", "And", "But", "Or", "For", "Nor", "As", "At",
-    "By", "From", "In", "Into", "Near", "Of", "On", "Onto", "To", "With"
+    "A",
+    "An",
+    "The",
+    "And",
+    "But",
+    "Or",
+    "For",
+    "Nor",
+    "As",
+    "At",
+    "By",
+    "From",
+    "In",
+    "Into",
+    "Near",
+    "Of",
+    "On",
+    "Onto",
+    "To",
+    "With"
   ];
   // Initialisms / acronyms left uppercase.
   const uppers = ["ID", "TV", "ADR", "CC0", "MADR"];

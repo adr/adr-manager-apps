@@ -4,10 +4,5 @@
     "baseUrl": "."
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
-  "exclude": [
-    "node_modules",
-    "src/parser/MADRLexer.js",
-    "src/parser/MADRParser.js",
-    "src/parser/MADRListener.js"
-  ]
+  "exclude": ["node_modules", "src/parser/MADRLexer.js", "src/parser/MADRParser.js", "src/parser/MADRListener.js"]
 }

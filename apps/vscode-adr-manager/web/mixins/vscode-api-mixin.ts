@@ -2,12 +2,12 @@
 declare const vscode: any;
 
 export default {
-	methods: {
-		sendMessage(command: string, data?: any | undefined) {
-			vscode.postMessage({
-				command: command,
-				data: data,
-			});
-		},
-	},
+  methods: {
+    sendMessage(command: string, data?: any | undefined) {
+      vscode.postMessage({
+        command: command,
+        data: data
+      });
+    }
+  }
 };

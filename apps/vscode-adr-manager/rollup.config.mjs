@@ -26,47 +26,47 @@ const postCssPlugins = [postcssImport()];
 // (plus an extracted .css) that the extension loads into its web views (see WebPanel.ts).
 // The compiled files are stored in the "dist/web" directory.
 export default fs.readdirSync(path.join(__dirname, "web", "pages")).map((input) => {
-	const name = input.split(".")[0].toLowerCase();
-	return {
-		input: `web/pages/${input}`,
-		output: {
-			file: `dist/web/${name}.js`,
-			format: "iife",
-			name: "app",
-			sourcemap: false,
-		},
-		plugins: [
-			vue(),
-			commonjs(),
-			json(),
-			alias({
-				entries: [{ find: "@", replacement: __dirname + "/web/" }],
-			}),
-			image(),
-			postcss({ extract: `${name}.css`, plugins: postCssPlugins }),
-			copy({
-				targets: [{ src: "web/assets", dest: "dist" }],
-			}),
-			nodePolyFills(),
-			resolve({
-				browser: true,
-				dedupe: ["vue"],
-			}),
-			replace({
-				"process.env.NODE_ENV": production ? '"production"' : '"development"',
-				preventAssignment: true,
-			}),
-			esbuild({
-				minify: production,
-				target: "esnext",
-			}),
-			production && terser(),
-			production && filesize(),
-		],
-		external: ["vscode"],
-		watch: {
-			clearScreen: false,
-			exclude: ["node_modules/**"],
-		},
-	};
+  const name = input.split(".")[0].toLowerCase();
+  return {
+    input: `web/pages/${input}`,
+    output: {
+      file: `dist/web/${name}.js`,
+      format: "iife",
+      name: "app",
+      sourcemap: false
+    },
+    plugins: [
+      vue(),
+      commonjs(),
+      json(),
+      alias({
+        entries: [{ find: "@", replacement: __dirname + "/web/" }]
+      }),
+      image(),
+      postcss({ extract: `${name}.css`, plugins: postCssPlugins }),
+      copy({
+        targets: [{ src: "web/assets", dest: "dist" }]
+      }),
+      nodePolyFills(),
+      resolve({
+        browser: true,
+        dedupe: ["vue"]
+      }),
+      replace({
+        "process.env.NODE_ENV": production ? '"production"' : '"development"',
+        preventAssignment: true
+      }),
+      esbuild({
+        minify: production,
+        target: "esnext"
+      }),
+      production && terser(),
+      production && filesize()
+    ],
+    external: ["vscode"],
+    watch: {
+      clearScreen: false,
+      exclude: ["node_modules/**"]
+    }
+  };
 });

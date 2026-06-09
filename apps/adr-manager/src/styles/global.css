@@ -1,21 +1,21 @@
 a {
-  text-decoration: none;
+    text-decoration: none;
 }
 a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 .v-btn:not(.v-tab) {
-  text-transform: uppercase;
-  letter-spacing: 1.25px;
+    text-transform: uppercase;
+    letter-spacing: 1.25px;
 }
 
 .cm-gutter {
-  width: 32px;
-  min-width: 32px;
+    width: 32px;
+    min-width: 32px;
 }
 
 .drag-active {
-  border-left: 2px solid #1976d2;
-  margin-left: -2px;
+    border-left: 2px solid #1976d2;
+    margin-left: -2px;
 }

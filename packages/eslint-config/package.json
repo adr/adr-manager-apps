@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Shared ESLint flat config for the ADR Manager monorepo",
-  "files": ["base.js", "vue.js", "node.js"],
+  "files": [
+    "base.js",
+    "vue.js",
+    "node.js"
+  ],
   "exports": {
     "./base": "./base.js",
     "./vue": "./vue.js",

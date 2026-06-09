@@ -2,14 +2,14 @@
 	<div id="considered-options-container">
 		<div id="options-header">
 			<TemplateHeader
-				:infoText="'List of all considered options.\nClick to select an option, rearrange options by drag and drop.\nOnly write a concise description; you can add a more detailed description when using the Professional MADR template.'"
+				:info-text="'List of all considered options.\nClick to select an option, rearrange options by drag and drop.\nOnly write a concise description; you can add a more detailed description when using the Professional MADR template.'"
 			>
 				<h2>Considered Options</h2>
 			</TemplateHeader>
-			<AddOptionButton @addOption="$emit('addOption')"></AddOptionButton>
+			<AddOptionButton @add-option="$emit('addOption')"></AddOptionButton>
 		</div>
 		<div id="options">
-			<div id="no-options-container" v-if="consideredOptions.length === 0">
+			<div v-if="consideredOptions.length === 0" id="no-options-container">
 				<h3>
 					<strong>No options available</strong>
 				</h3>
@@ -30,12 +30,12 @@
 							? 'selected-option'
 							: 'unselected-option'
 					"
-					@selectOption="$emit('selectOption', index)"
-					@editOption="$emit('editOption', { title: option.title, index: index })"
-					@deleteOption="$emit('deleteOption', index)"
+					@select-option="$emit('selectOption', index)"
+					@edit-option="$emit('editOption', { title: option.title, index: index })"
+					@delete-option="$emit('deleteOption', index)"
 				></OptionContainerBasic>
 			</draggable>
-			<div id="rearrange-message-container" v-if="consideredOptions.length >= 2">
+			<div v-if="consideredOptions.length >= 2" id="rearrange-message-container">
 				<h4>
 					<i>Click to choose option; rearrange options by dragging</i>
 				</h4>
@@ -62,15 +62,15 @@
 			AddOptionButton,
 			draggable: VueDraggableNext,
 		},
-		setup() {
-			return {
-				v$: useValidate(),
-			};
-		},
 		props: {
 			consideredOptionsProp: Array as PropType<string[]>,
 			chosenOption: String,
 			selectedIndex: Number,
+		},
+		setup() {
+			return {
+				v$: useValidate(),
+			};
 		},
 		data() {
 			return {

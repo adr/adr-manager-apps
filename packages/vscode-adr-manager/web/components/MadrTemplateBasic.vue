@@ -1,41 +1,41 @@
 <template>
 	<div id="template">
 		<TemplateTitleSection
-			:titleProp="title"
 			ref="title"
-			v-model:title="title"
-			@validate="validate('title')"
 			:key="dataFetched"
+			v-model:title="title"
+			:title-prop="title"
+			@validate="validate('title')"
 		></TemplateTitleSection>
 		<hr />
 		<TemplateContextAndProblemStatementSection
-			:contextAndProblemStatementProp="contextAndProblemStatement"
 			ref="contextAndProblemStatement"
-			v-model:contextAndProblemStatement="contextAndProblemStatement"
-			@validate="validate('contextAndProblemStatement')"
 			:key="dataFetched"
+			v-model:context-and-problem-statement="contextAndProblemStatement"
+			:context-and-problem-statement-prop="contextAndProblemStatement"
+			@validate="validate('contextAndProblemStatement')"
 		></TemplateContextAndProblemStatementSection>
 		<hr />
 		<TemplateConsideredOptionsBasicSection
-			:consideredOptionsProp="consideredOptions"
 			ref="consideredOptions"
-			v-model:consideredOptions="consideredOptions"
-			v-model:chosenOption="decisionOutcome.chosenOption"
-			v-model:selectedIndex="selectedIndex"
-			@addOption="addOption"
-			@selectOption="selectOption"
-			@editOption="editOption"
-			@deleteOption="deleteOption"
-			@checkSelection="checkSelection"
 			:key="dataFetched"
+			v-model:considered-options="consideredOptions"
+			v-model:chosen-option="decisionOutcome.chosenOption"
+			v-model:selected-index="selectedIndex"
+			:considered-options-prop="consideredOptions"
+			@add-option="addOption"
+			@select-option="selectOption"
+			@edit-option="editOption"
+			@delete-option="deleteOption"
+			@check-selection="checkSelection"
 		></TemplateConsideredOptionsBasicSection>
 		<hr />
 		<TemplateDecisionOutcomeBasicSection
-			:decisionOutcomeProp="decisionOutcome"
 			ref="decisionOutcome"
-			v-model:explanation="decisionOutcome.explanation"
-			@validate="validate('explanation')"
 			:key="dataFetched"
+			v-model:explanation="decisionOutcome.explanation"
+			:decision-outcome-prop="decisionOutcome"
+			@validate="validate('explanation')"
 		></TemplateDecisionOutcomeBasicSection>
 	</div>
 </template>

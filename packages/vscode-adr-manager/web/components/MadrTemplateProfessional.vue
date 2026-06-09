@@ -1,73 +1,73 @@
 <template>
 	<div id="template">
 		<TemplateTitleSection
-			:titleProp="title"
 			ref="title"
-			v-model:title="title"
-			@validate="validate('title')"
 			:key="dataFetched"
+			v-model:title="title"
+			:title-prop="title"
+			@validate="validate('title')"
 		></TemplateTitleSection>
 		<TemplateDateStatusDecidersSection
+			:key="dataFetched"
 			v-model:date="date"
 			v-model:status="status"
 			v-model:deciders="deciders"
 			@validate="validateAll"
-			:key="dataFetched"
 		></TemplateDateStatusDecidersSection>
 		<TemplateTechnicalStorySection
-			v-model:technicalStory="technicalStory"
-			@validate="validateAll"
 			:key="dataFetched"
+			v-model:technical-story="technicalStory"
+			@validate="validateAll"
 		></TemplateTechnicalStorySection>
 		<hr />
 		<TemplateContextAndProblemStatementSection
-			:contextAndProblemStatementProp="contextAndProblemStatement"
 			ref="contextAndProblemStatement"
-			v-model:contextAndProblemStatement="contextAndProblemStatement"
-			@validate="validate('contextAndProblemStatement')"
 			:key="dataFetched"
+			v-model:context-and-problem-statement="contextAndProblemStatement"
+			:context-and-problem-statement-prop="contextAndProblemStatement"
+			@validate="validate('contextAndProblemStatement')"
 		></TemplateContextAndProblemStatementSection>
 		<hr />
 		<TemplateDecisionDriversSection
-			:decisionDriversProp="decisionDrivers"
-			v-model:decisionDrivers="decisionDrivers"
-			@update:decisionDrivers="validateAll"
 			:key="dataFetched"
+			v-model:decision-drivers="decisionDrivers"
+			:decision-drivers-prop="decisionDrivers"
+			@update:decision-drivers="validateAll"
 		></TemplateDecisionDriversSection>
 		<hr />
 		<TemplateConsideredOptionsProfessionalSection
-			:consideredOptionsProp="consideredOptions"
 			ref="consideredOptions"
-			v-model:consideredOptions="consideredOptions"
-			v-model:chosenOption="decisionOutcome.chosenOption"
-			v-model:selectedIndex="selectedIndex"
-			@addOption="addOption"
-			@selectOption="selectOption"
-			@deleteOption="deleteOption"
-			@checkSelection="checkSelection"
+			:key="dataFetched"
+			v-model:considered-options="consideredOptions"
+			v-model:chosen-option="decisionOutcome.chosenOption"
+			v-model:selected-index="selectedIndex"
+			:considered-options-prop="consideredOptions"
+			@add-option="addOption"
+			@select-option="selectOption"
+			@delete-option="deleteOption"
+			@check-selection="checkSelection"
 			@validate="
 				validate('consideredOptions');
 				validate('chosenOption');
 			"
-			:key="dataFetched"
 		></TemplateConsideredOptionsProfessionalSection>
 		<hr />
 		<TemplateDecisionOutcomeProfessionalSection
-			:decisionOutcomeProp="decisionOutcome"
 			ref="decisionOutcome"
-			v-model:explanation="decisionOutcome.explanation"
-			v-model:positiveConsequences="decisionOutcome.positiveConsequences"
-			v-model:negativeConsequences="decisionOutcome.negativeConsequences"
-			@validate="validate('explanation')"
-			@updateArray="validateAll"
 			:key="dataFetched"
+			v-model:explanation="decisionOutcome.explanation"
+			v-model:positive-consequences="decisionOutcome.positiveConsequences"
+			v-model:negative-consequences="decisionOutcome.negativeConsequences"
+			:decision-outcome-prop="decisionOutcome"
+			@validate="validate('explanation')"
+			@update-array="validateAll"
 		></TemplateDecisionOutcomeProfessionalSection>
 		<hr />
 		<TemplateLinksSection
-			:linksProp="links"
-			v-model:links="links"
-			@update:links="validateAll"
 			:key="dataFetched"
+			v-model:links="links"
+			:links-prop="links"
+			@update:links="validateAll"
 		></TemplateLinksSection>
 	</div>
 </template>

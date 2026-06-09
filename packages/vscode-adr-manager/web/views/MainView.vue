@@ -2,17 +2,17 @@
 	<div id="main">
 		<img src="../assets/header-dark-theme.png" alt="ADR Manager Header Image" class="logo" />
 		<div id="adr-list">
-			<div class="adr-folder" v-for="(folder, index) in nonEmptySortedWorkspaceFolders" :key="index">
+			<div v-for="(folder, index) in nonEmptySortedWorkspaceFolders" :key="index" class="adr-folder">
 				<h2>
 					<strong>{{ folder }}</strong>
 				</h2>
-				<div class="adr-folder-list" v-for="(adr, adrIndex) in adrsInFolder(folder)" :key="adrIndex">
+				<div v-for="(adr, adrIndex) in adrsInFolder(folder)" :key="adrIndex" class="adr-folder-list">
 					<ADRContainer
 						:key="index"
 						:adr="adr"
-						@requestDelete="requestDelete(adr)"
-						@requestView="requestView(adr)"
-						@requestEdit="requestEdit(adr)"
+						@request-delete="requestDelete(adr)"
+						@request-view="requestView(adr)"
+						@request-edit="requestEdit(adr)"
 					></ADRContainer>
 				</div>
 			</div>
@@ -79,6 +79,32 @@
 				return this.allAdrs.length > 0;
 			},
 		},
+		/**
+		 * Sets up event listeners to receive messages and data from the extension, and fetch ADRs
+		 * upon rendering the view.
+		 */
+		mounted() {
+			window.addEventListener("message", (event) => {
+				const message = event.data;
+				switch (message.command) {
+					case "fetchAdrs": {
+						this.allAdrs = JSON.parse(message.adrs);
+						break;
+					}
+					case "getWorkspaceFolders": {
+						this.workspaceFolders = JSON.parse(message.workspaceFolders);
+						break;
+					}
+					case "getAdrDirectory": {
+						this.adrDirectory = message.adrDirectory;
+						break;
+					}
+				}
+			});
+			this.sendMessage("fetchAdrs");
+			this.sendMessage("getWorkspaceFolders");
+			this.sendMessage("getAdrDirectory");
+		},
 		methods: {
 			/**
 			 * Returns an array of ADRs that are located inside of the specified folder.
@@ -125,32 +151,6 @@
 			}) {
 				this.sendMessage("view", { fullPath: adr.fullPath });
 			},
-		},
-		/**
-		 * Sets up event listeners to receive messages and data from the extension, and fetch ADRs
-		 * upon rendering the view.
-		 */
-		mounted() {
-			window.addEventListener("message", (event) => {
-				const message = event.data;
-				switch (message.command) {
-					case "fetchAdrs": {
-						this.allAdrs = JSON.parse(message.adrs);
-						break;
-					}
-					case "getWorkspaceFolders": {
-						this.workspaceFolders = JSON.parse(message.workspaceFolders);
-						break;
-					}
-					case "getAdrDirectory": {
-						this.adrDirectory = message.adrDirectory;
-						break;
-					}
-				}
-			});
-			this.sendMessage("fetchAdrs");
-			this.sendMessage("getWorkspaceFolders");
-			this.sendMessage("getAdrDirectory");
 		},
 	});
 </script>

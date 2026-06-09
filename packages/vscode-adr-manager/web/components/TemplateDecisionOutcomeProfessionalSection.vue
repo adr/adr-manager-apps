@@ -1,30 +1,30 @@
 <template>
 	<div id="decision-outcome-container">
-		<TemplateHeader :infoText="'Add an explanation for the chosen option.'">
+		<TemplateHeader :info-text="'Add an explanation for the chosen option.'">
 			<h2>Decision Outcome</h2>
 		</TemplateHeader>
 		<div id="chosen-option-container">
 			<h3 id="chosen-option-text">
 				Chosen Option: <b>{{ chosenOptionText }}</b>
 			</h3>
-			<h3 id="chosen-option-error" v-if="!decisionOutcome.chosenOption">There must be one chosen option</h3>
+			<h3 v-if="!decisionOutcome.chosenOption" id="chosen-option-error">There must be one chosen option</h3>
 		</div>
 		<div id="explanation">
 			<h3>because</h3>
 			<div id="explanation-input-container">
 				<textarea
 					id="auto-grow-explanation"
+					ref="explanation"
+					v-model="v$.decisionOutcome.explanation.$model"
 					spellcheck="true"
 					:class="v$.decisionOutcome.explanation.$error ? 'invalid-input' : ''"
-					v-model="v$.decisionOutcome.explanation.$model"
 					@input="
 						updateHeight('explanation');
 						$emit('update:explanation', $event.target.value);
 						$emit('validate');
 					"
-					ref="explanation"
 				/>
-				<h4 class="error-message" v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid">
+				<h4 v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid" class="error-message">
 					{{ error.$message }}
 				</h4>
 			</div>
@@ -32,7 +32,7 @@
 		<div id="consequences-container">
 			<div id="positive-consequences-container">
 				<TemplateHeader
-					:infoText="'Give positive consequences, e.g., improvement of a quality attribute, follow-up decisions required, ...'"
+					:info-text="'Give positive consequences, e.g., improvement of a quality attribute, follow-up decisions required, ...'"
 				>
 					<h3>Positive Consequences</h3>
 				</TemplateHeader>
@@ -48,24 +48,24 @@
 				>
 					<div
 						v-for="(positive, index) in positiveConsequencesWithBlank"
-						:key="index"
-						class="multi-input"
 						id="positives"
+						:key="index"
 						ref="positives"
+						class="multi-input"
 					>
 						<i
-							class="codicon codicon-grabber positive-consequences-grabber"
 							v-if="decisionOutcome.positiveConsequences[index] !== ''"
+							class="codicon codicon-grabber positive-consequences-grabber"
 						></i>
 						<textarea
+							v-model="decisionOutcome.positiveConsequences[index]"
 							class="auto-grow-positive-consequence"
 							spellcheck="true"
-							v-model="decisionOutcome.positiveConsequences[index]"
 							@input="updateArray('positiveConsequences', $event.target.value, index, 'positives')"
 						/>
 						<i
-							class="codicon codicon-close multi-input-delete-icon"
 							v-if="decisionOutcome.positiveConsequences[index] !== ''"
+							class="codicon codicon-close multi-input-delete-icon"
 							@click="updateArray('positiveConsequences', '', index, 'positives')"
 						></i>
 					</div>
@@ -73,7 +73,7 @@
 			</div>
 			<div id="negative-consequences-container">
 				<TemplateHeader
-					:infoText="'Give negative consequences, e.g., afflicted quality attributes, follow-up decisions required, ...'"
+					:info-text="'Give negative consequences, e.g., afflicted quality attributes, follow-up decisions required, ...'"
 				>
 					<h3>Negative Consequences:</h3>
 				</TemplateHeader>
@@ -89,24 +89,24 @@
 				>
 					<div
 						v-for="(negative, index) in negativeConsequencesWithBlank"
-						:key="index"
-						class="multi-input"
 						id="negatives"
+						:key="index"
 						ref="negatives"
+						class="multi-input"
 					>
 						<i
-							class="codicon codicon-grabber negative-consequences-grabber"
 							v-if="decisionOutcome.negativeConsequences[index] !== ''"
+							class="codicon codicon-grabber negative-consequences-grabber"
 						></i>
 						<textarea
+							v-model="decisionOutcome.negativeConsequences[index]"
 							class="auto-grow-negative-consequence"
 							spellcheck="true"
-							v-model="decisionOutcome.negativeConsequences[index]"
 							@input="updateArray('negativeConsequences', $event.target.value, index, 'negatives')"
 						/>
 						<i
-							class="codicon codicon-close multi-input-delete-icon"
 							v-if="decisionOutcome.negativeConsequences[index] !== ''"
+							class="codicon codicon-close multi-input-delete-icon"
 							@click="updateArray('negativeConsequences', '', index, 'negatives')"
 						></i>
 					</div>
@@ -130,11 +130,6 @@
 			TemplateHeader,
 			draggable: VueDraggableNext,
 		},
-		setup() {
-			return {
-				v$: useVuelidate(),
-			};
-		},
 		props: {
 			decisionOutcomeProp: {
 				type: Object as PropType<{
@@ -150,6 +145,11 @@
 					negativeConsequences: [] as string[],
 				},
 			},
+		},
+		setup() {
+			return {
+				v$: useVuelidate(),
+			};
 		},
 		data() {
 			return {
@@ -183,6 +183,25 @@
 				negativeConsequencesWithBlank.push("");
 				return negativeConsequencesWithBlank;
 			},
+		},
+		/**
+		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+		 */
+		mounted() {
+			//@ts-ignore
+			this.$refs.explanation.dispatchEvent(new Event("input"));
+			//@ts-ignore
+			this.$refs.positives.forEach((positive) => {
+				if (positive.children[1]) {
+					positive.children[1].dispatchEvent(new Event("input"));
+				}
+			});
+			//@ts-ignore
+			this.$refs.negatives.forEach((negative) => {
+				if (negative.children[1]) {
+					negative.children[1].dispatchEvent(new Event("input"));
+				}
+			});
 		},
 		methods: {
 			/**
@@ -269,25 +288,6 @@
 					}
 				}
 			},
-		},
-		/**
-		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-		 */
-		mounted() {
-			//@ts-ignore
-			this.$refs.explanation.dispatchEvent(new Event("input"));
-			//@ts-ignore
-			this.$refs.positives.forEach((positive) => {
-				if (positive.children[1]) {
-					positive.children[1].dispatchEvent(new Event("input"));
-				}
-			});
-			//@ts-ignore
-			this.$refs.negatives.forEach((negative) => {
-				if (negative.children[1]) {
-					negative.children[1].dispatchEvent(new Event("input"));
-				}
-			});
 		},
 		validations() {
 			return {

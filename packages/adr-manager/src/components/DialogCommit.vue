@@ -15,20 +15,10 @@
             <v-card-text>
                 <div class="cardTextPos">
                     <v-icon>mdi-file</v-icon><span class="spanAfterIcon spanTitle"> Select files</span>
-                    <v-icon
-                        data-cy="mdiCheckSelected"
-                        class="status-icon-corner"
-                        v-if="fileSelected"
-                        color="success"
-                    >
+                    <v-icon data-cy="mdiCheckSelected" class="status-icon-corner" v-if="fileSelected" color="success">
                         mdi-check
                     </v-icon>
-                    <v-icon
-                        data-cy="mdiAlertNotSelected"
-                        class="status-icon-corner"
-                        v-if="!fileSelected"
-                        color="error"
-                    >
+                    <v-icon data-cy="mdiAlertNotSelected" class="status-icon-corner" v-if="!fileSelected" color="error">
                         mdi-alert-circle-outline
                     </v-icon>
                 </div>

@@ -1,9 +1,5 @@
 <template>
-    <v-card
-        class="editor text-left d-flex flex-column px-0 pb-2 h-100"
-        id="editor-convert"
-        data-cy="convertEditor"
-    >
+    <v-card class="editor text-left d-flex flex-column px-0 pb-2 h-100" id="editor-convert" data-cy="convertEditor">
         <v-card-title> Sorry, there were issues while parsing the ADR. </v-card-title>
         <div>
             If you want to use the MADR-Editor, our parser will generate the markdown on the right-hand side. You can

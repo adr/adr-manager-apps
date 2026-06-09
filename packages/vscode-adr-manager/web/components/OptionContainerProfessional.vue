@@ -8,12 +8,12 @@
 	>
 		<h4 @click="$emit('selectOption')"><strong>Title</strong></h4>
 		<input
-			spellcheck="true"
 			v-model="v$.title.$model"
+			spellcheck="true"
 			:class="v$.title.$error ? 'invalid-input' : ''"
 			@input="$emit('update:title', $event.target.value)"
 		/>
-		<h4 class="error-message" v-for="error of v$.title.$errors" :key="error.$uid">{{ error.$message }}</h4>
+		<h4 v-for="error of v$.title.$errors" :key="error.$uid" class="error-message">{{ error.$message }}</h4>
 		<div id="option-description-container" @click.self="$emit('selectOption')">
 			<h4 @click="$emit('selectOption')"><strong>Description</strong></h4>
 			<textarea
@@ -39,17 +39,17 @@
 						checkMove('pros', $event);
 					"
 				>
-					<div v-for="(pro, index) in prosWithBlank" :key="index" id="pros" ref="pros">
-						<i class="codicon codicon-grabber pros-grabber" v-if="pros[index] !== ''"></i>
+					<div v-for="(pro, index) in prosWithBlank" id="pros" :key="index" ref="pros">
+						<i v-if="pros[index] !== ''" class="codicon codicon-grabber pros-grabber"></i>
 						<textarea
+							v-model="pros[index]"
 							class="auto-grow-pro"
 							spellcheck="true"
-							v-model="pros[index]"
 							@input="updateArray('pros', $event.target.value, index, 'pros')"
 						/>
 						<i
-							class="codicon codicon-close multi-input-delete-icon"
 							v-if="pros[index] !== ''"
+							class="codicon codicon-close multi-input-delete-icon"
 							@click="updateArray('pros', '', index, 'pros')"
 						></i>
 					</div>
@@ -67,17 +67,17 @@
 						checkMove('cons', $event);
 					"
 				>
-					<div v-for="(con, index) in consWithBlank" :key="index" id="cons" ref="cons">
-						<i class="codicon codicon-grabber cons-grabber" v-if="cons[index] !== ''"></i>
+					<div v-for="(con, index) in consWithBlank" id="cons" :key="index" ref="cons">
+						<i v-if="cons[index] !== ''" class="codicon codicon-grabber cons-grabber"></i>
 						<textarea
+							v-model="cons[index]"
 							class="auto-grow-con"
 							spellcheck="true"
-							v-model="cons[index]"
 							@input="updateArray('cons', $event.target.value, index, 'cons')"
 						/>
 						<i
-							class="codicon codicon-close multi-input-delete-icon"
 							v-if="cons[index] !== ''"
+							class="codicon codicon-close multi-input-delete-icon"
 							@click="updateArray('cons', '', index, 'cons')"
 						></i>
 					</div>
@@ -111,11 +111,6 @@
 		components: {
 			draggable: VueDraggableNext,
 		},
-		setup() {
-			return {
-				v$: useValidate(),
-			};
-		},
 		props: {
 			titleProp: String,
 			description: String,
@@ -127,6 +122,11 @@
 				type: Array as PropType<string[]>,
 				default: [],
 			},
+		},
+		setup() {
+			return {
+				v$: useValidate(),
+			};
 		},
 		data() {
 			return {
@@ -151,6 +151,9 @@
 				consWithBlank.push("");
 				return consWithBlank;
 			},
+		},
+		mounted() {
+			this.v$.$touch();
 		},
 		methods: {
 			/**
@@ -226,9 +229,6 @@
 					}
 				}
 			},
-		},
-		mounted() {
-			this.v$.$touch();
 		},
 		validations() {
 			return {

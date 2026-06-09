@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // For the VS Code extension host (CommonJS, Node, emits to dist; allowJs for generated ANTLR sources).
+  "extends": "./base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"],
+    "sourceMap": true,
+    "allowJs": true
+  }
+}

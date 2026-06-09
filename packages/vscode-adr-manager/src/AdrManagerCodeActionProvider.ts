@@ -4,9 +4,9 @@ import { naturalCase2titleCase } from "./plugins/utils";
 export class AdrManagerCodeActionProvider implements vscode.CodeActionProvider {
 	provideCodeActions(
 		document: vscode.TextDocument,
-		range: vscode.Range | vscode.Selection,
+		_range: vscode.Range | vscode.Selection,
 		context: vscode.CodeActionContext,
-		token: vscode.CancellationToken
+		_token: vscode.CancellationToken
 	): vscode.ProviderResult<(vscode.CodeAction | vscode.Command)[]> {
 		const actions = new Array<vscode.CodeAction | vscode.Command>();
 

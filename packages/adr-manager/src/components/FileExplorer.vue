@@ -105,7 +105,9 @@
         <div class="flex-grow-0 d-flex flex-wrap">
             <DialogAddRepositories>
                 <template #activator="{ props }">
-                    <v-btn data-cy="addRepo" v-bind="props" color="secondary" class="flex-grow-1"> Add Repository </v-btn>
+                    <v-btn data-cy="addRepo" v-bind="props" color="secondary" class="flex-grow-1">
+                        Add Repository
+                    </v-btn>
                 </template>
             </DialogAddRepositories>
         </div>

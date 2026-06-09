@@ -1,6 +1,6 @@
 <template>
 	<div id="links" class="input-group">
-		<TemplateHeader :infoText="'Add references, e.g., to related ADRs.'">
+		<TemplateHeader :info-text="'Add references, e.g., to related ADRs.'">
 			<h2>Links</h2>
 		</TemplateHeader>
 		<draggable
@@ -13,17 +13,17 @@
 				checkMove;
 			"
 		>
-			<div v-for="(link, index) in linksWithBlank" :key="index" class="multi-input" ref="links">
-				<i class="codicon codicon-grabber links-grabber" v-if="links[index] !== ''"></i>
+			<div v-for="(link, index) in linksWithBlank" :key="index" ref="links" class="multi-input">
+				<i v-if="links[index] !== ''" class="codicon codicon-grabber links-grabber"></i>
 				<textarea
+					v-model="links[index]"
 					class="auto-grow-link"
 					spellcheck="true"
-					v-model="links[index]"
 					@input="updateArray($event.target.value, index)"
 				/>
 				<i
-					class="codicon codicon-close multi-input-delete-icon"
 					v-if="links[index] !== ''"
+					class="codicon codicon-close multi-input-delete-icon"
 					@click="updateArray('', index)"
 				></i>
 			</div>
@@ -64,6 +64,17 @@
 				return linksWithBlank;
 			},
 		},
+		/**
+		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+		 */
+		mounted() {
+			//@ts-ignore
+			this.$refs.links.forEach((link) => {
+				if (link.children[1]) {
+					link.children[1].dispatchEvent(new Event("input"));
+				}
+			});
+		},
 		methods: {
 			/**
 			 * Prevents the user to drag an item below an empty input field that is reserved for new inputs.
@@ -97,17 +108,6 @@
 					});
 				});
 			},
-		},
-		/**
-		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-		 */
-		mounted() {
-			//@ts-ignore
-			this.$refs.links.forEach((link) => {
-				if (link.children[1]) {
-					link.children[1].dispatchEvent(new Event("input"));
-				}
-			});
 		},
 	});
 </script>

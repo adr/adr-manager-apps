@@ -31,7 +31,7 @@ const extensionConfig = {
 		rules: [
 			{
 				test: /\.ts$/,
-				exclude: [/node_modules/, /web/],
+				exclude: [/node_modules\/(?!@adr-manager\/)/, /web/],
 				use: [
 					{
 						loader: "ts-loader",

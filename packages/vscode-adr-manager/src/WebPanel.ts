@@ -93,6 +93,8 @@ export class WebPanel {
 					case "view": {
 						const fileUri = vscode.Uri.file(e.data.fullPath);
 						await this.viewAdr(fileUri);
+						this.fetchAdrs();
+						return;
 					}
 					case "fetchAdrs": {
 						this.fetchAdrs();
@@ -206,7 +208,7 @@ export class WebPanel {
 					}
 					case "updateFileStatus": {
 						try {
-							const tryRead = await vscode.workspace.fs.readFile(vscode.Uri.file(e.data.fullPath));
+							await vscode.workspace.fs.readFile(vscode.Uri.file(e.data.fullPath));
 						} catch (FileSystemError) {
 							vscode.window.showErrorMessage("The ADR file has changed unexpectedly.");
 							vscode.commands.executeCommand("vscode-adr-manager.openMainWebView");
@@ -362,7 +364,7 @@ export class WebPanel {
 	private watchForWorkspaceChanges() {
 		this.watchForMarkdownChanges();
 		vscode.workspace.onDidChangeWorkspaceFolders(
-			async (e) => {
+			async () => {
 				this.fetchAdrs();
 				this.sendWorkspaceFolders();
 			},
@@ -380,7 +382,7 @@ export class WebPanel {
 		this._disposables.push(fileWatcher);
 
 		fileWatcher.onDidCreate(
-			async (e) => {
+			async () => {
 				this.fetchAdrs();
 				this.sendWorkspaceFolders();
 			},
@@ -388,7 +390,7 @@ export class WebPanel {
 			this._disposables
 		);
 		fileWatcher.onDidChange(
-			async (e) => {
+			async () => {
 				this.fetchAdrs();
 				this.sendWorkspaceFolders();
 				if (this._panel.title.startsWith("ADR Manager - View ADR", 0)) {
@@ -399,7 +401,7 @@ export class WebPanel {
 			this._disposables
 		);
 		fileWatcher.onDidDelete(
-			async (e) => {
+			async () => {
 				this.fetchAdrs();
 				this.sendWorkspaceFolders();
 				if (this._panel.title.startsWith("ADR Manager - View ADR", 0)) {

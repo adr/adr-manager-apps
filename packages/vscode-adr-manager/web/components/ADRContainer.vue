@@ -8,12 +8,12 @@
 				</h5>
 			</div>
 			<div class="button-group">
-				<button id="view" v-if="adr.adr.conforming" @click="$emit('requestView')">View</button>
-				<button id="edit" v-else @click="$emit('requestEdit')">Edit</button>
+				<button v-if="adr.adr.conforming" id="view" @click="$emit('requestView')">View</button>
+				<button v-else id="edit" @click="$emit('requestEdit')">Edit</button>
 				<button id="delete" @click="$emit('requestDelete')">Delete</button>
 			</div>
 		</div>
-		<h4 v-if="!adr.adr.conforming" class="not-conforming-message" v-for="error in adr.adr.parseErrors">
+		<h4 v-for="error in adr.adr.parseErrors" v-if="!adr.adr.conforming" class="not-conforming-message">
 			{{ "Parsing error at line " + error.line + ", position " + error.charPosition + ": " + error.message }}
 		</h4>
 	</div>

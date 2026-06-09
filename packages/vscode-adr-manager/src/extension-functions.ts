@@ -10,7 +10,7 @@ import {
 import { adr2md, md2adr } from "./plugins/parser";
 import { cleanPathString, matchesMadrTitleFormat, naturalCase2snakeCase } from "./plugins/utils";
 import { WebPanel } from "./WebPanel";
-var _ = require("lodash");
+const _ = require("lodash");
 
 /**
  * Returns the workspace folders opened in the current VS Code instance.
@@ -220,7 +220,7 @@ export async function adrDirectoryExists(folderUri: vscode.Uri) {
 		for (let i = 0; i < subDirectories.length; i++) {
 			if (currentDirectoryFound) {
 				currentDirectoryFound = false;
-				let currentDirectory = await vscode.workspace.fs.readDirectory(currentUri);
+				const currentDirectory = await vscode.workspace.fs.readDirectory(currentUri);
 				for (const [name, type] of currentDirectory) {
 					if (type === vscode.FileType.Directory && name === subDirectories[i]) {
 						currentDirectoryFound = true;
@@ -279,7 +279,7 @@ export async function createMarkdownFile(folderUri: vscode.Uri, name: string, co
  * @returns A string array of all folder names currently opened in the workspace
  */
 export function getWorkspaceFolderNames(): string[] {
-	let names: string[] = [];
+	const names: string[] = [];
 	if (isWorkspaceOpened()) {
 		getWorkspaceFolders().forEach((folder) => {
 			names.push(folder.name);
@@ -335,7 +335,7 @@ export async function getAllMDs(): Promise<
 export async function getMDsFromFolder(
 	folderUri: vscode.Uri
 ): Promise<{ adr: string; fullPath: string; relativePath: string; fileName: string }[]> {
-	let adrs: { adr: string; fullPath: string; relativePath: string; fileName: string }[] = [];
+	const adrs: { adr: string; fullPath: string; relativePath: string; fileName: string }[] = [];
 	const directory = await vscode.workspace.fs.readDirectory(folderUri);
 	for (const [name, type] of directory) {
 		if (type === vscode.FileType.File && matchesMadrTitleFormat(name)) {
@@ -473,6 +473,7 @@ export async function saveAdr(fields: {
 		return newUri;
 	} else {
 		vscode.window.showWarningMessage("ADR could not be found in the workspace.");
+		return undefined;
 	}
 }
 
@@ -524,7 +525,7 @@ export function getAdrObjectFromFields(fields: {
 		links: fields.links || [],
 	});
 
-	newAdr.cleanUp();
+	newAdr.cleanUp({ aggressive: true });
 
 	return newAdr;
 }
@@ -687,7 +688,7 @@ async function getHighestAdrNumber(folderUri: vscode.Uri): Promise<number> {
  * @returns The path of the file relative to the root folder as a string
  */
 function getAdrPathRelativeFromRootFolder(adrUri: vscode.Uri): string {
-	let filePath = adrUri.path;
+	const filePath = adrUri.path;
 	for (const folder of getWorkspaceFolders()) {
 		if (filePath.match(folder.uri.path)) {
 			return filePath.replace(folder.uri.path.substring(0, folder.uri.path.lastIndexOf("/") + 1), "");

@@ -12,7 +12,13 @@
             <div v-if="!showFileExplorer" class="d-flex align-center justify-center h-75 w-100">
                 <DialogAddRepositories>
                     <template #activator="{ props }">
-                        <v-btn data-cy="addRepo" size="x-large" color="secondary" class="align-center justify-center" v-bind="props">
+                        <v-btn
+                            data-cy="addRepo"
+                            size="x-large"
+                            color="secondary"
+                            class="align-center justify-center"
+                            v-bind="props"
+                        >
                             Add Repositories
                         </v-btn>
                     </template>

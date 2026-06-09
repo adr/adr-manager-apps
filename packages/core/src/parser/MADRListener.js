@@ -1,4 +1,4 @@
-// Generated from /Users/stevenchen/Desktop/Studium/Uni Stuttgart/Übungen/Uni Stuttgart/SS22/Bachelorarbeit/Repo/vscode-adr-manager/src/plugins/parser/MADR.g4 by ANTLR 4.9.2
+// Generated from MADR.g4 by ANTLR 4.13.2
 // jshint ignore: start
 import antlr4 from 'antlr4';
 

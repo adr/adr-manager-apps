@@ -4,7 +4,7 @@
 			<button id="back-button" class="secondary" @click="sendMessage('main')">
 				<div id="back-button-content"><i class="codicon codicon-chevron-left"></i> Back to ADR overview</div>
 			</button>
-			<div id="professional-fields-note" v-if="hasProfessionalFields">
+			<div v-if="hasProfessionalFields" id="professional-fields-note">
 				<h4>
 					<strong>{{ missingFieldsNote }}</strong>
 				</h4>
@@ -18,7 +18,7 @@
 		</div>
 		<div id="madr">
 			<MadrTemplateBasic
-				@sendInput="getInput"
+				@send-input="getInput"
 				@validated="enableButton"
 				@invalidated="disableButton"
 			></MadrTemplateBasic>
@@ -40,6 +40,7 @@
 	import { defineComponent } from "vue";
 	import MadrTemplateBasic from "../components/MadrTemplateBasic.vue";
 	import Toggle from "@vueform/toggle";
+	import "@vueform/toggle/themes/default.css";
 	import vscode from "../mixins/vscode-api-mixin";
 	import saveAdr from "../mixins/save-adr";
 
@@ -81,8 +82,6 @@
 		},
 	});
 </script>
-
-<style src="@vueform/toggle/themes/default.css"></style>
 
 <style lang="scss" scoped>
 	@use "../static/reset";

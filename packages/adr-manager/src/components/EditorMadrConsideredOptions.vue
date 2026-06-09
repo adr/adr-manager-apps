@@ -18,7 +18,11 @@
                 <span class="flex-grow-1 align-self-center my-0 py-0">
                     Some options have a more detailed description that is not displayed in Basic Mode.
                 </span>
-                <v-btn color="white" class="justify-self-end align-self-end my-0 py-0" @click="switchToProfessionalMode()">
+                <v-btn
+                    color="white"
+                    class="justify-self-end align-self-end my-0 py-0"
+                    @click="switchToProfessionalMode()"
+                >
                     Switch to Professional Mode
                 </v-btn>
             </div>
@@ -88,7 +92,11 @@
                 <drop @dragenter="(event: DnDEvent) => moveOption(event.data, i)" class="my-0 py-0">
                     <v-card
                         flat
-                        :class="['my-1', expandedOptions.includes(item) ? 'mb-8' : '', { 'drag-active': draggedOption === item }]"
+                        :class="[
+                            'my-1',
+                            expandedOptions.includes(item) ? 'mb-8' : '',
+                            { 'drag-active': draggedOption === item }
+                        ]"
                         @mouseenter="hoveredOption = item"
                         @mouseleave="hoveredOption = null"
                     >
@@ -206,7 +214,11 @@
                                                 <HelpIcon> Give arguments supporting this option. </HelpIcon>
                                             </v-row>
                                         </h6>
-                                        <EditorMadrList data-cy="goodConsOpt" :list="item.pros" class="ml-4 mr-0 px-0" />
+                                        <EditorMadrList
+                                            data-cy="goodConsOpt"
+                                            :list="item.pros"
+                                            class="ml-4 mr-0 px-0"
+                                        />
                                     </div>
                                     <div class="flex-grow-1 mx-0 px-0 py-0 my-0 option-col">
                                         <h6 class="py-4 pl-4">

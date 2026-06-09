@@ -1,44 +1,12 @@
 {
+    "extends": "@adr-manager/tsconfig/vue.json",
     "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "bundler",
-        "lib": ["ESNext", "DOM", "DOM.Iterable"],
-        "useDefineForClassFields": true,
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "isolatedModules": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-
-        "strict": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitOverride": true,
-        "noUncheckedIndexedAccess": true,
-        "noPropertyAccessFromIndexSignature": true,
-        "exactOptionalPropertyTypes": true,
-        "allowUnusedLabels": false,
-        "allowUnreachableCode": false,
-        "useUnknownInCatchVariables": true,
-
         "types": ["vite/client", "vitest/globals"],
         "baseUrl": ".",
         "paths": {
             "@/*": ["src/*"]
-        },
-
-        "noEmit": true,
-        "allowJs": false
+        }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "env.d.ts", "tests/**/*.ts"],
-    "exclude": [
-        "node_modules",
-        "dist",
-        "src/plugins/parser/MADRLexer.js",
-        "src/plugins/parser/MADRParser.js",
-        "src/plugins/parser/MADRListener.js"
-    ]
+    "exclude": ["node_modules", "dist"]
 }

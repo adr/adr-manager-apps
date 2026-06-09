@@ -1,7 +1,7 @@
 <template>
 	<div id="decision-drivers-container" class="input-group">
 		<TemplateHeader
-			:infoText="'Decision Drivers are competing forces or facing concerns that influence the decision.'"
+			:info-text="'Decision Drivers are competing forces or facing concerns that influence the decision.'"
 		>
 			<h2>Decision Drivers</h2>
 		</TemplateHeader>
@@ -18,19 +18,19 @@
 			<div
 				v-for="(driver, index) in decisionDriversWithBlank"
 				:key="index"
-				class="multi-input"
 				ref="decisionDrivers"
+				class="multi-input"
 			>
-				<i class="codicon codicon-grabber drivers-grabber" v-if="decisionDrivers[index] !== ''"></i>
+				<i v-if="decisionDrivers[index] !== ''" class="codicon codicon-grabber drivers-grabber"></i>
 				<textarea
+					v-model="decisionDrivers[index]"
 					class="auto-grow-decision-driver"
 					spellcheck="true"
-					v-model="decisionDrivers[index]"
 					@input="updateArray($event.target.value, index)"
 				/>
 				<i
-					class="codicon codicon-close multi-input-delete-icon"
 					v-if="decisionDrivers[index] !== ''"
+					class="codicon codicon-close multi-input-delete-icon"
 					@click="updateArray('', index)"
 				></i>
 			</div>
@@ -71,6 +71,17 @@
 				return decisionDriversWithBlank;
 			},
 		},
+		/**
+		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+		 */
+		mounted() {
+			//@ts-ignore
+			this.$refs.decisionDrivers.forEach((driver) => {
+				if (driver.children[1]) {
+					driver.children[1].dispatchEvent(new Event("input"));
+				}
+			});
+		},
 		methods: {
 			/**
 			 * Prevents the user to drag an item below an empty input field that is reserved for new inputs.
@@ -106,17 +117,6 @@
 					});
 				});
 			},
-		},
-		/**
-		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-		 */
-		mounted() {
-			//@ts-ignore
-			this.$refs.decisionDrivers.forEach((driver) => {
-				if (driver.children[1]) {
-					driver.children[1].dispatchEvent(new Event("input"));
-				}
-			});
 		},
 	});
 </script>

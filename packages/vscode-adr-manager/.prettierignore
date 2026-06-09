@@ -1,0 +1,8 @@
+# Ignore artifacts:
+dist
+dist-web
+out
+coverage
+node_modules
+src/plugins/parser
+*.vsix

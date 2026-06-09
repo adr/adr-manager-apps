@@ -3,17 +3,9 @@ module.exports = {
 	preset: "ts-jest",
 	testEnvironment: "jsdom",
 	transform: {
-		// transform files with ts-jest
-		"^.+\\.(js|ts)$": "ts-jest",
+		// transform js/ts with ts-jest; tsconfig moved out of `globals` in ts-jest 29
+		"^.+\\.(js|ts)$": ["ts-jest", { tsconfig: { allowJs: true } }]
 	},
 	testPathIgnorePatterns: ["dist"],
-	transformIgnorePatterns: ["node_modules/(?!antlr4)"],
-	globals: {
-		"ts-jest": {
-			tsconfig: {
-				// allow js in typescript
-				allowJs: true,
-			},
-		},
-	},
+	transformIgnorePatterns: ["node_modules/(?!(antlr4|@adr-manager)/)"]
 };

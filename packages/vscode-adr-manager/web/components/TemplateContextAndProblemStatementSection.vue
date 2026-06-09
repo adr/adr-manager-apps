@@ -1,23 +1,23 @@
 <template>
 	<div id="context-and-problem-statement-container" class="input-group">
 		<TemplateHeader
-			:infoText="'Describe the context and problem statement, e.g., in free form using two to three sentences or in the form of an illustrative story.\nYou may want to articulate the problem in form of a question.'"
+			:info-text="'Describe the context and problem statement, e.g., in free form using two to three sentences or in the form of an illustrative story.\nYou may want to articulate the problem in form of a question.'"
 		>
 			<h2>Context and Problem Statement</h2>
 		</TemplateHeader>
 		<textarea
 			id="auto-grow-context-problem-statement"
+			ref="contextAndProblemStatement"
+			v-model="v$.contextAndProblemStatement.$model"
 			spellcheck="true"
 			:class="v$.contextAndProblemStatement.$error ? 'invalid-input' : ''"
-			v-model="v$.contextAndProblemStatement.$model"
 			@input="
 				updateHeight();
 				$emit('update:contextAndProblemStatement', $event.target.value);
 				$emit('validate');
 			"
-			ref="contextAndProblemStatement"
 		/>
-		<h4 class="error-message" v-for="error of v$.contextAndProblemStatement.$errors" :key="error.$uid">
+		<h4 v-for="error of v$.contextAndProblemStatement.$errors" :key="error.$uid" class="error-message">
 			{{ error.$message }}
 		</h4>
 	</div>
@@ -34,18 +34,25 @@
 		components: {
 			TemplateHeader,
 		},
+		props: {
+			contextAndProblemStatementProp: String,
+		},
 		setup() {
 			return {
 				v$: useValidate(),
 			};
 		},
-		props: {
-			contextAndProblemStatementProp: String,
-		},
 		data() {
 			return {
 				contextAndProblemStatement: this.contextAndProblemStatementProp,
 			};
+		},
+		/**
+		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+		 */
+		mounted() {
+			//@ts-ignore
+			this.$refs.contextAndProblemStatement.dispatchEvent(new Event("input"));
 		},
 		methods: {
 			/**
@@ -58,13 +65,6 @@
 					cps.style.height = `${cps.scrollHeight}px`;
 				});
 			},
-		},
-		/**
-		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-		 */
-		mounted() {
-			//@ts-ignore
-			this.$refs.contextAndProblemStatement.dispatchEvent(new Event("input"));
 		},
 		validations() {
 			return {

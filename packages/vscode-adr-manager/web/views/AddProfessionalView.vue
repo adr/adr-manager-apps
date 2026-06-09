@@ -13,7 +13,7 @@
 		</div>
 		<div id="madr">
 			<MadrTemplateProfessional
-				@sendInput="getInput"
+				@send-input="getInput"
 				@validated="enableButton"
 				@invalidated="disableButton"
 			></MadrTemplateProfessional>
@@ -30,6 +30,7 @@
 	import { defineComponent } from "vue";
 	import MadrTemplateProfessional from "../components/MadrTemplateProfessional.vue";
 	import Toggle from "@vueform/toggle";
+	import "@vueform/toggle/themes/default.css";
 	import vscode from "../mixins/vscode-api-mixin";
 	import saveAdr from "../mixins/save-adr";
 
@@ -71,8 +72,6 @@
 		},
 	});
 </script>
-
-<style src="@vueform/toggle/themes/default.css"></style>
 
 <style lang="scss" scoped>
 	@use "../static/reset";

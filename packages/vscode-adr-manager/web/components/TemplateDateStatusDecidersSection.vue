@@ -3,8 +3,8 @@
 		<div class="input">
 			<p>Last Updated:</p>
 			<input
-				type="date"
 				id="date"
+				type="date"
 				:value="date"
 				@input="
 					$emit('update:date', $event.target.value);
@@ -22,8 +22,8 @@
 		<div class="input">
 			<p>Status:</p>
 			<select
-				name="status"
 				id="status"
+				name="status"
 				:value="status.toLowerCase()"
 				@input="
 					$emit('update:status', $event.target.value.toLowerCase());
@@ -47,8 +47,8 @@
 		<div class="input">
 			<p>Deciders:</p>
 			<input
-				type="text"
 				id="deciders"
+				type="text"
 				spellcheck="true"
 				:value="deciders"
 				@input="
@@ -71,7 +71,7 @@
 	import { defineComponent } from "vue";
 
 	export default defineComponent({
-		name: "Templatedate-status-deciders-containerSection",
+		name: "TemplatedateStatusDecidersContainerSection",
 		props: {
 			date: String,
 			status: String,

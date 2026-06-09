@@ -6,7 +6,11 @@
                     <splitpanes class="mx-auto default-theme">
                         <pane class="h-100">
                             <v-card-text class="mx-auto mx-0 my-0 px-0 py-0 h-100">
-                                <EditorMadr class="mx-auto mx-0 my-0 px-0 py-0 h-100" :value="adr" @input="updateAdrToMd" />
+                                <EditorMadr
+                                    class="mx-auto mx-0 my-0 px-0 py-0 h-100"
+                                    :value="adr"
+                                    @input="updateAdrToMd"
+                                />
                             </v-card-text>
                         </pane>
                         <pane class="mx-auto overflow-y-auto" v-if="alwaysShowMarkdownPreview">

@@ -31,19 +31,19 @@ describe("Change Casings Tests", () => {
 	 * Tests of the utility functions snakeCase2naturalCase and naturalCase2snakeCase
 	 */
 	test("Test snakeCase2naturalCase", () => {
-		let result = snakeCase2naturalCase("0005-use-dashes-in-file-names.md");
+		const result = snakeCase2naturalCase("0005-use-dashes-in-file-names.md");
 		expect(result).toBe("0005 Use Dashes In File Names.md");
 	});
 
 	test("Test naturalCase2snakeCase", () => {
-		let result = naturalCase2snakeCase("0005 Use dashes in File names.md");
+		const result = naturalCase2snakeCase("0005 Use dashes in File names.md");
 		expect(result).toBe("0005-use-dashes-in-file-names.md");
 	});
 });
 
 describe("Test MADR Title Format Match", () => {
 	test("Valid MADR titles", () => {
-		let validTitles = [
+		const validTitles = [
 			"0000-use-markdown-architectural-records.md",
 			"0001-use-vue.js.md",
 			"0002-use-antlr-for-parsing-adrs.md",
@@ -55,13 +55,13 @@ describe("Test MADR Title Format Match", () => {
 			"0008_UpperCase_LetTErs_IN_WorDs.md",
 		];
 		validTitles.forEach((title) => {
-			let result = matchesMadrTitleFormat(title);
+			const result = matchesMadrTitleFormat(title);
 			expect(result).toBeTruthy();
 		});
 	});
 
 	test("Invalid MADR titles", () => {
-		let invalidTitles = [
+		const invalidTitles = [
 			"001-only-three-numbers-at-the-start.md",
 			"0003-not-ending-in-md.txt",
 			"0004-dash-in-the-end-.md",
@@ -69,7 +69,7 @@ describe("Test MADR Title Format Match", () => {
 		];
 
 		invalidTitles.forEach((title) => {
-			let result = matchesMadrTitleFormat(title);
+			const result = matchesMadrTitleFormat(title);
 			expect(result).toBeFalsy();
 		});
 	});
@@ -77,12 +77,12 @@ describe("Test MADR Title Format Match", () => {
 
 describe("Test Cleaning Path Strings", () => {
 	test("Replace backslashes with forward slash", () => {
-		let uncleanedPaths = [
+		const uncleanedPaths = [
 			"C:\\Users\\Steven\\some\\path\\with\\backslash",
 			"\\\\Users\\\\\\Steven\\\\multiple\\\\\\backslashes",
 			"\\backslash\\at\\the\\end\\",
 		];
-		let cleanedPaths = [
+		const cleanedPaths = [
 			"C:/Users/Steven/some/path/with/backslash",
 			"/Users/Steven/multiple/backslashes",
 			"/backslash/at/the/end/",
@@ -92,11 +92,11 @@ describe("Test Cleaning Path Strings", () => {
 		}
 	});
 	test("Replace multiple forward slashes with single forward slash", () => {
-		let uncleanedPaths = [
+		const uncleanedPaths = [
 			"//Users//Steven/a/path//with///multiple/////forward///slashes",
 			"/multiple/forward/slashes/at/the/end//",
 		];
-		let cleanedPaths = [
+		const cleanedPaths = [
 			"/Users/Steven/a/path/with/multiple/forward/slashes",
 			"/multiple/forward/slashes/at/the/end/",
 		];

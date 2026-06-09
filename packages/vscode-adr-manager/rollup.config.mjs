@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import alias from "@rollup/plugin-alias";
 import commonjs from "@rollup/plugin-commonjs";
 import esbuild from "rollup-plugin-esbuild";
@@ -10,18 +11,20 @@ import postcss from "rollup-plugin-postcss";
 import postcssImport from "postcss-import";
 import replace from "@rollup/plugin-replace";
 import resolve from "@rollup/plugin-node-resolve";
-import requireContext from "rollup-plugin-require-context";
-import { terser } from "rollup-plugin-terser";
-import vue from "rollup-plugin-vue";
+import terser from "@rollup/plugin-terser";
+import vue from "unplugin-vue/rollup";
 import nodePolyFills from "rollup-plugin-polyfill-node";
 import copy from "rollup-plugin-copy";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const production = !process.env.ROLLUP_WATCH;
 
 const postCssPlugins = [postcssImport()];
 
-// Compiles all files in the "web/pages" directory to .js files that will be used to render the different views.
-// The compiled files will be stored in the "dist-web" directory.
+// Compiles each file in the "web/pages" directory to a self-contained IIFE bundle
+// (plus an extracted .css) that the extension loads into its web views (see WebPanel.ts).
+// The compiled files are stored in the "dist/web" directory.
 export default fs.readdirSync(path.join(__dirname, "web", "pages")).map((input) => {
 	const name = input.split(".")[0].toLowerCase();
 	return {
@@ -44,11 +47,8 @@ export default fs.readdirSync(path.join(__dirname, "web", "pages")).map((input) 
 			copy({
 				targets: [{ src: "web/assets", dest: "dist" }],
 			}),
-			requireContext(),
 			nodePolyFills(),
 			resolve({
-				jsnext: true,
-				main: true,
 				browser: true,
 				dedupe: ["vue"],
 			}),

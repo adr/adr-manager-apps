@@ -1,14 +1,10 @@
 {
+    "extends": "@adr-manager/tsconfig/vue.json",
     "compilerOptions": {
         "target": "ES2021",
         "lib": ["ES2021", "DOM"],
         "types": ["cypress", "node"],
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "isolatedModules": false,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "noEmit": true
+        "isolatedModules": false
     },
     "include": ["**/*.ts", "../cypress.config.ts"]
 }

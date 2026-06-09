@@ -1,14 +1,4 @@
 {
-    "compilerOptions": {
-        "composite": true,
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "bundler",
-        "types": ["node"],
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
-        "strict": true,
-        "noEmit": true
-    },
+    "extends": "@adr-manager/tsconfig/node.json",
     "include": ["vite.config.ts", "vitest.config.ts"]
 }

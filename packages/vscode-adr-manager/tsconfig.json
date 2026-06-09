@@ -1,14 +1,12 @@
 {
-	"compilerOptions": {
-		"module": "commonjs",
-		"target": "ESNext",
-		"lib": ["ES2020", "dom"],
-		"sourceMap": true,
-		"rootDirs": ["src", "web"],
-		"strict": true,
-		"skipLibCheck": true,
-		"allowJs": true,
-		"outDir": "./dist"
-	},
-	"exclude": ["node_modules", "dist", "dist-web", "src/**/*.js"]
+  "extends": "@adr-manager/tsconfig/commonjs.json",
+  "compilerOptions": {
+    "rootDirs": ["src", "web"],
+    "outDir": "./dist",
+    // Opt out of the two most aggressive strict flags for this legacy extension;
+    // the rest of the shared strict base still applies. Harden and remove over time.
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false
+  },
+  "exclude": ["node_modules", "dist", "dist-web", "src/**/*.js"]
 }

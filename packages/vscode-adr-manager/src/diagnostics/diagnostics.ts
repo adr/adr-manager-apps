@@ -9,7 +9,7 @@ import { createShortTitle, naturalCase2titleCase } from "../plugins/utils";
 export async function getDiagnostics(doc: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
 	const diagnostics = new Array<vscode.Diagnostic>();
 	// indices of required fields for detecting empty fields of a MADR
-	let indicesOfRequiredFields = {
+	const indicesOfRequiredFields = {
 		title: -1,
 		contextAndProblemStatement: -1,
 		consideredOptions: -1,
@@ -187,7 +187,7 @@ async function extractListItems(fileUri: vscode.Uri, heading: string): Promise<s
 	const matches = [...text.matchAll(regex)];
 
 	// Clean matches
-	const result = matches.reduce((acc, curr) => {
+	const result = matches.reduce((acc: string[], curr) => {
 		// remove zero-width character
 		const [title, item] = curr.slice(1);
 		// check for correct heading

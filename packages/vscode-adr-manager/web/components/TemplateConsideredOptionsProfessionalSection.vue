@@ -2,14 +2,14 @@
 	<div id="considered-options-container">
 		<div id="options-header">
 			<TemplateHeader
-				:infoText="'List of all considered options.\nClick to select an option, rearrange options by drag and drop.'"
+				:info-text="'List of all considered options.\nClick to select an option, rearrange options by drag and drop.'"
 			>
 				<h2>Considered Options</h2>
 			</TemplateHeader>
-			<AddOptionButton @addOption="$emit('addOption')" draggable="false"></AddOptionButton>
+			<AddOptionButton draggable="false" @add-option="$emit('addOption')"></AddOptionButton>
 		</div>
 		<div id="options">
-			<div id="no-options-container" v-if="consideredOptions.length === 0">
+			<div v-if="consideredOptions.length === 0" id="no-options-container">
 				<h3>
 					<strong>No options available</strong>
 				</h3>
@@ -23,21 +23,21 @@
 			>
 				<OptionContainerProfessional
 					v-for="(option, index) in consideredOptions"
-					:titleProp="option.title"
-					:prosProp="option.pros"
-					:consProp="option.cons"
 					:key="option"
 					v-model:title="option.title"
 					v-model:description="option.description"
 					v-model:pros="option.pros"
 					v-model:cons="option.cons"
+					:title-prop="option.title"
+					:pros-prop="option.pros"
+					:cons-prop="option.cons"
 					:class="
 						option.title === chosenOption && index === selectedIndex
 							? 'selected-option'
 							: 'unselected-option'
 					"
-					@selectOption="$emit('selectOption', index)"
-					@deleteOption="$emit('deleteOption', index)"
+					@select-option="$emit('selectOption', index)"
+					@delete-option="$emit('deleteOption', index)"
 					@update:title="
 						if (selectedIndex === index) $emit('selectOption', index);
 						$emit('validate');
@@ -47,7 +47,7 @@
 					@update:cons="$emit('validate')"
 				></OptionContainerProfessional>
 			</draggable>
-			<div id="rearrange-message-container" v-if="consideredOptions.length >= 2">
+			<div v-if="consideredOptions.length >= 2" id="rearrange-message-container">
 				<h4>
 					<i>Click to choose option; rearrange options by dragging</i>
 				</h4>
@@ -74,17 +74,17 @@
 			OptionContainerProfessional,
 			draggable: VueDraggableNext,
 		},
-		setup() {
-			return {
-				v$: useValidate(),
-			};
-		},
 		props: {
 			consideredOptionsProp: Array as PropType<
 				{ title: string; description: string; pros: string[]; cons: string[] }[]
 			>,
 			chosenOption: String,
 			selectedIndex: Number,
+		},
+		setup() {
+			return {
+				v$: useValidate(),
+			};
 		},
 		data() {
 			return {

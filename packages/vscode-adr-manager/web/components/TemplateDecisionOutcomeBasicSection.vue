@@ -1,7 +1,7 @@
 <template>
 	<div id="decision-outcome-container">
 		<TemplateHeader
-			:infoText="'Add an explanation for the chosen option.\nYou can add consequences when using the Professional MADR template.'"
+			:info-text="'Add an explanation for the chosen option.\nYou can add consequences when using the Professional MADR template.'"
 		>
 			<h2>Decision Outcome</h2>
 		</TemplateHeader>
@@ -9,25 +9,25 @@
 			<h3 id="chosen-option-text">
 				Chosen Option: <b>{{ chosenOptionText }}</b>
 			</h3>
-			<h3 id="chosen-option-error" v-if="!decisionOutcome.chosenOption">There must be one chosen option</h3>
+			<h3 v-if="!decisionOutcome.chosenOption" id="chosen-option-error">There must be one chosen option</h3>
 		</div>
 		<div id="explanation">
 			<h3>because</h3>
 			<div id="explanation-input-container">
 				<textarea
 					id="auto-grow-explanation"
+					ref="explanation"
+					v-model="v$.decisionOutcome.explanation.$model"
 					spellcheck="true"
 					:class="v$.decisionOutcome.explanation.$error ? 'invalid-input' : ''"
-					v-model="v$.decisionOutcome.explanation.$model"
 					@click.once="updateHeight"
 					@input="
 						updateHeight();
 						$emit('update:explanation', $event.target.value);
 						$emit('validate');
 					"
-					ref="explanation"
 				/>
-				<h4 class="error-message" v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid">
+				<h4 v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid" class="error-message">
 					{{ error.$message }}
 				</h4>
 			</div>
@@ -47,11 +47,6 @@
 		components: {
 			TemplateHeader,
 		},
-		setup() {
-			return {
-				v$: useValidate(),
-			};
-		},
 		props: {
 			decisionOutcomeProp: {
 				type: Object as PropType<{
@@ -68,6 +63,11 @@
 				},
 			},
 		},
+		setup() {
+			return {
+				v$: useValidate(),
+			};
+		},
 		data() {
 			return {
 				decisionOutcome: this.decisionOutcomeProp,
@@ -80,6 +80,13 @@
 					: "none";
 			},
 		},
+		/**
+		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+		 */
+		mounted() {
+			//@ts-ignore
+			this.$refs.explanation.dispatchEvent(new Event("input"));
+		},
 		methods: {
 			/**
 			 * Updated the height of the textarea based on the input.
@@ -91,13 +98,6 @@
 					explanation.style.height = `${explanation.scrollHeight}px`;
 				});
 			},
-		},
-		/**
-		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-		 */
-		mounted() {
-			//@ts-ignore
-			this.$refs.explanation.dispatchEvent(new Event("input"));
 		},
 		validations() {
 			return {

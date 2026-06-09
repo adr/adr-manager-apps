@@ -1,22 +1,22 @@
 <template>
 	<div id="title-container" class="input-group">
 		<TemplateHeader
-			:infoText="'Describe the solved problem and the solution concisely.\n\nThe title is also used as the file name, so keep it short and avoid using special characters.'"
+			:info-text="'Describe the solved problem and the solution concisely.\n\nThe title is also used as the file name, so keep it short and avoid using special characters.'"
 		>
 			<h2>Title</h2>
 		</TemplateHeader>
 		<input
+			ref="title"
+			v-model="v$.title.$model"
 			type="text"
 			spellcheck="true"
 			:class="v$.title.$error ? 'invalid-input' : ''"
-			v-model="v$.title.$model"
 			@input="
 				$emit('update:title', $event.target.value);
 				$emit('validate');
 			"
-			ref="title"
 		/>
-		<h4 class="error-message" v-for="error of v$.title.$errors" :key="error.$uid">{{ error.$message }}</h4>
+		<h4 v-for="error of v$.title.$errors" :key="error.$uid" class="error-message">{{ error.$message }}</h4>
 	</div>
 </template>
 
@@ -35,13 +35,13 @@
 		components: {
 			TemplateHeader,
 		},
+		props: {
+			titleProp: String,
+		},
 		setup() {
 			return {
 				v$: useValidate(),
 			};
-		},
-		props: {
-			titleProp: String,
 		},
 		data() {
 			return {

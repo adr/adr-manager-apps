@@ -1,10 +1,11 @@
 <template>
 	<div id="technical-story-container" class="input-group">
-		<TemplateHeader :infoText="'Technical context of the ADR, e.g., a ticket or issue URL'">
+		<TemplateHeader :info-text="'Technical context of the ADR, e.g., a ticket or issue URL'">
 			<h2>Technical Story</h2>
 		</TemplateHeader>
 		<textarea
 			id="auto-grow-technical-story"
+			ref="technicalStory"
 			spellcheck="true"
 			:value="technicalStory"
 			@input="
@@ -12,7 +13,6 @@
 				$emit('update:technicalStory', $event.target.value);
 				$emit('validate');
 			"
-			ref="technicalStory"
 		/>
 	</div>
 </template>
@@ -29,6 +29,13 @@
 		props: {
 			technicalStory: String,
 		},
+		/**
+		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+		 */
+		mounted() {
+			//@ts-ignore
+			this.$refs.technicalStory.dispatchEvent(new Event("input"));
+		},
 		methods: {
 			/**
 			 * Updated the height of the textarea based on the input.
@@ -40,13 +47,6 @@
 					ts.style.height = `${ts.scrollHeight}px`;
 				});
 			},
-		},
-		/**
-		 * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-		 */
-		mounted() {
-			//@ts-ignore
-			this.$refs.technicalStory.dispatchEvent(new Event("input"));
 		},
 	});
 </script>

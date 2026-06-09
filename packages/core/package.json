@@ -1,0 +1,30 @@
+{
+  "name": "@adr-manager/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared MADR parser, ADR domain model, and utilities for the ADR Manager monorepo",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": ["src"],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "antlr4": "catalog:"
+  },
+  "devDependencies": {
+    "@adr-manager/tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

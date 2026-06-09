@@ -1,200 +1,125 @@
 # ADR Manager Apps
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Extension · CI](https://github.com/adr/adr-manager-apps/actions/workflows/extension-ci.yml/badge.svg)](https://github.com/adr/adr-manager-apps/actions/workflows/extension-ci.yml)
+[![Web · Tests](https://github.com/adr/adr-manager-apps/actions/workflows/web-tests.yml/badge.svg)](https://github.com/adr/adr-manager-apps/actions/workflows/web-tests.yml)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/StevenChen.vscode-adr-manager?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=StevenChen.vscode-adr-manager)
 
-ADR Manager Apps is the monorepo for the web-based ADR Manager and the ADR Manager VS Code extension.
-Both packages help teams create, edit, validate, and manage Architecture Decision Records written in Markdown with the [MADR](https://adr.github.io/madr/) template.
+ADR Manager Apps is the monorepo for the web-based **ADR Manager** and the **ADR Manager VS Code extension**.
+Both apps help teams create, edit, validate, and manage Architectural Decision Records (ADRs) written in Markdown with the [MADR](https://adr.github.io/madr/) template.
 
-The repository is maintained as a pnpm workspace so both packages can be developed, tested, built, versioned, and released together.
+- **Web app**: manage MADRs in GitHub repositories, live at <https://adr.github.io/adr-manager-apps/>
+- **VS Code extension**: manage MADRs in local workspaces, on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=StevenChen.vscode-adr-manager)
+
+The apps share a common core and tooling, and are developed, tested, versioned, and released together from one pnpm workspace.
 
 ## Packages
 
-| Package | Path | Description |
-| --- | --- | --- |
-| `adr-manager` | `packages/adr-manager` | Vue 2 and Vite web app for managing MADRs in GitHub repositories |
-| `vscode-adr-manager` | `packages/vscode-adr-manager` | VS Code extension for managing MADRs inside local workspaces |
+| Package                        | Path                                                         | Description                                                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `adr-manager`                  | [`packages/adr-manager`](packages/adr-manager)               | Web app (Vue 3, Vuetify, Vite, TypeScript, CodeMirror 6) for managing MADRs in GitHub repositories via GitHub OAuth                                   |
+| `vscode-adr-manager`           | [`packages/vscode-adr-manager`](packages/vscode-adr-manager) | VS Code extension for managing MADRs in single-root, multi-root, and folder-based workspaces, with commands, context menus, snippets, and diagnostics |
+| `@adr-manager/core`            | [`packages/core`](packages/core)                             | Shared MADR parser (ANTLR4), ADR domain model, and utilities used by both apps                                                                        |
+| `@adr-manager/eslint-config`   | [`packages/eslint-config`](packages/eslint-config)           | Shared ESLint flat configs (`base`, `vue`, `node`)                                                                                                    |
+| `@adr-manager/prettier-config` | [`packages/prettier-config`](packages/prettier-config)       | Shared Prettier configuration                                                                                                                         |
+| `@adr-manager/tsconfig`        | [`packages/tsconfig`](packages/tsconfig)                     | Shared TypeScript configs (`base`, `vue`, `node`, `commonjs`)                                                                                         |
 
-Read the package README files for package-specific usage details:
+The two apps are the deliverables. The `@adr-manager/*` packages are private workspace packages and are not published anywhere.
+
+Package-specific usage details live in the package docs:
 
 - [Web app README](packages/adr-manager/README.md)
-- [VS Code extension README](packages/vscode-adr-manager/README.md)
+- [VS Code extension README](packages/vscode-adr-manager/README.md) and [CHANGELOG](packages/vscode-adr-manager/CHANGELOG.md)
 
-## Features
+## Architecture
 
-- Manage ADRs that follow the MADR Markdown format
-- Create, edit, delete, and push ADR changes through the web app
-- Work with ADRs from single-root, multi-root, and folder-based VS Code workspaces
-- Use VS Code commands, context menu entries, snippets, diagnostics, and webviews for ADR workflows
-- Build and release both packages from one workspace
+- `@adr-manager/core` is consumed directly as TypeScript source (its exports point at `src/index.ts`), so there is no build step and no stale artifacts between the core and the apps.
+- `@adr-manager/eslint-config`, `@adr-manager/prettier-config`, and `@adr-manager/tsconfig` centralize tooling so every package extends the same rules.
+- Shared dependency versions are pinned once in the `catalog:` section of [`pnpm-workspace.yaml`](pnpm-workspace.yaml) and referenced from packages with the `catalog:` protocol.
+- The workspace uses pnpm's `nodeLinker: hoisted` (flat `node_modules`) because the Vue and VS Code packaging toolchains expect flat dependency resolution.
 
 ## Prerequisites
 
-Install these tools before working on the repository:
-
-- [Node.js](https://nodejs.org/) version 22.13 or newer
-- [pnpm](https://pnpm.io/) version 11.5.1
+- [Node.js](https://nodejs.org/) >= 22.13
+- [pnpm](https://pnpm.io/) 11.5.1, pinned via the `packageManager` field so recent pnpm versions (or `corepack enable`) switch to it automatically
 - [Git](https://git-scm.com/)
 - [Visual Studio Code](https://code.visualstudio.com/) when developing or testing the extension
 
-The workspace uses pnpm with a hoisted `node_modules` layout because the legacy Vue and VS Code packaging toolchains expect flat dependency resolution.
-The relevant settings are stored in `pnpm-workspace.yaml`.
-
-## Getting Started
-
-Clone the repository and install dependencies from the workspace root.
+## Getting started
 
 ```bash
-git clone git@github.com:adr/adr-manager-apps.git
+git clone https://github.com/adr/adr-manager-apps.git
 cd adr-manager-apps
 pnpm install
 ```
 
-If pnpm reports blocked dependency build scripts, run:
+Installs are hardened in [`pnpm-workspace.yaml`](pnpm-workspace.yaml): newly published dependency versions are delayed for five days, and only reviewed build scripts (`esbuild`, `cypress`, `core-js`) are allowed to run.
+If pnpm reports blocked dependency build scripts, review and approve them with `pnpm approve-builds`.
 
-```bash
-pnpm approve-builds
-```
+## Development
 
-The workspace delays newly published dependency versions for five days, allows the reviewed build scripts needed by `esbuild`, `cypress`, and `core-js`, and explicitly blocks known unnecessary dependency build scripts.
-
-## Run The Web App
-
-Start the web app development server from the workspace root:
+### Web app
 
 ```bash
 pnpm dev:web
 ```
 
-The Vite server runs on:
+The Vite dev server runs at `http://localhost:8000/adr-manager-apps/` (the `/adr-manager-apps/` base path matches the GitHub Pages deployment).
+The main manager route is `http://localhost:8000/adr-manager-apps/#/manager`.
 
-```text
-http://localhost:8000
-```
-
-The main manager route is:
-
-```text
-http://localhost:8000/adr-manager-apps/#/manager
-```
-
-The web app connects to GitHub and stores the active OAuth `authId` and local ADR changes in browser local storage.
+The web app connects to GitHub through OAuth and stores the active `authId` and local ADR changes in browser local storage.
 You need a GitHub account with access to a repository that contains MADRs, normally under `docs/adr`.
 
-## Run The VS Code Extension
+### VS Code extension
 
-Start the extension watcher from the workspace root:
+There are two ways to run the extension locally:
 
-```bash
-pnpm watch:ext
-```
+- **Debug with F5**: open the `packages/vscode-adr-manager` folder in VS Code (the `Run Extension` launch configuration lives in that folder) and press `F5`. This builds the extension and opens an Extension Development Host.
+- **Watch mode**: run `pnpm watch:ext` from the workspace root. This watches the extension host bundle (webpack) and the webview bundles (Rollup) in parallel and writes output to `packages/vscode-adr-manager/dist`.
 
-This runs the extension bundle watcher and the webview bundle watcher in parallel.
-It writes generated files to `packages/vscode-adr-manager/dist`.
+In the Extension Development Host, open a folder that contains an ADR directory and run `Open ADR Manager` from the Command Palette.
+The extension defaults to `docs/decisions` for the ADR directory. Change it with the `adrManager.adrDirectory` setting or the `Change ADR Directory` command.
 
-For local extension development in VS Code:
-
-1. Open this repository in VS Code.
-2. Run `pnpm watch:ext` in a terminal.
-3. Start the extension host from VS Code with the extension development launch configuration if one is available.
-4. Open a workspace folder that contains an ADR directory such as `docs/decisions`.
-5. Run `Open ADR Manager` from the Command Palette.
-
-The extension defaults to `docs/decisions` for the ADR directory.
-You can change this with the `adrManager.adrDirectory` setting or the `Change ADR Directory` command.
-
-## Build
-
-Build every package:
+## Build and package
 
 ```bash
-pnpm build
+pnpm build      # build every package
+pnpm build:web  # web app only: vue-tsc type check + Vite build -> packages/adr-manager/dist
+pnpm build:ext  # extension only: webpack + Rollup -> packages/vscode-adr-manager/dist
 ```
 
-Build only the web app:
-
-```bash
-pnpm build:web
-```
-
-The web app production build is written to:
-
-```text
-packages/adr-manager/dist
-```
-
-Build only the VS Code extension:
-
-```bash
-pnpm build:ext
-```
-
-The extension build is written to:
-
-```text
-packages/vscode-adr-manager/dist
-```
-
-Package the VS Code extension as a VSIX file:
+Package the extension as a VSIX file and install it into VS Code:
 
 ```bash
 pnpm vsix
-```
-
-The VSIX file is written to:
-
-```text
-packages/vscode-adr-manager/vscode-adr-manager-<version>.vsix
-```
-
-Install a generated VSIX into VS Code with:
-
-```bash
 code --install-extension packages/vscode-adr-manager/vscode-adr-manager-<version>.vsix
 ```
 
 Replace `<version>` with the version from `packages/vscode-adr-manager/package.json`.
 
-## Test
+## Testing and code quality
 
-Run all tests:
+| Command                               | What it runs                                               |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `pnpm test`                           | All package test suites                                    |
+| `pnpm test:web`                       | Web app unit tests (Vitest)                                |
+| `pnpm test:ext`                       | Extension tests (Jest, `pretest` compiles and lints first) |
+| `pnpm e2e:web`                        | Web app end-to-end tests (Cypress)                         |
+| `pnpm lint:ext`                       | Extension linting (ESLint)                                 |
+| `pnpm --filter adr-manager lint`      | Web app linting (ESLint)                                   |
+| `pnpm --filter adr-manager typecheck` | Web app type check (vue-tsc)                               |
+| `pnpm format` / `pnpm format:check`   | Prettier write / check across the whole repository         |
 
-```bash
-pnpm test
-```
+### End-to-end tests
 
-Run web app unit tests:
-
-```bash
-pnpm test:web
-```
-
-Run extension tests:
-
-```bash
-pnpm test:ext
-```
-
-Run extension linting:
+The Cypress tests need the web app dev server running and a valid GitHub OAuth session:
 
 ```bash
-pnpm lint:ext
-```
-
-Run web app end-to-end tests:
-
-```bash
-pnpm e2e:web
-```
-
-The end-to-end tests use Cypress.
-They need the web app to be running and require a valid GitHub OAuth session.
-Provide the session data with environment variables:
-
-```bash
+pnpm dev:web   # in a separate terminal
 CYPRESS_OAUTH_E2E_AUTH_ID=<auth-id> CYPRESS_USER=<github-user> pnpm e2e:web
 ```
 
-You can also create `packages/adr-manager/cypress.env.json`:
+Alternatively, create `packages/adr-manager/cypress.env.json`:
 
 ```json
 {
@@ -203,58 +128,43 @@ You can also create `packages/adr-manager/cypress.env.json`:
 }
 ```
 
-To get a local `authId`, sign in through the running web app, open browser developer tools, and inspect local storage for `http://localhost:8000`.
+To get a local `authId`, sign in through the running web app, open the browser developer tools, and inspect local storage for `http://localhost:8000`.
 
-## Useful Commands
+## Releases and CI
 
-| Command | Description |
-| --- | --- |
-| `pnpm install` | Install workspace dependencies |
-| `pnpm dev:web` | Start the web app development server |
-| `pnpm watch:ext` | Watch and rebuild the VS Code extension |
-| `pnpm build` | Build all packages |
-| `pnpm build:web` | Build only the web app |
-| `pnpm build:ext` | Build only the VS Code extension |
-| `pnpm vsix` | Package the VS Code extension as a VSIX |
-| `pnpm test` | Run all package tests |
-| `pnpm test:web` | Run web app unit tests |
-| `pnpm test:ext` | Run extension tests |
-| `pnpm e2e:web` | Run web app Cypress tests |
-| `pnpm lint:ext` | Run extension linting |
-| `pnpm format` | Format the web app package |
-| `pnpm changeset` | Create a changeset for a release |
-| `pnpm version-packages` | Apply changeset versions |
+Releases are coordinated with [Changesets](https://github.com/changesets/changesets):
 
-## Repository Structure
+1. Add a changeset alongside any change that should be released: `pnpm changeset`.
+2. On every push to `main`, the `Release` workflow opens or updates a **Version Packages (joint release)** PR that applies pending changesets (version bumps and changelogs, via `pnpm version-packages`).
+3. Merging that PR publishes the bumped versions to `main`. Neither package is published to npm. Instead:
+   - the web app deploys to GitHub Pages automatically (`Web · Build & Publish` pushes `packages/adr-manager/dist` to the `gh-pages` branch), and
+   - the extension is published to the VS Code Marketplace by manually running the `Extension · Publish` workflow (`vsce publish`, requires the `VSCE_PAT` secret).
+
+| Workflow                | Trigger                                     | What it does                                               |
+| ----------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| `Extension · CI`        | Push touching the extension, manual         | Compiles, lints, tests, and uploads a VSIX artifact        |
+| `Web · Tests`           | Push touching the web app, manual           | Vitest unit tests and Cypress e2e tests (Chrome)           |
+| `Release`               | Push to `main`                              | Opens/updates the Changesets "Version Packages" PR         |
+| `Web · Build & Publish` | Push to `main` touching the web app, manual | Builds the web app and deploys it to the `gh-pages` branch |
+| `Extension · Publish`   | Manual                                      | Publishes the extension to the VS Code Marketplace         |
+
+## Repository structure
 
 ```text
 .
-|-- package.json
-|-- pnpm-lock.yaml
-|-- pnpm-workspace.yaml
-|-- packages
-|   |-- adr-manager
-|   `-- vscode-adr-manager
+|-- .changeset/                  # changesets config and pending release notes
+|-- .github/workflows/           # CI, release, and publish pipelines
+|-- packages/
+|   |-- adr-manager/             # web app (src, tests, cypress)
+|   |-- vscode-adr-manager/      # VS Code extension (src, webviews in web/)
+|   |-- core/                    # shared MADR parser and ADR domain model
+|   |-- eslint-config/           # shared ESLint flat configs
+|   |-- prettier-config/         # shared Prettier config
+|   `-- tsconfig/                # shared TypeScript configs
+|-- package.json                 # root orchestration scripts
+|-- pnpm-workspace.yaml          # workspace layout, dependency catalog, install hardening
 `-- README.md
 ```
-
-Important package directories:
-
-- `packages/adr-manager/src` contains the web app source.
-- `packages/adr-manager/tests` contains web app unit tests.
-- `packages/adr-manager/cypress` contains web app Cypress tests.
-- `packages/vscode-adr-manager/src` contains the extension source.
-- `packages/vscode-adr-manager/web` contains the extension webview source.
-- `packages/vscode-adr-manager/src/test` contains extension tests.
-
-## Development Notes
-
-- Use pnpm from the workspace root for normal development.
-- Keep package-specific commands inside package scripts so root commands stay stable.
-- Do not commit generated `dist`, Cypress artifact, coverage, or VSIX files.
-- The web app Vite config uses `/adr-manager-apps/` as the production base path.
-- The extension package command runs webpack for the extension host and Rollup for the webviews.
-- Some test runs on newer Node versions may print a `punycode` deprecation warning from dependencies.
 
 ## Contributing
 
@@ -272,15 +182,12 @@ For a full validation pass, run:
 ```bash
 pnpm build
 pnpm test
+pnpm format:check
 ```
 
-If the extension package is affected, also run:
+If the extension package is affected, also run `pnpm vsix`.
 
-```bash
-pnpm vsix
-```
-
-## Reporting Issues
+### Reporting issues
 
 Open a GitHub issue with:
 
@@ -296,3 +203,9 @@ Do not include private GitHub tokens, OAuth session values, or repository secret
 ## License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
+
+## Acknowledgements
+
+- The web-based ADR Manager started as an undergraduate research project at the Institute of Software Engineering of the University of Stuttgart and was submitted to the [ICSE Score Contest 2021](https://conf.researchr.org/home/icse-2021/score-2021).
+- The VS Code extension was created by Steven Chen as part of a Bachelor thesis at the University of Stuttgart.
+- Both apps build on the [MADR](https://adr.github.io/madr/) template from the [adr organization](https://github.com/adr).

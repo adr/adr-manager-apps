@@ -1,5 +1,6 @@
 // Functions using the VS Code Extension API
 import * as vscode from "vscode";
+import type { AdrInit, Option } from "@adr-manager/core";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import {
   adrTemplatemarkdownContent,
@@ -7,7 +8,7 @@ import {
   initialMarkdownContent,
   readmeMarkdownContent
 } from "./plugins/constants";
-import { adr2md, md2adr } from "./plugins/parser";
+import { parseAdr, serializeAdr, type MadrTemplateVersion } from "./plugins/parser";
 import { cleanPathString, matchesMadrTitleFormat, naturalCase2snakeCase } from "./plugins/utils";
 import { WebPanel } from "./WebPanel";
 
@@ -73,7 +74,7 @@ export function isDiagnosticsEnabled(): boolean {
  * @param mdString The Markdown string of the ADR to be edited
  */
 export async function determineViewEditorMode(mdString: string): Promise<string> {
-  const adr = md2adr(mdString);
+  const adr = parseAdr(mdString);
   if (isProfessionalAdr(adr)) {
     return "professional";
   } else {
@@ -90,15 +91,21 @@ function isProfessionalAdr(adr: ArchitecturalDecisionRecord) {
   return (
     adr.status ||
     adr.deciders ||
+    adr.decisionMakers ||
+    adr.consulted ||
+    adr.informed ||
     adr.date ||
     adr.technicalStory ||
     adr.decisionDrivers.length ||
     adr.consideredOptions.some((option) => {
-      return option.pros.length || option.cons.length;
+      return option.description || option.pros.length || option.neutrals.length || option.cons.length;
     }) ||
     adr.decisionOutcome.positiveConsequences.length ||
     adr.decisionOutcome.negativeConsequences.length ||
-    adr.links.length
+    adr.consequences.length ||
+    adr.confirmation ||
+    adr.links.length ||
+    adr.moreInformation
   );
 }
 
@@ -355,100 +362,50 @@ export function createBasicAdr(fields: {
   yaml: string;
   title: string;
   contextAndProblemStatement: string;
-  consideredOptions: {
-    title: string;
-    description: string;
-    pros: string[];
-    cons: string[];
-  }[];
+  consideredOptions: ReadonlyArray<Partial<Option>>;
   chosenOption: string;
   explanation: string;
+  templateVersion?: MadrTemplateVersion;
 }) {
-  const adrFields = {
+  const newAdr = getAdrObjectFromFields({
     yaml: fields.yaml,
     title: fields.title,
     contextAndProblemStatement: fields.contextAndProblemStatement,
     consideredOptions: fields.consideredOptions,
     decisionOutcome: {
       chosenOption: fields.chosenOption,
-      explanation: fields.explanation,
-      positiveConsequences: [],
-      negativeConsequences: []
+      explanation: fields.explanation
     }
-  };
-  const newAdr = getAdrObjectFromFields(adrFields);
+  });
 
-  // Convert ADR object to Markdown and save it in the ADR Directory
-  const newMD = adr2md(newAdr);
+  const newMD = serializeAdr(newAdr, fields.templateVersion ?? "2.1.2");
   saveMarkdownToAdrDirectory(newMD, newAdr.title);
 }
 
 /**
  * Creates a new ArchitecturalDecision object with all fields the user has filled out using the professional template and
  * saves the ADR as a Markdown file in the ADR Directory.
- * @param fields The fields of the new short ADR
+ * @param fields The fields of the new ADR
  */
-export function createProfessionalAdr(fields: {
-  yaml: string;
-  title: string;
-  date: string;
-  status: string;
-  deciders: string;
-  technicalStory: string;
-  contextAndProblemStatement: string;
-  consideredOptions: {
-    title: string;
-    description: string;
-    pros: string[];
-    cons: string[];
-  }[];
-  decisionOutcome: {
-    chosenOption: string;
-    explanation: string;
-    positiveConsequences: string[];
-    negativeConsequences: string[];
-  };
-  links: string[];
-}) {
+export function createProfessionalAdr(fields: AdrInit & { templateVersion?: MadrTemplateVersion }) {
   const newAdr = getAdrObjectFromFields(fields);
 
-  // Convert ADR object to Markdown and save it in the ADR Directory
-  const newMD = adr2md(newAdr);
+  const newMD = serializeAdr(newAdr, fields.templateVersion ?? "2.1.2");
   saveMarkdownToAdrDirectory(newMD, newAdr.title);
 }
 
 /**
  * Saves any changes made to an ADR in the corresponding file, overwriting existing data.
- * @param fields The fields of the edited short ADR
+ * The file is rewritten in the requested template version, which is how switching the
+ * version selector in the editor converts an existing document.
+ * @param fields The fields of the edited ADR
  */
-export async function saveAdr(fields: {
-  yaml?: string;
-  title?: string;
-  date?: string;
-  status?: string;
-  deciders?: string;
-  technicalStory?: string;
-  contextAndProblemStatement?: string;
-  decisionDrivers?: string[];
-  consideredOptions?: {
-    title: string;
-    description: string;
-    pros: string[];
-    cons: string[];
-  }[];
-  decisionOutcome?: {
-    chosenOption: string;
-    explanation: string;
-    positiveConsequences: string[];
-    negativeConsequences: string[];
-  };
-  links?: string[];
-  fullPath: string;
-}): Promise<vscode.Uri | undefined> {
-  // Update, convert ADR object to Markdown and save
+export async function saveAdr(
+  fields: AdrInit & { fullPath: string; templateVersion?: MadrTemplateVersion }
+): Promise<vscode.Uri | undefined> {
   const fileUri = vscode.Uri.file(fields.fullPath);
   if (fileUri) {
-    const adr = md2adr(new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri)));
+    const adr = parseAdr(new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri)));
     adr.update({
       yaml: fields.yaml,
       title: fields.title,
@@ -459,12 +416,19 @@ export async function saveAdr(fields: {
       contextAndProblemStatement: fields.contextAndProblemStatement,
       decisionDrivers: fields.decisionDrivers,
       consideredOptions: fields.consideredOptions,
-      decisionOutcome: fields.decisionOutcome,
-      links: fields.links
+      decisionOutcome: fields.decisionOutcome ? { ...adr.decisionOutcome, ...fields.decisionOutcome } : undefined,
+      links: fields.links,
+      decisionMakers: fields.decisionMakers,
+      consulted: fields.consulted,
+      informed: fields.informed,
+      confirmation: fields.confirmation,
+      consequences: fields.consequences,
+      moreInformation: fields.moreInformation
     });
     const newUri = getRenamedUri(fileUri, adr.title);
     await vscode.workspace.fs.rename(fileUri, newUri);
-    await vscode.workspace.fs.writeFile(newUri, new TextEncoder().encode(adr2md(adr)));
+    const newMD = serializeAdr(adr, fields.templateVersion ?? "2.1.2");
+    await vscode.workspace.fs.writeFile(newUri, new TextEncoder().encode(newMD));
     return newUri;
   } else {
     vscode.window.showWarningMessage("ADR could not be found in the workspace.");
@@ -473,55 +437,14 @@ export async function saveAdr(fields: {
 }
 
 /**
- * Returns a new (basic) ADR object with only the specified required fields.
- * @param fields The required fields of the basic ADR object
- * @returns A new ADR object with the specified required fields
+ * Returns a new ADR object with the specified fields, cleaned up the way the
+ * extension expects (empty list entries dropped).
+ * @param fields The fields of the ADR object
+ * @returns A new ADR object with the specified fields
  */
-export function getAdrObjectFromFields(fields: {
-  yaml?: string;
-  title: string;
-  date?: string;
-  status?: string;
-  deciders?: string;
-  technicalStory?: string;
-  contextAndProblemStatement: string;
-  decisionDrivers?: string[];
-  consideredOptions: {
-    title: string;
-    description: string;
-    pros: string[];
-    cons: string[];
-  }[];
-  decisionOutcome: {
-    chosenOption: string;
-    explanation: string;
-    positiveConsequences?: string[];
-    negativeConsequences?: string[];
-  };
-  links?: string[];
-}): ArchitecturalDecisionRecord {
-  // Create ADR object
-  const newAdr = new ArchitecturalDecisionRecord({
-    yaml: fields.yaml ?? "",
-    title: fields.title,
-    date: fields.date ?? "",
-    status: fields.status ?? "",
-    deciders: fields.deciders ?? "",
-    technicalStory: fields.technicalStory ?? "",
-    contextAndProblemStatement: fields.contextAndProblemStatement,
-    decisionDrivers: fields.decisionDrivers || [],
-    consideredOptions: fields.consideredOptions,
-    decisionOutcome: {
-      chosenOption: fields.decisionOutcome.chosenOption,
-      explanation: fields.decisionOutcome.explanation,
-      positiveConsequences: fields.decisionOutcome.positiveConsequences || [],
-      negativeConsequences: fields.decisionOutcome.negativeConsequences || []
-    },
-    links: fields.links || []
-  });
-
+export function getAdrObjectFromFields(fields: AdrInit): ArchitecturalDecisionRecord {
+  const newAdr = new ArchitecturalDecisionRecord(fields);
   newAdr.cleanUp({ aggressive: true });
-
   return newAdr;
 }
 
@@ -696,7 +619,7 @@ function getAdrPathRelativeFromRootFolder(adrUri: vscode.Uri): string {
 export async function getAdrNumberFromUri(fileUri: vscode.Uri): Promise<string> {
   const content = await vscode.workspace.fs.readFile(fileUri);
   const md = new TextDecoder().decode(content);
-  if (!md2adr(md).conforming) {
+  if (!parseAdr(md).conforming) {
     return "";
   } else {
     const splitArray = fileUri.toString().split("/");

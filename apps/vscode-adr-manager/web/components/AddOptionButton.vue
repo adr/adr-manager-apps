@@ -1,8 +1,10 @@
 <template>
-  <div id="add-option-container">
-    <i id="add-option-icon" class="codicon codicon-add" @click="addOption"></i>
-    <h4>Add Option</h4>
-  </div>
+  <button type="button" class="opt-card opt-card-add" @click="$emit('addOption')">
+    <span class="opt-head">
+      <span class="opt-grip dimmed"><i class="codicon codicon-add"></i></span>
+      <span class="add-label">Add a considered option…</span>
+    </span>
+  </button>
 </template>
 
 <script lang="ts">
@@ -10,33 +12,26 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "AddOptionButton",
-  methods: {
-    /**
-     * Emits the "addOption" event which triggers the parent component to add a new option
-     * to the list of considered options.
-     */
-    addOption() {
-      this.$emit("addOption");
-    }
-  }
+  emits: ["addOption"]
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-#add-option-container {
-  display: flex;
-  align-items: center;
-  justify-content: baseline;
-  margin: 0 1rem 1rem 2rem;
+<style scoped>
+.opt-card-add {
+  display: block;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  padding: 0;
+  color: var(--adr-ink-3);
 }
 
-#add-option-icon {
-  background: green;
-  border-radius: 5px;
-  padding: 2px;
-  margin-right: 0.5rem;
-  color: white;
+.opt-head {
+  width: 100%;
+}
+
+.add-label {
+  font-size: 14.5px;
+  padding: 12px 6px;
 }
 </style>

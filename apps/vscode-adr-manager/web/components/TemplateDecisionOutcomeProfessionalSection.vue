@@ -1,43 +1,79 @@
 <template>
-  <div id="decision-outcome-container">
-    <TemplateHeader :info-text="'Add an explanation for the chosen option.'">
+  <div class="decision-outcome">
+    <TemplateHeader :info-text="'Select the chosen option by clicking its circle in the list above, and explain why.'">
       <h2>Decision Outcome</h2>
     </TemplateHeader>
-    <div id="chosen-option-container">
-      <h3 id="chosen-option-text">
-        Chosen Option: <b>{{ chosenOptionText }}</b>
-      </h3>
-      <h3 v-if="!decisionOutcome.chosenOption" id="chosen-option-error">There must be one chosen option</h3>
+    <div class="chosen-row">
+      <span class="lbl">Chosen option</span>
+      <span class="chip chosen-chip" :class="{ none: !decisionOutcome.chosenOption }">
+        <i
+          class="codicon"
+          :class="decisionOutcome.chosenOption ? 'codicon-pass-filled' : 'codicon-circle-large-outline'"
+        ></i>
+        {{ chosenOptionText }}
+      </span>
+      <p v-if="!decisionOutcome.chosenOption" class="hint">Choose one of the considered options above</p>
     </div>
-    <div id="explanation">
-      <h3>because</h3>
-      <div id="explanation-input-container">
+    <div class="because-row">
+      <span class="lbl">because</span>
+      <div class="because-input">
         <textarea
           id="auto-grow-explanation"
-          ref="explanation"
           v-model="v$.decisionOutcome.explanation.$model"
+          class="field"
+          :class="{ invalid: v$.decisionOutcome.explanation.$error }"
+          placeholder="justification for the chosen option…"
           spellcheck="true"
-          :class="v$.decisionOutcome.explanation.$error ? 'invalid-input' : ''"
           @input="
             updateHeight('explanation');
             $emit('update:explanation', $event.target.value);
             $emit('validate');
           "
         />
-        <h4 v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid" class="error-message">
+        <p v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid" class="error-message">
           {{ error.$message }}
-        </h4>
+        </p>
       </div>
     </div>
-    <div id="consequences-container">
-      <div id="positive-consequences-container">
-        <TemplateHeader
-          :info-text="'Give positive consequences, e.g., improvement of a quality attribute, follow-up decisions required, ...'"
-        >
-          <h3>Positive Consequences</h3>
-        </TemplateHeader>
+    <template v-if="templateVersion === '4.0.0'">
+      <div class="v4-block">
+        <div class="subhead">
+          <h4>Consequences</h4>
+          <span class="ver-tag">4.0</span>
+          <HelpTooltip>Good / Neutral / Bad consequences of the decision, one combined list in MADR 4.0.0.</HelpTooltip>
+        </div>
+        <ConsequenceListEditor :list="consequences" @changed="$emit('updateArray')"></ConsequenceListEditor>
+      </div>
+      <div class="v4-block">
+        <div class="subhead">
+          <h4>Confirmation</h4>
+          <span class="ver-tag">4.0</span>
+          <HelpTooltip>
+            How is implementation / compliance with this decision confirmed? E.g. a review or an ArchUnit test.
+          </HelpTooltip>
+        </div>
+        <textarea
+          id="auto-grow-confirmation"
+          class="field"
+          placeholder="How will this decision be confirmed?…"
+          spellcheck="true"
+          :value="confirmation"
+          @input="
+            updateHeight('confirmation');
+            $emit('update:confirmation', $event.target.value);
+            $emit('updateArray');
+          "
+        />
+      </div>
+    </template>
+    <div v-else class="outcome-cols">
+      <div>
+        <div class="subhead">
+          <h4>Positive Consequences</h4>
+          <HelpTooltip>e.g. improvement of a quality attribute, follow-up decisions required, …</HelpTooltip>
+        </div>
         <draggable
-          class="drag-area"
+          class="list"
           :list="decisionOutcome.positiveConsequences"
           :sort="true"
           handle=".positive-consequences-grabber"
@@ -46,39 +82,42 @@
             checkMove('positiveConsequences', $event);
           "
         >
-          <div
-            v-for="(positive, index) in positiveConsequencesWithBlank"
-            id="positives"
-            :key="index"
-            ref="positives"
-            class="multi-input"
-          >
-            <i
-              v-if="decisionOutcome.positiveConsequences[index] !== ''"
-              class="codicon codicon-grabber positive-consequences-grabber"
-            ></i>
+          <div v-for="(positive, index) in positiveConsequencesWithBlank" :key="index" class="list-row">
+            <span
+              class="gutter"
+              :class="decisionOutcome.positiveConsequences[index] === '' ? 'dimmed' : 'positive-consequences-grabber'"
+            >
+              <i
+                class="codicon"
+                :class="decisionOutcome.positiveConsequences[index] === '' ? 'codicon-add' : 'codicon-gripper'"
+              ></i>
+            </span>
             <textarea
               v-model="decisionOutcome.positiveConsequences[index]"
-              class="auto-grow-positive-consequence"
+              class="field auto-grow-positive-consequence"
+              placeholder="a positive consequence…"
               spellcheck="true"
               @input="updateArray('positiveConsequences', $event.target.value, index, 'positives')"
             />
-            <i
+            <button
               v-if="decisionOutcome.positiveConsequences[index] !== ''"
-              class="codicon codicon-close multi-input-delete-icon"
+              type="button"
+              class="row-del"
+              title="Remove"
               @click="updateArray('positiveConsequences', '', index, 'positives')"
-            ></i>
+            >
+              <i class="codicon codicon-trash"></i>
+            </button>
           </div>
         </draggable>
       </div>
-      <div id="negative-consequences-container">
-        <TemplateHeader
-          :info-text="'Give negative consequences, e.g., afflicted quality attributes, follow-up decisions required, ...'"
-        >
-          <h3>Negative Consequences:</h3>
-        </TemplateHeader>
+      <div>
+        <div class="subhead">
+          <h4>Negative Consequences</h4>
+          <HelpTooltip>e.g. afflicted quality attributes, follow-up decisions required, …</HelpTooltip>
+        </div>
         <draggable
-          class="drag-area"
+          class="list"
           :list="decisionOutcome.negativeConsequences"
           :sort="true"
           handle=".negative-consequences-grabber"
@@ -87,28 +126,32 @@
             checkMove('negativeConsequences', $event);
           "
         >
-          <div
-            v-for="(negative, index) in negativeConsequencesWithBlank"
-            id="negatives"
-            :key="index"
-            ref="negatives"
-            class="multi-input"
-          >
-            <i
-              v-if="decisionOutcome.negativeConsequences[index] !== ''"
-              class="codicon codicon-grabber negative-consequences-grabber"
-            ></i>
+          <div v-for="(negative, index) in negativeConsequencesWithBlank" :key="index" class="list-row">
+            <span
+              class="gutter"
+              :class="decisionOutcome.negativeConsequences[index] === '' ? 'dimmed' : 'negative-consequences-grabber'"
+            >
+              <i
+                class="codicon"
+                :class="decisionOutcome.negativeConsequences[index] === '' ? 'codicon-add' : 'codicon-gripper'"
+              ></i>
+            </span>
             <textarea
               v-model="decisionOutcome.negativeConsequences[index]"
-              class="auto-grow-negative-consequence"
+              class="field auto-grow-negative-consequence"
+              placeholder="a negative consequence…"
               spellcheck="true"
               @input="updateArray('negativeConsequences', $event.target.value, index, 'negatives')"
             />
-            <i
+            <button
               v-if="decisionOutcome.negativeConsequences[index] !== ''"
-              class="codicon codicon-close multi-input-delete-icon"
+              type="button"
+              class="row-del"
+              title="Remove"
               @click="updateArray('negativeConsequences', '', index, 'negatives')"
-            ></i>
+            >
+              <i class="codicon codicon-trash"></i>
+            </button>
           </div>
         </draggable>
       </div>
@@ -121,12 +164,16 @@ import { defineComponent, PropType } from "vue";
 import useVuelidate from "@vuelidate/core";
 import { helpers, required } from "@vuelidate/validators";
 import { VueDraggableNext } from "vue-draggable-next";
+import ConsequenceListEditor from "./ConsequenceListEditor.vue";
+import HelpTooltip from "./HelpTooltip.vue";
 import TemplateHeader from "./TemplateHeader.vue";
 import { createShortTitle } from "../../src/plugins/utils";
 
 export default defineComponent({
   name: "TemplateDecisionOutcomeProfessionalSection",
   components: {
+    ConsequenceListEditor,
+    HelpTooltip,
     TemplateHeader,
     draggable: VueDraggableNext
   },
@@ -144,6 +191,18 @@ export default defineComponent({
         positiveConsequences: [] as string[],
         negativeConsequences: [] as string[]
       }
+    },
+    consequencesProp: {
+      type: Array as PropType<{ kind: string; text: string }[]>,
+      default: () => []
+    },
+    confirmation: {
+      type: String,
+      default: ""
+    },
+    templateVersion: {
+      type: String,
+      default: "2.1.2"
     }
   },
   setup() {
@@ -153,7 +212,8 @@ export default defineComponent({
   },
   data() {
     return {
-      decisionOutcome: this.decisionOutcomeProp
+      decisionOutcome: this.decisionOutcomeProp,
+      consequences: this.consequencesProp
     };
   },
   computed: {
@@ -165,7 +225,7 @@ export default defineComponent({
     },
     /**
      * Computes a new positive consequences array with a blank entry at the end of the array such that
-     * a blank input field is rendered for the user to enter a new decision driver in.
+     * a blank input field is rendered for the user to enter a new consequence in.
      */
     positiveConsequencesWithBlank() {
       const positiveConsequencesWithBlank = this.decisionOutcome.positiveConsequences;
@@ -174,7 +234,7 @@ export default defineComponent({
     },
     /**
      * Computes a new negative consequences array with a blank entry at the end of the array such that
-     * a blank input field is rendered for the user to enter a new decision driver in.
+     * a blank input field is rendered for the user to enter a new consequence in.
      */
     negativeConsequencesWithBlank() {
       const negativeConsequencesWithBlank = this.decisionOutcome.negativeConsequences;
@@ -183,23 +243,15 @@ export default defineComponent({
     }
   },
   /**
-   * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+   * Sizes the textareas to prefilled content and revalidates without marking
+   * pristine fields as erroneous.
    */
   mounted() {
-    //@ts-ignore
-    this.$refs.explanation.dispatchEvent(new Event("input"));
-    //@ts-ignore
-    this.$refs.positives.forEach((positive) => {
-      if (positive.children[1]) {
-        positive.children[1].dispatchEvent(new Event("input"));
-      }
-    });
-    //@ts-ignore
-    this.$refs.negatives.forEach((negative) => {
-      if (negative.children[1]) {
-        negative.children[1].dispatchEvent(new Event("input"));
-      }
-    });
+    this.updateHeight("explanation");
+    this.updateHeight("confirmation");
+    this.updateHeight("positives");
+    this.updateHeight("negatives");
+    this.$emit("validate");
   },
   methods: {
     /**
@@ -228,7 +280,7 @@ export default defineComponent({
       }
     },
     /**
-     * Updates the list of decision drivers/links.
+     * Updates the list of positive/negative consequences.
      */
     updateArray(name: string, text: string, index: number, heightKey: string) {
       if (name === "positiveConsequences") {
@@ -257,6 +309,16 @@ export default defineComponent({
             const explanation = document.getElementById("auto-grow-explanation")!;
             explanation.style.height = "auto";
             explanation.style.height = `${explanation.scrollHeight}px`;
+          });
+          break;
+        }
+        case "confirmation": {
+          this.$nextTick(() => {
+            const confirmation = document.getElementById("auto-grow-confirmation");
+            if (confirmation) {
+              confirmation.style.height = "auto";
+              confirmation.style.height = `${confirmation.scrollHeight}px`;
+            }
           });
           break;
         }
@@ -300,109 +362,82 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-#chosen-option-container {
+<style scoped>
+.chosen-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 12px;
 }
 
-#chosen-option-text {
-  margin-top: 2rem;
+.hint {
+  font-size: var(--adr-text-xs);
+  color: var(--adr-ink-3);
 }
 
-#chosen-option-error {
-  color: var(--vscode-editorError-foreground);
-  margin-left: 1.5rem;
+.lbl {
+  flex: 0 0 auto;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--adr-ink-2);
 }
 
-#explanation {
+.chosen-chip {
+  font-weight: 600;
+  cursor: default;
+}
+
+.chosen-chip:not(.none) {
+  border-color: var(--adr-success);
+  color: var(--adr-success);
+}
+
+.chosen-chip:not(.none) .codicon {
+  color: var(--adr-success);
+}
+
+.chosen-chip.none {
+  border-style: dashed;
+  color: var(--adr-ink-3);
+}
+
+.because-row {
   display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  margin-top: 1.5rem;
-  & h3 {
-    margin-right: 2rem;
-  }
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 12px;
 }
 
-#explanation-input-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  & #auto-grow-explanation {
-    height: 39px;
-    resize: none;
-    overflow-y: hidden;
-  }
+.because-row .lbl {
+  padding-top: 10px;
 }
 
-#consequences-container {
-  display: flex;
-  margin: 1rem 0;
-}
-
-#positive-consequences-container,
-#negative-consequences-container {
-  flex: 1;
-}
-
-#positives,
-#negatives {
-  width: 95%;
-}
-
-.drag-area {
+.because-input {
   display: flex;
   flex-direction: column;
-  flex-wrap: wrap;
-  width: 100%;
+  flex: 1 1 auto;
 }
 
-.positive-consequences-grabber,
-.negative-consequences-grabber {
-  position: initial;
-  margin-right: 0.5rem;
-  transform: scale(1.2);
+#auto-grow-explanation,
+#auto-grow-confirmation,
+.auto-grow-positive-consequence,
+.auto-grow-negative-consequence {
+  overflow-y: hidden;
+}
 
-  &:hover {
-    cursor: grab;
+.v4-block {
+  margin-top: 18px;
+}
+
+.outcome-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 28px;
+  margin-top: 16px;
+}
+
+@media (max-width: 820px) {
+  .outcome-cols {
+    grid-template-columns: 1fr;
   }
-
-  &:active {
-    cursor: grabbing;
-  }
-}
-
-.multi-input {
-  @include centered-flex(row);
-  justify-content: left;
-  margin: 0.5rem 0;
-  & .auto-grow-positive-consequence,
-  & .auto-grow-negative-consequence {
-    height: 39px;
-    resize: none;
-    overflow-y: hidden;
-  }
-}
-
-.multi-input-delete-icon {
-  transform: scale(1.5);
-  margin-left: 0.5rem;
-
-  &:hover {
-    cursor: pointer;
-  }
-}
-
-.invalid-input,
-.invalid-input:focus {
-  border: 1.5px solid var(--vscode-editorError-foreground) !important;
-  outline-color: var(--vscode-editorError-foreground) !important;
-}
-
-.error-message {
-  color: var(--vscode-editorError-foreground);
 }
 </style>

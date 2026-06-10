@@ -1,43 +1,22 @@
 <template>
-    <v-dialog v-model="show" width="600">
-        <template #activator="{ props }">
-            <slot name="activator" :props="props" />
+    <BaseDialog :model-value="show" title="Delete ADR" icon="delete" @update:model-value="emit('close')">
+        <p>Are you sure you want to delete '{{ adrPath }}'?</p>
+        <template #actions>
+            <button type="button" data-cy="dialogDeleteAdrBtn" class="btn btn-text-success" @click="emit('confirm')">
+                Delete
+            </button>
+            <button type="button" class="btn btn-text-error" @click="emit('close')">Cancel</button>
         </template>
-        <v-card>
-            <v-card-title>
-                <div>
-                    <v-avatar color="primary" size="35"> <v-icon color="white">mdi-delete</v-icon></v-avatar>
-                    <span class="dialogTitle"> Delete ADR</span>
-                </div>
-            </v-card-title>
-            <v-divider></v-divider>
-
-            <v-card-text> Are you sure you want to delete '{{ adr?.path }}'? </v-card-text>
-            <v-divider></v-divider>
-
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn data-cy="dialogDeleteAdrBtn" variant="text" color="success" @click="deleteAdr"> Delete </v-btn>
-                <v-btn variant="text" color="error" @click="show = false"> Cancel </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+    </BaseDialog>
 </template>
 
 <script setup lang="ts">
-import { store } from "@/plugins/store";
-import type { Repository } from "@/plugins/classes";
-import type { AdrFile } from "@/types/adr";
+import BaseDialog from "./BaseDialog.vue";
 
-const show = defineModel<boolean>({ default: false });
-const props = defineProps<{ repo?: Repository | undefined; adr?: AdrFile | undefined }>();
+defineProps<{ show: boolean; adrPath: string }>();
 
-function deleteAdr(): void {
-    if (props.adr && props.repo) {
-        store.deleteAdr(props.adr, props.repo);
-    }
-    show.value = false;
-}
+const emit = defineEmits<{
+    close: [];
+    confirm: [];
+}>();
 </script>
-
-<style scoped></style>

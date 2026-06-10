@@ -1,11 +1,13 @@
 <template>
-  <div id="technical-story-container" class="input-group">
-    <TemplateHeader :info-text="'Technical context of the ADR, e.g., a ticket or issue URL'">
-      <h2>Technical Story</h2>
-    </TemplateHeader>
+  <div class="tech-story">
+    <div class="subhead">
+      <h4>Technical Story</h4>
+      <HelpTooltip>Technical context of the ADR, e.g. a ticket or issue URL.</HelpTooltip>
+    </div>
     <textarea
       id="auto-grow-technical-story"
-      ref="technicalStory"
+      class="field"
+      placeholder="e.g. JIRA-1234, or an issue URL…"
       spellcheck="true"
       :value="technicalStory"
       @input="
@@ -19,22 +21,18 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import TemplateHeader from "./TemplateHeader.vue";
+import HelpTooltip from "./HelpTooltip.vue";
 
 export default defineComponent({
   name: "TemplateTechnicalStorySection",
   components: {
-    TemplateHeader
+    HelpTooltip
   },
   props: {
     technicalStory: String
   },
-  /**
-   * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-   */
   mounted() {
-    //@ts-ignore
-    this.$refs.technicalStory.dispatchEvent(new Event("input"));
+    this.updateHeight();
   },
   methods: {
     /**
@@ -51,20 +49,12 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
+<style scoped>
+.tech-story {
+  margin-top: 16px;
+}
 
-.input-group {
-  margin-bottom: 1.5rem;
-
-  & input {
-    height: 3rem;
-  }
-
-  & #auto-grow-technical-story {
-    min-height: 39px;
-    resize: none;
-    overflow-y: hidden;
-  }
+#auto-grow-technical-story {
+  overflow-y: hidden;
 }
 </style>

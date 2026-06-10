@@ -1,0 +1,940 @@
+/*
+ * ADR Manager design system for the VS Code webviews.
+ * Mirrors the web app's token-based design (apps/adr-manager/src/styles) while
+ * deriving surfaces, text and lines from the host VS Code theme so the panels
+ * adapt to light, dark and high-contrast themes like native editor UI.
+ */
+
+:root {
+  /* Brand and semantic colors, identical to the web design system */
+  --adr-blue: #1976d2;
+  --adr-blue-600: #1565c0;
+  --adr-success: #4caf50;
+  --adr-error: var(--vscode-editorError-foreground, #ff5252);
+  --adr-warning: var(--vscode-editorWarning-foreground, #fb8c00);
+  --adr-info: #2196f3;
+
+  --accent: var(--adr-blue);
+  --accent-600: var(--adr-blue-600);
+  --accent-050: color-mix(in srgb, var(--accent) 14%, var(--adr-surface));
+
+  /* Surfaces and text derived from the host theme */
+  --adr-surface: var(--vscode-editor-background, #ffffff);
+  --adr-ink: var(--vscode-editor-foreground, var(--vscode-foreground, #1f1f1f));
+  --adr-ink-2: color-mix(in srgb, var(--adr-ink) 72%, transparent);
+  --adr-ink-3: color-mix(in srgb, var(--adr-ink) 45%, transparent);
+  --adr-line: color-mix(in srgb, var(--adr-ink) 14%, transparent);
+  --adr-line-strong: color-mix(in srgb, var(--adr-ink) 28%, transparent);
+  --adr-surface-1: color-mix(in srgb, var(--adr-ink) 4%, var(--adr-surface));
+  --adr-surface-2: color-mix(in srgb, var(--adr-ink) 9%, var(--adr-surface));
+  --adr-code-bg: color-mix(in srgb, var(--adr-ink) 6%, var(--adr-surface));
+
+  --adr-field: var(--vscode-input-background, var(--adr-surface));
+  --adr-field-border: color-mix(in srgb, var(--adr-ink) 24%, transparent);
+  --adr-field-border-hover: color-mix(in srgb, var(--adr-ink) 40%, transparent);
+
+  /* Petrol/teal focus identity from the web app, lightened for dark themes below */
+  --adr-focus: #0f4c5c;
+  --adr-focus-ring: color-mix(in srgb, var(--adr-focus) 18%, transparent);
+
+  /* Tone labels (pros, cons, consequences) */
+  --adr-tone-good-bg: color-mix(in srgb, var(--adr-success) 14%, var(--adr-surface));
+  --adr-tone-good-fg: #2e7d32;
+  --adr-tone-neutral-bg: var(--adr-surface-2);
+  --adr-tone-neutral-fg: var(--adr-ink-2);
+  --adr-tone-bad-bg: color-mix(in srgb, var(--adr-error) 12%, var(--adr-surface));
+  --adr-tone-bad-fg: #c62828;
+
+  --adr-chosen-bg: color-mix(in srgb, var(--adr-success) 10%, var(--adr-surface));
+  --adr-chosen-border: color-mix(in srgb, var(--adr-success) 45%, var(--adr-surface));
+
+  /* Typography: host fonts with the web app's type scale */
+  --adr-font: var(--vscode-font-family, "Segoe UI", sans-serif);
+  /* Keep concrete fonts after the var: if the editor font name isn't
+     installed, the browser can still continue down this list. */
+  --adr-font-mono: var(--vscode-editor-font-family, ui-monospace), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --adr-text-h1: 26px;
+  --adr-text-h3: 16px;
+  --adr-text-body: 14px;
+  --adr-text-sm: 13px;
+  --adr-text-xs: 12px;
+
+  --adr-track-btn: 1.25px;
+
+  --adr-radius-sm: 4px;
+  --adr-radius-md: 8px;
+  --adr-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --adr-shadow-pop: 0 6px 16px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+body.vscode-dark {
+  color-scheme: dark;
+  --adr-focus: #63aebf;
+  --adr-tone-good-fg: #a5d6a7;
+  --adr-tone-bad-fg: #ef9a9a;
+}
+
+body.vscode-high-contrast:not(.vscode-high-contrast-light) {
+  color-scheme: dark;
+}
+
+body.vscode-high-contrast {
+  --adr-line: var(--vscode-contrastBorder, var(--adr-ink));
+  --adr-line-strong: var(--vscode-contrastBorder, var(--adr-ink));
+  --adr-field-border: var(--vscode-contrastBorder, var(--adr-ink));
+  --adr-focus: var(--vscode-focusBorder, #0f4c5c);
+  --adr-shadow-1: none;
+  --adr-shadow-pop: none;
+}
+
+/* ---- Base ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--adr-font);
+  font-size: var(--adr-text-body);
+  line-height: 1.5;
+  color: var(--adr-ink);
+  background: var(--adr-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--accent-600);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* body prefix outranks VS Code's injected _defaultStyles, which paints bare
+   code elements with textPreformat red and an undefined monospace variable. */
+body code {
+  font-family: var(--adr-font-mono);
+  font-size: 0.92em;
+  color: inherit;
+  background: var(--adr-code-bg);
+  border-radius: var(--adr-radius-sm);
+  padding: 1px 5px;
+}
+
+.codicon {
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, var(--adr-focus));
+  outline-offset: 1px;
+}
+
+/* ---- Toolbar (panel header) ---- */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 16px;
+  background: var(--adr-surface);
+  border-bottom: 1px solid var(--adr-line);
+}
+
+.toolbar .btn,
+.toolbar .seg button {
+  white-space: nowrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+}
+
+.brand img {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.brand .word {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--adr-ink);
+}
+
+.brand .word span {
+  font-weight: 400;
+  color: var(--adr-ink-2);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 6px;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--adr-text-xs);
+  font-weight: 500;
+  letter-spacing: var(--adr-track-btn);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--adr-ink);
+  background: transparent;
+}
+
+.btn .codicon {
+  font-size: 15px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover:enabled {
+  background: var(--accent-600);
+}
+
+.btn-ghost {
+  color: var(--adr-ink-2);
+}
+
+.btn-ghost:hover:enabled {
+  background: var(--adr-surface-2);
+  color: var(--adr-ink);
+}
+
+.btn-outline {
+  background: var(--adr-surface);
+  border: 1px solid var(--adr-line-strong);
+}
+
+.btn-outline:hover:enabled {
+  background: var(--adr-surface-2);
+}
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--adr-ink-2);
+  padding: 0;
+}
+
+.icon-btn:hover {
+  background: var(--adr-surface-2);
+  color: var(--adr-ink);
+}
+
+.icon-btn.danger:hover {
+  color: var(--adr-error);
+}
+
+.icon-btn .codicon {
+  font-size: 16px;
+}
+
+body.vscode-high-contrast .btn,
+body.vscode-high-contrast .icon-btn {
+  border: 1px solid var(--vscode-contrastBorder, transparent);
+}
+
+/* ---- Segmented control (editor mode) ---- */
+.seg {
+  display: inline-flex;
+  background: var(--adr-surface-2);
+  border-radius: 7px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.seg button {
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--adr-ink-2);
+  padding: 5px 13px;
+  border-radius: 5px;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+}
+
+.seg button.on {
+  background: var(--adr-surface);
+  color: var(--adr-ink);
+  box-shadow: var(--adr-shadow-1);
+}
+
+body.vscode-high-contrast .seg button.on {
+  border: 1px solid var(--vscode-contrastBorder, transparent);
+}
+
+.seg-label {
+  font-size: var(--adr-text-xs);
+  color: var(--adr-ink-3);
+  align-self: center;
+  white-space: nowrap;
+}
+
+/* ---- Inputs ---- */
+.field {
+  width: 100%;
+  background: var(--adr-field);
+  border: 1px solid var(--adr-field-border);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: var(--adr-text-body);
+  color: var(--adr-ink);
+  padding: 10px 13px;
+  outline: 0;
+  resize: none;
+  line-height: 1.55;
+  transition:
+    border-color 0.14s,
+    box-shadow 0.14s;
+}
+
+.field::placeholder {
+  color: var(--adr-ink-3);
+}
+
+.field:hover {
+  border-color: var(--adr-field-border-hover);
+}
+
+.field:focus {
+  border-color: var(--adr-focus);
+  box-shadow: 0 0 0 3px var(--adr-focus-ring);
+  outline: 0;
+}
+
+textarea.field {
+  display: block;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+.field.invalid,
+.field.invalid:focus {
+  border-color: var(--adr-error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--adr-error) 18%, transparent);
+}
+
+.error-message {
+  color: var(--adr-error);
+  font-size: var(--adr-text-xs);
+  font-weight: 500;
+  margin-top: 5px;
+}
+
+/* ---- Chips (meta bar: date, status, people) ---- */
+.chip {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--adr-field-border);
+  background: var(--adr-field);
+  font-size: var(--adr-text-sm);
+  color: var(--adr-ink);
+  transition:
+    border-color 0.14s,
+    box-shadow 0.14s;
+}
+
+.chip:hover {
+  border-color: var(--adr-field-border-hover);
+}
+
+.chip:focus-within {
+  border-color: var(--adr-focus);
+  box-shadow: 0 0 0 3px var(--adr-focus-ring);
+}
+
+.chip .codicon {
+  font-size: 15px;
+  color: var(--adr-ink-2);
+}
+
+.chip.status {
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-size: var(--adr-text-xs);
+}
+
+.chip.status[data-tone="accepted"] {
+  border-color: var(--adr-success);
+  color: var(--adr-success);
+}
+
+.chip.status[data-tone="rejected"] {
+  border-color: var(--adr-error);
+  color: var(--adr-error);
+}
+
+.chip.status[data-tone="proposed"] {
+  border-color: var(--adr-info);
+  color: var(--adr-info);
+}
+
+.chip.status[data-tone="deprecated"],
+.chip.status[data-tone="superseded"] {
+  border-color: var(--adr-warning);
+  color: var(--adr-warning);
+}
+
+.chip-input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--adr-text-sm);
+  color: inherit;
+  min-width: 60px;
+  padding: 0;
+}
+
+.chip-input::placeholder {
+  color: var(--adr-ink-3);
+}
+
+select.chip-input {
+  appearance: none;
+  cursor: pointer;
+  text-transform: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
+select.chip-input option {
+  background: var(--adr-field);
+  color: var(--vscode-input-foreground, var(--adr-ink));
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+/* ---- Menus ---- */
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 280px;
+  background: var(--adr-surface);
+  border-radius: var(--adr-radius-md);
+  box-shadow: var(--adr-shadow-pop);
+  padding: 6px;
+  z-index: 60;
+  border: 1px solid var(--adr-line);
+}
+
+.menu-item {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: var(--adr-surface-2);
+}
+
+.menu-item.sel {
+  background: var(--accent-050);
+}
+
+.menu-item .mi-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid var(--adr-line-strong);
+  flex: 0 0 18px;
+  margin-top: 2px;
+  position: relative;
+}
+
+.menu-item.sel .mi-radio {
+  border-color: var(--accent);
+}
+
+.menu-item.sel .mi-radio::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.menu-item .mi-title {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.menu-item .mi-desc {
+  color: var(--adr-ink-2);
+  font-size: var(--adr-text-xs);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+/* ---- Version badges ---- */
+.ver-pill {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent-050);
+  color: var(--accent-600);
+}
+
+.ver-tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--adr-radius-sm);
+  background: var(--accent-050);
+  color: var(--accent-600);
+  text-transform: none;
+  letter-spacing: 0.2px;
+}
+
+body.vscode-dark .ver-pill,
+body.vscode-dark .ver-tag {
+  color: color-mix(in srgb, var(--accent) 55%, var(--adr-ink));
+}
+
+/* ---- Editor layout ---- */
+.editor-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px 40px 80px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--adr-line);
+  margin: 26px 0;
+  border: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.section-head h2 {
+  font-size: var(--adr-text-h3);
+  font-weight: 600;
+  color: var(--adr-ink);
+}
+
+.section-head h3,
+.subhead h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--adr-ink-2);
+}
+
+.subhead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 16px 0 6px;
+}
+
+.section-head .opt {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--adr-ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-left: 2px;
+}
+
+/* ---- Help tooltip ---- */
+.help {
+  position: relative;
+  display: inline-flex;
+  cursor: help;
+  color: var(--adr-ink-3);
+}
+
+.help .codicon {
+  font-size: 16px;
+}
+
+.help:hover {
+  color: var(--accent);
+}
+
+.help .bubble {
+  /* display: none keeps hidden bubbles out of the scroll container's
+     overflow area; opacity alone would still stretch it. */
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--vscode-editorHoverWidget-background, rgba(45, 47, 55, 0.96));
+  color: var(--vscode-editorHoverWidget-foreground, #fff);
+  border: 1px solid var(--vscode-editorHoverWidget-border, transparent);
+  font-size: var(--adr-text-xs);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: pre-line;
+  padding: 8px 11px;
+  border-radius: 6px;
+  width: max-content;
+  max-width: 300px;
+  box-shadow: var(--adr-shadow-pop);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.12s,
+    display 0.12s allow-discrete;
+  z-index: 50;
+}
+
+/* For icons flush against the pane's right edge: anchor the bubble's right
+   edge to the icon instead of centering, so it never overflows the pane. */
+.help.align-end .bubble {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.help:hover .bubble,
+.help:focus-visible .bubble {
+  display: block;
+  opacity: 1;
+}
+
+@starting-style {
+  .help:hover .bubble,
+  .help:focus-visible .bubble {
+    opacity: 0;
+  }
+}
+
+/* ---- Inline warning alert ---- */
+.alert {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-left: 4px solid var(--adr-warning);
+  border-radius: 6px;
+  padding: 11px 14px;
+  margin: 16px 0;
+  box-shadow: var(--adr-shadow-1);
+}
+
+.alert .codicon {
+  color: var(--adr-warning);
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+
+.alert .atext {
+  flex: 1 1 auto;
+  font-size: var(--adr-text-sm);
+  color: var(--adr-ink);
+}
+
+.alert .btn {
+  height: 30px;
+  flex: 0 0 auto;
+}
+
+/* ---- Tone labels (pros, cons, consequences) ---- */
+.tone-label {
+  flex: 0 0 auto;
+  align-self: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin: 0 4px;
+  text-transform: uppercase;
+}
+
+.tone-good {
+  background: var(--adr-tone-good-bg);
+  color: var(--adr-tone-good-fg);
+}
+
+.tone-neutral {
+  background: var(--adr-tone-neutral-bg);
+  color: var(--adr-tone-neutral-fg);
+}
+
+.tone-bad {
+  background: var(--adr-tone-bad-bg);
+  color: var(--adr-tone-bad-fg);
+}
+
+/* ---- List editor rows (drivers, links, pros/cons, consequences) ---- */
+.list-row {
+  display: flex;
+  align-items: flex-start;
+  border-radius: 6px;
+}
+
+.list-row:hover {
+  background: var(--adr-surface-1);
+}
+
+.list-row .gutter {
+  flex: 0 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  color: var(--adr-ink-3);
+  cursor: grab;
+  opacity: 0;
+  min-height: 40px;
+}
+
+.list-row .gutter:active {
+  cursor: grabbing;
+}
+
+.list-row:hover .gutter {
+  opacity: 1;
+}
+
+.list-row .gutter.dimmed {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.list-row .field {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 9px 8px;
+  box-shadow: none;
+  min-height: 0;
+}
+
+.list-row .field:hover {
+  border-bottom-color: var(--adr-field-border);
+}
+
+.list-row .field:focus {
+  background: var(--adr-surface-1);
+  box-shadow: none;
+  border-bottom: 2px solid var(--adr-focus);
+}
+
+.list-row .row-del {
+  flex: 0 0 34px;
+  align-self: center;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  color: var(--adr-ink-3);
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.list-row:hover .row-del {
+  opacity: 1;
+}
+
+.list-row .row-del:hover {
+  color: var(--adr-error);
+}
+
+/* ---- Considered option cards ---- */
+.opt-card {
+  border: 1px solid var(--adr-line);
+  border-radius: var(--adr-radius-md);
+  background: var(--adr-surface);
+  width: 100%;
+  margin-bottom: 4px;
+  overflow: visible;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s;
+}
+
+.opt-card:hover {
+  box-shadow: var(--adr-shadow-1);
+}
+
+.opt-card.chosen {
+  background: var(--adr-chosen-bg);
+  border-color: var(--adr-chosen-border);
+}
+
+.opt-card-add {
+  border-style: dashed;
+  cursor: pointer;
+}
+
+.opt-card-add:hover {
+  background: var(--adr-surface-1);
+}
+
+.opt-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 6px 0 4px;
+}
+
+.opt-grip {
+  flex: 0 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--adr-ink-3);
+  cursor: grab;
+  opacity: 0;
+}
+
+.opt-grip:active {
+  cursor: grabbing;
+}
+
+.opt-card:hover .opt-grip {
+  opacity: 1;
+}
+
+.opt-grip.dimmed {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.opt-choose {
+  flex: 0 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--adr-ink-3);
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.opt-choose .codicon {
+  font-size: 18px;
+}
+
+.opt-choose.dimmed {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.opt-card.chosen .opt-choose {
+  color: var(--adr-success);
+}
+
+.opt-title-input {
+  flex: 1 1 auto;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--adr-ink);
+  padding: 12px 6px;
+}
+
+.opt-title-input::placeholder {
+  color: var(--adr-ink-3);
+}
+
+.opt-card.chosen .opt-title-input {
+  font-weight: 700;
+}
+
+.opt-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+}
+
+.opt-card:hover .opt-actions,
+.opt-card:focus-within .opt-actions {
+  opacity: 1;
+}
+
+.chosen-tag {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--adr-success);
+  text-transform: uppercase;
+  padding: 0 6px;
+}

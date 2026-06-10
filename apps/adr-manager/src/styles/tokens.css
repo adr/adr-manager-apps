@@ -1,0 +1,73 @@
+/* ADR Manager design tokens. Source of truth: the adr-manager-design-system bundle. */
+:root {
+    /* Brand */
+    --adr-navy: #010025;
+    --adr-navy-700: #1a1c45;
+    --adr-blue: #1976d2;
+    --adr-blue-600: #1565c0;
+    --adr-blue-050: #e8f1fb;
+
+    /* adr.zone-inspired petrol/teal, used on the writing surface (inputs) */
+    --adr-teal: #0f4c5c;
+    --adr-teal-600: #0b3a46;
+    --adr-teal-050: #e7f0f2;
+    --adr-teal-ring: rgba(15, 76, 92, 0.15);
+
+    /* Semantic */
+    --adr-success: #4caf50;
+    --adr-success-050: #f1f8e9;
+    --adr-error: #ff5252;
+    --adr-warning: #fb8c00;
+    --adr-warning-050: #fff4e5;
+    --adr-info: #2196f3;
+    --adr-neutral: #90a4ae;
+
+    /* Neutrals / surfaces */
+    --adr-ink: rgba(0, 0, 0, 0.87);
+    --adr-ink-2: rgba(0, 0, 0, 0.6);
+    --adr-ink-3: rgba(0, 0, 0, 0.38);
+    --adr-line: rgba(0, 0, 0, 0.12);
+    --adr-line-strong: rgba(0, 0, 0, 0.22);
+    --adr-surface: #ffffff;
+    --adr-surface-1: #fafafa;
+    --adr-surface-2: #f4f5f7;
+    --adr-field: #ffffff;
+    --adr-field-hover: #fbfdfd;
+    --adr-field-border: #cdd9dc;
+    --adr-field-border-hover: #a7b9bd;
+    --adr-code-bg: #f7f7f9;
+
+    /* Interactive accent (the "classic" identity: blue actions, teal focus) */
+    --accent: var(--adr-blue);
+    --accent-600: var(--adr-blue-600);
+    --accent-050: var(--adr-blue-050);
+
+    /* Typography */
+    --adr-font: "Roboto", -apple-system, "Segoe UI", sans-serif;
+    --adr-font-mono: "Roboto Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+    --adr-font-input: "Geist", "Roboto", -apple-system, "Segoe UI", sans-serif;
+
+    --adr-text-h1: 28px;
+    --adr-text-h2: 20px;
+    --adr-text-h3: 16px;
+    --adr-text-body: 14px;
+    --adr-text-sm: 13px;
+    --adr-text-xs: 12px;
+
+    --adr-w-regular: 400;
+    --adr-w-medium: 500;
+    --adr-w-bold: 700;
+
+    --adr-track-btn: 1.25px;
+
+    /* Radii and elevation */
+    --adr-radius-sm: 4px;
+    --adr-radius-md: 8px;
+    --adr-radius-lg: 12px;
+    --adr-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+    --adr-shadow-2: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 4px 8px -1px rgba(0, 0, 0, 0.08);
+    --adr-shadow-pop: 0 6px 16px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.1);
+
+    /* Spacing step (Material 4px grid) */
+    --adr-sp: 4px;
+}

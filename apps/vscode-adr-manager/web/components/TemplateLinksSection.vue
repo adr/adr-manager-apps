@@ -1,10 +1,10 @@
 <template>
-  <div id="links" class="input-group">
-    <TemplateHeader :info-text="'Add references, e.g., to related ADRs.'">
+  <div class="links">
+    <TemplateHeader :info-text="'Add references, e.g. to related ADRs.'" optional>
       <h2>Links</h2>
     </TemplateHeader>
     <draggable
-      class="drag-area"
+      class="list"
       :list="links"
       :sort="true"
       handle=".links-grabber"
@@ -13,19 +13,20 @@
         checkMove;
       "
     >
-      <div v-for="(link, index) in linksWithBlank" :key="index" ref="links" class="multi-input">
-        <i v-if="links[index] !== ''" class="codicon codicon-grabber links-grabber"></i>
+      <div v-for="(link, index) in linksWithBlank" :key="index" class="list-row">
+        <span class="gutter" :class="links[index] === '' ? 'dimmed' : 'links-grabber'">
+          <i class="codicon" :class="links[index] === '' ? 'codicon-add' : 'codicon-gripper'"></i>
+        </span>
         <textarea
           v-model="links[index]"
-          class="auto-grow-link"
+          class="field auto-grow-link"
+          placeholder="a link or reference, e.g. Refined by ADR-0005…"
           spellcheck="true"
           @input="updateArray($event.target.value, index)"
         />
-        <i
-          v-if="links[index] !== ''"
-          class="codicon codicon-close multi-input-delete-icon"
-          @click="updateArray('', index)"
-        ></i>
+        <button v-if="links[index] !== ''" type="button" class="row-del" title="Remove" @click="updateArray('', index)">
+          <i class="codicon codicon-trash"></i>
+        </button>
       </div>
     </draggable>
   </div>
@@ -55,8 +56,8 @@ export default defineComponent({
   },
   computed: {
     /**
-     * Computes a new decision drivers array with a blank entry at the end of the array such that
-     * a blank input field is rendered for the user to enter a new decision driver in.
+     * Computes a new links array with a blank entry at the end of the array such that
+     * a blank input field is rendered for the user to enter a new link in.
      */
     linksWithBlank() {
       const linksWithBlank = this.links;
@@ -64,16 +65,8 @@ export default defineComponent({
       return linksWithBlank;
     }
   },
-  /**
-   * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-   */
   mounted() {
-    //@ts-ignore
-    this.$refs.links.forEach((link) => {
-      if (link.children[1]) {
-        link.children[1].dispatchEvent(new Event("input"));
-      }
-    });
+    this.updateHeight();
   },
   methods: {
     /**
@@ -88,7 +81,7 @@ export default defineComponent({
       }
     },
     /**
-     * Updates the list of decision drivers/links.
+     * Updates the list of links.
      */
     updateArray(text: string, index: number) {
       this.links.splice(index, 1, text);
@@ -112,55 +105,8 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-.input-group {
-  margin-bottom: 1.5rem;
-
-  & input {
-    height: 3rem;
-  }
-}
-
-.multi-input {
-  @include centered-flex(row);
-  justify-content: left;
-  margin: 0.5rem 0;
-  & .auto-grow-link {
-    height: 39px;
-    resize: none;
-    overflow-y: hidden;
-  }
-}
-
-.multi-input-delete-icon {
-  transform: scale(1.5);
-  margin-left: 0.5rem;
-
-  &:hover {
-    cursor: pointer;
-  }
-}
-
-.drag-area {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.links-grabber {
-  position: initial;
-  margin-right: 0.5rem;
-  transform: scale(1.2);
-
-  &:hover {
-    cursor: grab;
-  }
-
-  &:active {
-    cursor: grabbing;
-  }
+<style scoped>
+.auto-grow-link {
+  overflow-y: hidden;
 }
 </style>

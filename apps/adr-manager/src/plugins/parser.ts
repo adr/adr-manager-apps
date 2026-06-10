@@ -1,6 +1,9 @@
 export {
     md2adr,
     adr2md,
+    md2adr400,
+    adr2md400,
+    detectMadrVersion,
     snakeCase2naturalCase,
     naturalCase2snakeCase,
     matchOptionTitleMoreRelaxed

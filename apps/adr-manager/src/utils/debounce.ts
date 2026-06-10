@@ -5,7 +5,7 @@ export interface DebouncedFn<A extends unknown[]> {
 
 /**
  * Returns a debounced version of `fn` that delays invocation until `delay` ms have
- * elapsed since the last call. Replaces lodash's `debounce` for the app's needs.
+ * elapsed since the last call.
  */
 export function debounce<A extends unknown[]>(fn: (...args: A) => void, delay: number): DebouncedFn<A> {
     let timer: ReturnType<typeof setTimeout> | undefined;

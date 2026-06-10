@@ -1,13 +1,14 @@
 <template>
-  <div id="template">
+  <div class="template">
     <TemplateTitleSection
       ref="title"
       :key="dataFetched"
       v-model:title="title"
       :title-prop="title"
+      :file-name="fileName"
       @validate="validate('title')"
     ></TemplateTitleSection>
-    <hr />
+    <hr class="divider" />
     <TemplateContextAndProblemStatementSection
       ref="contextAndProblemStatement"
       :key="dataFetched"
@@ -15,7 +16,7 @@
       :context-and-problem-statement-prop="contextAndProblemStatement"
       @validate="validate('contextAndProblemStatement')"
     ></TemplateContextAndProblemStatementSection>
-    <hr />
+    <hr class="divider" />
     <TemplateConsideredOptionsBasicSection
       ref="consideredOptions"
       :key="dataFetched"
@@ -29,7 +30,7 @@
       @delete-option="deleteOption"
       @check-selection="checkSelection"
     ></TemplateConsideredOptionsBasicSection>
-    <hr />
+    <hr class="divider" />
     <TemplateDecisionOutcomeBasicSection
       ref="decisionOutcome"
       :key="dataFetched"
@@ -82,22 +83,3 @@ export default defineComponent({
   }
 });
 </script>
-
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-#template {
-  width: 95%;
-  height: auto;
-  background: var(--vscode-textBlockQuote-background);
-  border: 1.5px solid var(--vscode-input-foreground);
-  margin: 1.5rem auto 0.5rem auto;
-  padding: 1.5rem;
-}
-
-hr {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  border: 0.5px solid var(--vscode-input-foreground);
-}
-</style>

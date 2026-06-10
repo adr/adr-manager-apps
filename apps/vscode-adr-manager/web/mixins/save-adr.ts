@@ -18,6 +18,7 @@ export default {
         title: string;
         description: string;
         pros: string[];
+        neutrals: string[];
         cons: string[];
       }[],
       decisionOutcome: {
@@ -27,6 +28,13 @@ export default {
         negativeConsequences: [] as string[]
       },
       links: [] as string[],
+      decisionMakers: "",
+      consulted: "",
+      informed: "",
+      consequences: [] as { kind: string; text: string }[],
+      confirmation: "",
+      moreInformation: "",
+      templateVersion: "2.1.2",
       fullPath: ""
     };
   },
@@ -38,88 +46,85 @@ export default {
       return (
         this.status ||
         this.deciders ||
+        this.decisionMakers ||
+        this.consulted ||
+        this.informed ||
         this.date ||
         this.technicalStory ||
         this.decisionDrivers.length ||
         this.consideredOptions.some((option) => {
-          return option.description || option.pros.length || option.cons.length;
+          return option.description || option.pros.length || option.neutrals.length || option.cons.length;
         }) ||
         this.decisionOutcome.positiveConsequences.length ||
         this.decisionOutcome.negativeConsequences.length ||
-        this.links.length
+        this.consequences.length ||
+        this.confirmation ||
+        this.links.length ||
+        this.moreInformation
       );
     },
     /**
      * Returns a string listing all non-empty fields that are not shown in the Basic editor
      */
     missingFieldsNote() {
-      let fields = "";
+      const fields: string[] = [];
       if (this.status) {
-        fields = fields.concat("'Status', ");
+        fields.push("'Status'");
       }
-      if (this.deciders) {
-        fields = fields.concat("'Deciders', ");
+      if (this.deciders || this.decisionMakers) {
+        fields.push(this.templateVersion === "4.0.0" ? "'Decision-makers'" : "'Deciders'");
+      }
+      if (this.consulted) {
+        fields.push("'Consulted'");
+      }
+      if (this.informed) {
+        fields.push("'Informed'");
       }
       if (this.date) {
-        fields = fields.concat("'Date', ");
+        fields.push("'Date'");
       }
       if (this.technicalStory) {
-        fields = fields.concat("'Technical Story', ");
+        fields.push("'Technical Story'");
+      }
+      if (this.decisionDrivers.some((driver) => driver !== "")) {
+        fields.push("'Decision Drivers'");
+      }
+      if (this.consideredOptions.some((option) => option.description)) {
+        fields.push("'Option Descriptions'");
       }
       if (
-        this.decisionDrivers.filter((driver) => {
-          driver !== "";
-        }).length
+        this.consideredOptions.some(
+          (option) =>
+            option.pros.some((pro) => pro !== "") ||
+            option.neutrals.some((neutral) => neutral !== "") ||
+            option.cons.some((con) => con !== "")
+        )
       ) {
-        fields = fields.concat("'Decision Drivers', ");
+        fields.push("'Pros and Cons of the Options'");
       }
       if (
-        this.consideredOptions.some((option) => {
-          return option.description;
-        })
+        this.decisionOutcome.positiveConsequences.some((positive) => positive !== "") ||
+        this.decisionOutcome.negativeConsequences.some((negative) => negative !== "")
       ) {
-        fields = fields.concat("'Option Descriptions', ");
+        fields.push("'Positive and Negative Consequences'");
       }
-      if (
-        this.consideredOptions.some((option) => {
-          return (
-            option.pros.filter((option) => {
-              option !== "";
-            }).length ||
-            option.cons.filter((option) => {
-              option !== "";
-            }).length
-          );
-        })
-      ) {
-        fields = fields.concat("'Pros and Cons of the Options', ");
+      if (this.consequences.length) {
+        fields.push("'Consequences'");
       }
-      if (
-        this.decisionOutcome.positiveConsequences.filter((positive) => {
-          positive !== "";
-        }).length ||
-        this.decisionOutcome.negativeConsequences.filter((negative) => {
-          negative !== "";
-        }).length
-      ) {
-        fields = fields.concat("'Positive and Negative Consequences', ");
+      if (this.confirmation) {
+        fields.push("'Confirmation'");
       }
-      if (
-        this.links.filter((link) => {
-          link !== "";
-        }).length
-      ) {
-        fields = fields.concat("'Links', ");
+      if (this.links.some((link) => link !== "")) {
+        fields.push("'Links'");
+      }
+      if (this.moreInformation) {
+        fields.push("'More Information'");
       }
 
-      if (fields !== "") {
-        let string = "The fields ";
-        string = string.concat(fields.substring(0, fields.length - 2));
-        string = string.concat(" of this ADR have values, but are not shown in the basic editor mode.");
-        return string;
-      } else {
+      if (fields.length === 0) {
         return "";
       }
+      return `The fields ${fields.join(", ")} of this ADR have values, but are not shown in the basic editor mode.`;
     }
   },
   methods: {
@@ -140,6 +145,7 @@ export default {
         title: string;
         description: string;
         pros: string[];
+        neutrals?: string[];
         cons: string[];
       }[];
       decisionOutcome: {
@@ -149,6 +155,13 @@ export default {
         negativeConsequences: string[];
       };
       links: string[];
+      decisionMakers?: string;
+      consulted?: string;
+      informed?: string;
+      consequences?: { kind: string; text: string }[];
+      confirmation?: string;
+      moreInformation?: string;
+      templateVersion?: string;
       fullPath: string;
     }) {
       this.yaml = fields.yaml;
@@ -159,9 +172,18 @@ export default {
       this.technicalStory = fields.technicalStory;
       this.contextAndProblemStatement = fields.contextAndProblemStatement;
       this.decisionDrivers = fields.decisionDrivers;
-      this.consideredOptions = fields.consideredOptions;
+      this.consideredOptions = fields.consideredOptions.map((option) => ({ neutrals: [], ...option }));
       this.decisionOutcome = fields.decisionOutcome;
       this.links = fields.links;
+      this.decisionMakers = fields.decisionMakers ?? "";
+      this.consulted = fields.consulted ?? "";
+      this.informed = fields.informed ?? "";
+      this.consequences = fields.consequences ?? [];
+      this.confirmation = fields.confirmation ?? "";
+      this.moreInformation = fields.moreInformation ?? "";
+      if (fields.templateVersion) {
+        this.templateVersion = fields.templateVersion;
+      }
       this.fullPath = fields.fullPath;
     },
     /**
@@ -192,7 +214,8 @@ export default {
             contextAndProblemStatement: this.contextAndProblemStatement,
             consideredOptions: this.consideredOptions,
             chosenOption: this.decisionOutcome.chosenOption,
-            explanation: this.decisionOutcome.explanation
+            explanation: this.decisionOutcome.explanation,
+            templateVersion: this.templateVersion
           })
         );
       } else {
@@ -209,7 +232,14 @@ export default {
             decisionDrivers: this.decisionDrivers,
             consideredOptions: this.consideredOptions,
             decisionOutcome: this.decisionOutcome,
-            links: this.links.filter((link) => link)
+            links: this.links.filter((link) => link),
+            decisionMakers: this.decisionMakers,
+            consulted: this.consulted,
+            informed: this.informed,
+            consequences: this.consequences,
+            confirmation: this.confirmation,
+            moreInformation: this.moreInformation,
+            templateVersion: this.templateVersion
           })
         );
       }
@@ -227,7 +257,7 @@ export default {
             title: this.title,
             oldTitle: this.oldTitle,
             date: this.date,
-            status: naturalCase2titleCase(this.status),
+            status: this.templateVersion === "4.0.0" ? this.status : naturalCase2titleCase(this.status),
             deciders: this.deciders,
             technicalStory: this.technicalStory,
             contextAndProblemStatement: this.contextAndProblemStatement,
@@ -235,6 +265,13 @@ export default {
             consideredOptions: this.consideredOptions,
             decisionOutcome: this.decisionOutcome,
             links: this.links,
+            decisionMakers: this.decisionMakers,
+            consulted: this.consulted,
+            informed: this.informed,
+            consequences: this.consequences,
+            confirmation: this.confirmation,
+            moreInformation: this.moreInformation,
+            templateVersion: this.templateVersion,
             fullPath: this.fullPath
           }
         })
@@ -245,21 +282,6 @@ export default {
      */
     openEditor() {
       this.sendMessage("requestEdit", { fullPath: this.fullPath });
-    },
-    /**
-     * Update the height of 'Context and Problem Statement' and 'Explanation' textareas when the input gets large.
-     */
-    updateTextAreaHeight() {
-      const cps = document.getElementById("auto-grow-context-problem-statement")!;
-      cps.addEventListener("input", () => {
-        cps.style.height = "auto";
-        cps.style.height = `${cps.scrollHeight}px`;
-      });
-      const explanation = document.getElementById("auto-grow-explanation")!;
-      explanation.addEventListener("input", () => {
-        explanation.style.height = "auto";
-        explanation.style.height = `${explanation.scrollHeight}px`;
-      });
     }
   },
   mounted() {

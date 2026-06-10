@@ -3,6 +3,12 @@
 import { createShortTitle } from "../../src/plugins/utils";
 
 export default {
+  props: {
+    templateVersion: {
+      type: String,
+      default: "2.1.2"
+    }
+  },
   data() {
     return {
       yaml: "",
@@ -17,6 +23,7 @@ export default {
         title: string;
         description: string;
         pros: string[];
+        neutrals: string[];
         cons: string[];
       }[],
       decisionOutcome: {
@@ -26,6 +33,12 @@ export default {
         negativeConsequences: [] as string[]
       },
       links: [] as string[],
+      decisionMakers: "",
+      consulted: "",
+      informed: "",
+      consequences: [] as { kind: string; text: string }[],
+      confirmation: "",
+      moreInformation: "",
       fullPath: "",
       selectedIndex: -1,
       valid: {
@@ -38,6 +51,29 @@ export default {
       // key to re-render components upon receiving values of an existing ADR
       dataFetched: false
     };
+  },
+  watch: {
+    /**
+     * Deciders and decision-makers name the same people, so switching the template
+     * version carries the populated one over to the other template's field.
+     */
+    templateVersion(version: string) {
+      if (version === "4.0.0" && this.decisionMakers === "" && this.deciders !== "") {
+        this.decisionMakers = this.deciders;
+      }
+      if (version === "2.1.2" && this.deciders === "" && this.decisionMakers !== "") {
+        this.deciders = this.decisionMakers;
+      }
+      this.sendInput();
+    }
+  },
+  computed: {
+    /**
+     * The file name of the ADR being edited, empty when adding a new ADR.
+     */
+    fileName(): string {
+      return this.fullPath.split("/").pop() ?? "";
+    }
   },
   methods: {
     /**
@@ -56,6 +92,7 @@ export default {
         title: string;
         description: string;
         pros: string[];
+        neutrals?: string[];
         cons: string[];
       }[];
       decisionOutcome: {
@@ -65,6 +102,12 @@ export default {
         negativeConsequences: string[];
       };
       links: string[];
+      decisionMakers?: string;
+      consulted?: string;
+      informed?: string;
+      consequences?: { kind: string; text: string }[];
+      confirmation?: string;
+      moreInformation?: string;
       fullPath: string;
     }) {
       this.yaml = adr.yaml;
@@ -80,6 +123,7 @@ export default {
           title: option.title,
           description: option.description,
           pros: option.pros.filter((pro) => pro !== ""),
+          neutrals: (option.neutrals ?? []).filter((neutral) => neutral !== ""),
           cons: option.cons.filter((con) => con !== "")
         };
       });
@@ -90,6 +134,12 @@ export default {
         negativeConsequences: adr.decisionOutcome.negativeConsequences.filter((negative) => negative !== "")
       };
       this.links = adr.links.filter((link) => link !== "");
+      this.decisionMakers = adr.decisionMakers ?? "";
+      this.consulted = adr.consulted ?? "";
+      this.informed = adr.informed ?? "";
+      this.consequences = (adr.consequences ?? []).filter((consequence) => consequence.text !== "");
+      this.confirmation = adr.confirmation ?? "";
+      this.moreInformation = adr.moreInformation ?? "";
       this.fullPath = adr.fullPath;
       this.selectOption(
         this.consideredOptions.findIndex((option) => {
@@ -258,6 +308,12 @@ export default {
         consideredOptions: this.consideredOptions,
         decisionOutcome: this.decisionOutcome,
         links: this.links,
+        decisionMakers: this.decisionMakers,
+        consulted: this.consulted,
+        informed: this.informed,
+        consequences: this.consequences,
+        confirmation: this.confirmation,
+        moreInformation: this.moreInformation,
         fullPath: this.fullPath
       });
       if (Object.values(this.valid).every((value) => value)) {
@@ -273,7 +329,7 @@ export default {
       const message = event.data;
       switch (message.command) {
         case "addOption": {
-          this.consideredOptions.push({ title: message.option, description: "", pros: [], cons: [] });
+          this.consideredOptions.push({ title: message.option, description: "", pros: [], neutrals: [], cons: [] });
           if (this.consideredOptions.length === 1) {
             this.selectOption(0);
           }

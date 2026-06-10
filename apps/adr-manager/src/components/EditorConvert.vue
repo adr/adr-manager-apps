@@ -1,23 +1,26 @@
 <template>
-    <v-card class="editor text-left d-flex flex-column px-0 pb-2 h-100" id="editor-convert" data-cy="convertEditor">
-        <v-card-title> Sorry, there were issues while parsing the ADR. </v-card-title>
-        <div>
-            If you want to use the MADR-Editor, our parser will generate the markdown on the right-hand side. You can
+    <div class="convert" data-cy="convertEditor">
+        <h2 class="convert-title">Sorry, there were issues while parsing the ADR.</h2>
+        <p class="convert-note">
+            If you want to use the MADR editor, our parser will generate the markdown on the right-hand side. You can
             edit your raw Markdown to make sure that no important content is lost while parsing. <br />
             Note, that we only support MADRs matching the template at
             <a href="https://github.com/adr/madr/blob/master/template/template.md" target="_blank">
                 https://github.com/adr/madr/blob/master/template/template.md
             </a>
-        </div>
+        </p>
 
-        <div class="d-flex text-center">
-            <h5 class="flex-grow-1 text-center">Your ADR</h5>
-            <h5 class="flex-grow-1 text-center">Result</h5>
+        <div class="convert-heads">
+            <h4>Your ADR</h4>
+            <h4>Result</h4>
         </div>
-        <div ref="host" class="flex-grow-1 overflow-auto"></div>
+        <div ref="host" class="convert-diff"></div>
 
-        <v-btn data-cy="acceptDiv" color="success" @click="accept"> Accept </v-btn>
-    </v-card>
+        <button type="button" data-cy="acceptDiv" class="btn btn-primary accept-btn" @click="accept">
+            <span class="mdi mdi-check" aria-hidden="true"></span>
+            Accept
+        </button>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -27,19 +30,26 @@ import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { markdown } from "@codemirror/lang-markdown";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
-import { adr2md, md2adr } from "@/plugins/parser";
+import { adr2md, adr2md400, md2adr, md2adr400 } from "@/plugins/parser";
 import { debounce } from "@/utils/debounce";
+import type { MadrTemplateVersion } from "@adr-manager/core";
 
-const props = withDefaults(defineProps<{ raw?: string }>(), { raw: "" });
+const props = withDefaults(defineProps<{ raw?: string; templateVersion?: MadrTemplateVersion }>(), {
+    raw: "",
+    templateVersion: "2.1.2"
+});
 const emit = defineEmits<{ accept: [string] }>();
 
 const host = useTemplateRef<HTMLDivElement>("host");
 let merge: MergeView | null = null;
 let mergeMd = props.raw;
 
-const baseExt = [markdown(), syntaxHighlighting(defaultHighlightStyle), EditorView.lineWrapping];
+const baseExtensions = [markdown(), syntaxHighlighting(defaultHighlightStyle), EditorView.lineWrapping];
 
 function rightDoc(): string {
+    if (props.templateVersion === "4.0.0") {
+        return adr2md400(md2adr400(mergeMd));
+    }
     return adr2md(md2adr(mergeMd));
 }
 
@@ -48,9 +58,9 @@ const scheduleRight = debounce(() => {
         return;
     }
     const next = rightDoc();
-    const cur = merge.b.state.doc.toString();
-    if (next !== cur) {
-        merge.b.dispatch({ changes: { from: 0, to: cur.length, insert: next } });
+    const current = merge.b.state.doc.toString();
+    if (next !== current) {
+        merge.b.dispatch({ changes: { from: 0, to: current.length, insert: next } });
     }
 }, 300);
 
@@ -62,10 +72,10 @@ onMounted(() => {
         a: {
             doc: mergeMd,
             extensions: [
-                ...baseExt,
-                EditorView.updateListener.of((u) => {
-                    if (u.docChanged) {
-                        mergeMd = u.state.doc.toString();
+                ...baseExtensions,
+                EditorView.updateListener.of((update) => {
+                    if (update.docChanged) {
+                        mergeMd = update.state.doc.toString();
                         scheduleRight();
                     }
                 })
@@ -73,7 +83,7 @@ onMounted(() => {
         },
         b: {
             doc: rightDoc(),
-            extensions: [...baseExt, EditorState.readOnly.of(true)]
+            extensions: [...baseExtensions, EditorState.readOnly.of(true)]
         },
         highlightChanges: true,
         gutter: true,
@@ -81,14 +91,15 @@ onMounted(() => {
     });
 });
 
-// Re-seed the editable side when the source markdown changes (the slice clones the string).
 watch(
     () => props.raw,
     (newRaw) => {
-        mergeMd = (" " + newRaw).slice(1);
+        mergeMd = newRaw;
         if (merge) {
-            const a = merge.a.state.doc.toString();
-            merge.a.dispatch({ changes: { from: 0, to: a.length, insert: mergeMd } });
+            const current = merge.a.state.doc.toString();
+            if (current !== newRaw) {
+                merge.a.dispatch({ changes: { from: 0, to: current.length, insert: newRaw } });
+            }
             scheduleRight();
         }
     }
@@ -105,4 +116,51 @@ function accept(): void {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.convert {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 32px;
+    text-align: left;
+}
+
+.convert-title {
+    margin: 0 0 8px;
+    font-size: var(--adr-text-h2);
+    font-weight: 500;
+    color: var(--adr-navy);
+}
+
+.convert-note {
+    margin: 0 0 18px;
+    font-size: var(--adr-text-sm);
+    color: var(--adr-ink-2);
+}
+
+.convert-heads {
+    display: flex;
+}
+
+.convert-heads h4 {
+    flex: 1 1 50%;
+    text-align: center;
+    margin: 0 0 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--adr-ink-2);
+}
+
+.convert-diff {
+    flex: 1 1 auto;
+    overflow: auto;
+    border: 1px solid var(--adr-line);
+    border-radius: var(--adr-radius-md);
+    background: var(--adr-surface);
+    margin-bottom: 16px;
+}
+
+.accept-btn {
+    align-self: flex-end;
+}
+</style>

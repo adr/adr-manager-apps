@@ -15,7 +15,7 @@ import {
   treatAsMultiRoot
 } from "./extension-functions";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
-import { md2adr } from "./plugins/parser";
+import { detectMadrVersion, parseAdr } from "./plugins/parser";
 
 export class WebPanel {
   /**
@@ -218,7 +218,8 @@ export class WebPanel {
   async viewAdr(fileUri: vscode.Uri) {
     const mdString = new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri));
 
-    const adr = md2adr(mdString);
+    const templateVersion = detectMadrVersion(mdString);
+    const adr = parseAdr(mdString, templateVersion);
     await vscode.commands.executeCommand("vscode-adr-manager.openViewAdrWebView", mdString);
 
     const adrNumber = await getAdrNumberFromUri(fileUri);
@@ -239,6 +240,13 @@ export class WebPanel {
         consideredOptions: adr.consideredOptions,
         decisionOutcome: adr.decisionOutcome,
         links: adr.links,
+        decisionMakers: adr.decisionMakers,
+        consulted: adr.consulted,
+        informed: adr.informed,
+        consequences: adr.consequences,
+        confirmation: adr.confirmation,
+        moreInformation: adr.moreInformation,
+        templateVersion: templateVersion,
         fullPath: fileUri.path
       })
     });
@@ -438,7 +446,7 @@ export class WebPanel {
     }[] = [];
     (await getAllMDs()).forEach((md) => {
       allAdrs.push({
-        adr: md2adr(md.adr),
+        adr: parseAdr(md.adr),
         fullPath: md.fullPath,
         relativePath: md.relativePath,
         fileName: md.fileName

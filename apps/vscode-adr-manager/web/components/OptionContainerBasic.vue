@@ -1,22 +1,21 @@
 <template>
-  <div
-    id="option-box"
-    @click.self="$emit('selectOption')"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
-  >
-    <div id="edit-icon-container" @click="$emit('editOption')">
-      <i class="codicon codicon-edit"></i>
+  <div class="opt-card" :class="{ chosen }">
+    <div class="opt-head">
+      <span class="opt-grip"><i class="codicon codicon-gripper"></i></span>
+      <button type="button" class="opt-choose" title="Mark as chosen option" @click="$emit('selectOption')">
+        <i class="codicon" :class="chosen ? 'codicon-pass-filled' : 'codicon-circle-large-outline'"></i>
+      </button>
+      <span class="opt-title" @click="$emit('selectOption')">{{ shortTitle || "(untitled option)" }}</span>
+      <span v-if="chosen" class="chosen-tag">chosen</span>
+      <div class="opt-actions">
+        <button type="button" class="icon-btn" title="Rename option" @click="$emit('editOption')">
+          <i class="codicon codicon-edit"></i>
+        </button>
+        <button type="button" class="icon-btn danger" title="Remove option" @click="$emit('deleteOption')">
+          <i class="codicon codicon-trash"></i>
+        </button>
+      </div>
     </div>
-    <div id="delete-icon-container" @click="$emit('deleteOption')">
-      <i class="codicon codicon-trash"></i>
-    </div>
-    <div id="text" @click="$emit('selectOption')">
-      <h3>
-        <b>{{ shortTitle }}</b>
-      </h3>
-    </div>
-    <i id="grabber" class="codicon codicon-grabber" :class="isHovered ? 'visible' : 'invisible'"></i>
   </div>
 </template>
 
@@ -30,13 +29,13 @@ export default defineComponent({
     title: {
       type: String,
       default: ""
+    },
+    chosen: {
+      type: Boolean,
+      default: false
     }
   },
-  data() {
-    return {
-      isHovered: false
-    };
-  },
+  emits: ["selectOption", "editOption", "deleteOption"],
   computed: {
     shortTitle() {
       return createShortTitle(this.title);
@@ -45,106 +44,19 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-body.vscode-high-contrast #option-box {
-  border: 1px solid var(--vscode-contrastBorder);
-}
-
-body.vscode-high-contrast .selected-option,
-body.vscode-high-contrast .codicon {
-  color: var(--vscode-editor-foreground);
-}
-
-#option-box {
-  position: relative;
-  @include centered-flex(row);
-  width: 12rem;
-  height: 12rem;
-  margin: 1rem;
-  border: 1px solid var(--vscode-input-foreground);
-  border-radius: 5px;
-  &:hover {
-    cursor: pointer;
-    filter: brightness(110%);
-    transform: scale(1.02);
-  }
-}
-
-#text {
-  @include centered-flex(row);
-
-  text-align: center;
-  width: 100%;
-  margin: 10px;
+<style scoped>
+.opt-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--adr-ink);
+  padding: 12px 6px;
+  cursor: pointer;
   overflow-wrap: anywhere;
-  & h3 {
-    padding: 0;
-  }
 }
 
-#edit-icon-container {
-  position: absolute;
-  transform: translate(-250%, -250%);
-  & i {
-    transform: scale(1.2);
-    padding: 5px;
-
-    &:hover {
-      cursor: pointer;
-    }
-  }
-}
-
-#delete-icon-container {
-  position: absolute;
-  transform: translate(250%, -250%);
-  & i {
-    transform: scale(1.25);
-    padding: 5px;
-
-    &:hover {
-      cursor: pointer;
-    }
-  }
-}
-
-.selected-option {
-  background: var(--vscode-editor-selectionBackground);
-  & h3 {
-    color: var(--vscode-editor-selectionForeground) !important;
-  }
-}
-
-body.vscode-high-contrast .selected-option .codicon {
-  color: var(--vscode-editor-background);
-}
-
-.unselected-option {
-  background: var(--vscode-editor-background);
-}
-
-#grabber {
-  position: absolute;
-  bottom: 0.2rem;
-  right: 45%;
-  transform: scale(1.2);
-
-  &:hover {
-    cursor: grab;
-  }
-
-  &:active {
-    cursor: grabbing;
-  }
-}
-
-.visible {
-  display: unset;
-}
-
-.invisible {
-  display: none !important;
+.opt-card.chosen .opt-title {
+  font-weight: 700;
 }
 </style>

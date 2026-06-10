@@ -11,8 +11,7 @@ context("Deleting repositories", () => {
         cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
         cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();
         cy.get("[data-cy=addRepoDialog]").click();
-        cy.get("[data-cy=repoNameList]").click();
-        cy.get("[data-cy=removeRepo]").click();
+        cy.get("[data-cy=removeRepo]").click({ force: true });
         cy.get("[data-cy=removeRepoBtn]").click();
         cy.get("[data-cy=listRepo]").should("have.length", 0);
         cy.get("[data-cy=addRepo]").should(() => {

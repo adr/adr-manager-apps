@@ -1,37 +1,26 @@
 <template>
-  <div id="considered-options-container">
-    <div id="options-header">
-      <TemplateHeader
-        :info-text="'List of all considered options.\nClick to select an option, rearrange options by drag and drop.'"
-      >
-        <h2>Considered Options</h2>
-      </TemplateHeader>
-      <AddOptionButton draggable="false" @add-option="$emit('addOption')"></AddOptionButton>
-    </div>
-    <div id="options">
-      <div v-if="consideredOptions.length === 0" id="no-options-container">
-        <h3>
-          <strong>No options available</strong>
-        </h3>
-      </div>
-      <draggable
-        class="drag-area"
-        :list="consideredOptions"
-        :sort="true"
-        handle=".option-grabber"
-        @update="$emit('checkSelection', $event)"
-      >
+  <div class="considered-options">
+    <TemplateHeader
+      :info-text="'List all considered options. Click the circle of an option to choose it, rearrange options by drag and drop. Expand an option to add a description and pros / cons.'"
+    >
+      <h2>Considered Options</h2>
+    </TemplateHeader>
+    <div class="options">
+      <draggable :list="consideredOptions" :sort="true" handle=".opt-grip" @update="$emit('checkSelection', $event)">
         <OptionContainerProfessional
           v-for="(option, index) in consideredOptions"
           :key="option"
           v-model:title="option.title"
           v-model:description="option.description"
           v-model:pros="option.pros"
+          v-model:neutrals="option.neutrals"
           v-model:cons="option.cons"
           :title-prop="option.title"
           :pros-prop="option.pros"
+          :neutrals-prop="option.neutrals"
           :cons-prop="option.cons"
-          :class="option.title === chosenOption && index === selectedIndex ? 'selected-option' : 'unselected-option'"
+          :template-version="templateVersion"
+          :chosen="option.title === chosenOption && index === selectedIndex"
           @select-option="$emit('selectOption', index)"
           @delete-option="$emit('deleteOption', index)"
           @update:title="
@@ -40,15 +29,11 @@
           "
           @update:description="$emit('validate')"
           @update:pros="$emit('validate')"
+          @update:neutrals="$emit('validate')"
           @update:cons="$emit('validate')"
         ></OptionContainerProfessional>
       </draggable>
-      <div v-if="consideredOptions.length >= 2" id="rearrange-message-container">
-        <h4>
-          <i>Click to choose option; rearrange options by dragging</i>
-        </h4>
-        <i class="codicon codicon-grabber"></i>
-      </div>
+      <AddOptionButton @add-option="$emit('addOption')"></AddOptionButton>
     </div>
   </div>
 </template>
@@ -71,9 +56,15 @@ export default defineComponent({
     draggable: VueDraggableNext
   },
   props: {
-    consideredOptionsProp: Array as PropType<{ title: string; description: string; pros: string[]; cons: string[] }[]>,
+    consideredOptionsProp: Array as PropType<
+      { title: string; description: string; pros: string[]; neutrals: string[]; cons: string[] }[]
+    >,
     chosenOption: String,
-    selectedIndex: Number
+    selectedIndex: Number,
+    templateVersion: {
+      type: String,
+      default: "2.1.2"
+    }
   },
   setup() {
     return {
@@ -95,49 +86,3 @@ export default defineComponent({
   }
 });
 </script>
-
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-#options-header {
-  display: flex;
-}
-
-#options {
-  @include centered-flex(column);
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-
-#no-options-container {
-  @include centered-flex(column);
-  margin-top: 2rem;
-}
-
-.drag-area {
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.selected-option {
-  background: var(--vscode-editor-selectionBackground);
-  & h3 {
-    color: var(--vscode-editor-selectionForeground) !important;
-  }
-}
-
-.unselected-option {
-  background: var(--vscode-editor-background);
-}
-
-#rearrange-message-container {
-  @include centered-flex(row);
-  margin-top: 0.5rem;
-  width: 100%;
-
-  & i {
-    margin-left: 0.5rem;
-  }
-}
-</style>

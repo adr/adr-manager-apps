@@ -2,5 +2,5 @@
 import { Lexer, InputStream } from "antlr4";
 
 export default class MADRLexer extends Lexer {
-    constructor(input: InputStream);
+  constructor(input: InputStream);
 }

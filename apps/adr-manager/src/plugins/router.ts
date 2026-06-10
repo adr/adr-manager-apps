@@ -25,7 +25,6 @@ const routes: RouteRecordRaw[] = [
             if (p["organization"] && p["repo"] && p["branch"] && p["adr"]) {
                 return { name: "EditorWithSpecifiedAdr" };
             } else if (p["organization"] && p["repo"] && p["branch"]) {
-                console.log("Route to spec repo");
                 return { name: "EditorWithSpecifiedRepo" };
             }
             return { name: "EditorUnspecified" };
@@ -67,7 +66,6 @@ const routes: RouteRecordRaw[] = [
         })
     },
     {
-        // Router 4 catch-all (replaces the Router 3 "/*").
         path: "/:pathMatch(.*)*",
         name: "Error 404",
         component: ErrorPage

@@ -1,4 +1,4 @@
-import type { AdrInit, DecisionOutcome, Option, ParseError } from "./types";
+import type { AdrInit, Consequence, DecisionOutcome, Option, ParseError } from "./types";
 import { cleanUpString } from "./utils";
 
 /**
@@ -23,6 +23,12 @@ export class ArchitecturalDecisionRecord {
   consideredOptions: Option[];
   decisionOutcome: DecisionOutcome;
   links: string[];
+  decisionMakers: string;
+  consulted: string;
+  informed: string;
+  confirmation: string;
+  consequences: Consequence[];
+  moreInformation: string;
 
   constructor(init: AdrInit = {}) {
     this.yaml = init.yaml ?? "";
@@ -50,17 +56,24 @@ export class ArchitecturalDecisionRecord {
       negativeConsequences: outcome?.negativeConsequences ?? []
     };
     this.links = init.links ?? [];
+    this.decisionMakers = init.decisionMakers ?? "";
+    this.consulted = init.consulted ?? "";
+    this.informed = init.informed ?? "";
+    this.confirmation = init.confirmation ?? "";
+    this.consequences = init.consequences?.map((consequence) => ({ ...consequence })) ?? [];
+    this.moreInformation = init.moreInformation ?? "";
 
     this.cleanUp();
   }
 
-  addOption({ title, description, pros, cons }: Partial<Option> = {}): Option {
+  addOption({ title, description, pros, neutrals, cons }: Partial<Option> = {}): Option {
     const id = this.highestOptionId;
     this.highestOptionId += 1;
     const newOpt: Option = {
       title: title ?? "",
       description: description ?? "",
       pros: pros ?? [],
+      neutrals: neutrals ?? [],
       cons: cons ?? [],
       id
     };
@@ -97,8 +110,18 @@ export class ArchitecturalDecisionRecord {
       opt.title = cleanUpString(opt.title);
       opt.description = cleanUpString(opt.description);
       opt.pros = opt.pros.map(cleanUpString).filter((el) => el !== "");
+      opt.neutrals = opt.neutrals.map(cleanUpString).filter((el) => el !== "");
       opt.cons = opt.cons.map(cleanUpString).filter((el) => el !== "");
     });
+
+    this.decisionMakers = cleanUpString(this.decisionMakers);
+    this.consulted = cleanUpString(this.consulted);
+    this.informed = cleanUpString(this.informed);
+    this.confirmation = cleanUpString(this.confirmation);
+    this.moreInformation = cleanUpString(this.moreInformation);
+    this.consequences = this.consequences
+      .map((consequence) => ({ kind: consequence.kind, text: cleanUpString(consequence.text) }))
+      .filter((consequence) => consequence.text !== "");
 
     this.decisionOutcome.chosenOption = cleanUpString(this.decisionOutcome.chosenOption);
     this.decisionOutcome.explanation = cleanUpString(this.decisionOutcome.explanation);
@@ -134,6 +157,12 @@ export class ArchitecturalDecisionRecord {
     consideredOptions?: ReadonlyArray<Partial<Option>>;
     decisionOutcome?: DecisionOutcome;
     links?: string[];
+    decisionMakers?: string;
+    consulted?: string;
+    informed?: string;
+    confirmation?: string;
+    consequences?: Consequence[];
+    moreInformation?: string;
   }): void {
     this.yaml = fields.yaml ?? this.yaml;
     this.title = fields.title ?? this.title;
@@ -145,6 +174,12 @@ export class ArchitecturalDecisionRecord {
     this.decisionDrivers = fields.decisionDrivers ?? this.decisionDrivers;
     this.decisionOutcome = fields.decisionOutcome ?? this.decisionOutcome;
     this.links = fields.links ?? this.links;
+    this.decisionMakers = fields.decisionMakers ?? this.decisionMakers;
+    this.consulted = fields.consulted ?? this.consulted;
+    this.informed = fields.informed ?? this.informed;
+    this.confirmation = fields.confirmation ?? this.confirmation;
+    this.consequences = fields.consequences ?? this.consequences;
+    this.moreInformation = fields.moreInformation ?? this.moreInformation;
     if (fields.consideredOptions && fields.consideredOptions.length) {
       this.highestOptionId = 0;
       this.consideredOptions = [];
@@ -152,15 +187,5 @@ export class ArchitecturalDecisionRecord {
         this.addOption(option);
       }
     }
-  }
-
-  static createNewAdr(): ArchitecturalDecisionRecord {
-    return new ArchitecturalDecisionRecord({
-      status: "proposed",
-      date: new Date().toISOString().slice(0, 10),
-      decisionOutcome: {
-        explanation: "comes out best."
-      }
-    });
   }
 }

@@ -18,7 +18,7 @@ import {
   isDiagnosticsEnabled
 } from "./extension-functions";
 import { WebPanel } from "./WebPanel";
-import { md2adr } from "./plugins/parser";
+import { parseAdr } from "./plugins/parser";
 import { getDiagnostics } from "./diagnostics/diagnostics";
 import { AdrManagerCodeActionProvider } from "./AdrManagerCodeActionProvider";
 
@@ -133,7 +133,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("vscode-adr-manager.viewInAdrManager", async () => {
       if (vscode.window.activeTextEditor) {
         const file = vscode.window.activeTextEditor.document;
-        const adr = md2adr(file.getText());
+        const adr = parseAdr(file.getText());
         if (!adr.conforming) {
           vscode.window.showErrorMessage(
             "The requested Markdown file does not conform to MADR, please edit the file such that it conforms to MADR."
@@ -159,7 +159,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.viewAdrFromContextMenu", async (uri: vscode.Uri) => {
       const mdString = new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
-      const adr = md2adr(mdString);
+      const adr = parseAdr(mdString);
       if (!adr.conforming) {
         vscode.window.showErrorMessage(
           "The requested Markdown file does not conform to MADR, please edit the file such that it conforms to MADR."

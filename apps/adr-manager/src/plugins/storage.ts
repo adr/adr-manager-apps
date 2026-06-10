@@ -1,7 +1,7 @@
 /**
  * Typed wrapper around the handful of localStorage keys the app uses.
  */
-export type StorageKey = "addedRepositories" | "mode" | "authId" | "user";
+export type StorageKey = "addedRepositories" | "mode" | "authId" | "user" | "explorerWidth" | "previewWidth";
 
 export function lsGet(key: StorageKey): string | null {
     return localStorage.getItem(key);

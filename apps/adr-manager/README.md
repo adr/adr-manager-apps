@@ -13,7 +13,7 @@ It offers a naming scheme and template to keep the layout of recorded decisions 
 Each decision is stored in a separate file.
 The web app supports the management of MADRs stored in the folder `docs/adr` in GitHub repositories.
 
-The web app is built with Vue 3, Vuetify, Vite, TypeScript, and CodeMirror 6, and it shares the MADR parser and ADR domain model with the VS Code extension through the [`@adr-manager/core`](../core) package.
+The web app is built with Vue 3, Vite, TypeScript, CodeMirror 6, and a custom token-based design system (no UI framework), and it shares the MADR parser and ADR domain model with the VS Code extension through the [`@adr-manager/core`](../../packages/core) package.
 
 ## Quick Start
 

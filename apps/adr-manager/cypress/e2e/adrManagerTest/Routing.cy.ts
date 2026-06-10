@@ -23,7 +23,7 @@ context("Routing and correct URLs", () => {
             cy.get("[data-cy=newADR]").click({ force: true });
             cy.url().should("equal", `${TEST_BASE_URL}/adr/adr-manager/main/${String(adrCount).padStart(4, "0")}-.md`);
             cy.get("[data-cy=deleteAdrBtn]").each(($el) => {
-                cy.wrap($el).click();
+                cy.wrap($el).click({ force: true });
                 cy.get("[data-cy=dialogDeleteAdrBtn]").click();
             });
             cy.url().should("equal", `${TEST_BASE_URL}/adr/adr-manager/main`);

@@ -1,35 +1,40 @@
 <template>
-  <div id="decision-outcome-container">
+  <div class="decision-outcome">
     <TemplateHeader
-      :info-text="'Add an explanation for the chosen option.\nYou can add consequences when using the Professional MADR template.'"
+      :info-text="'Select the chosen option by clicking its circle in the list above, and explain why. You can add consequences in the Professional editor mode.'"
     >
       <h2>Decision Outcome</h2>
     </TemplateHeader>
-    <div id="chosen-option-container">
-      <h3 id="chosen-option-text">
-        Chosen Option: <b>{{ chosenOptionText }}</b>
-      </h3>
-      <h3 v-if="!decisionOutcome.chosenOption" id="chosen-option-error">There must be one chosen option</h3>
+    <div class="chosen-row">
+      <span class="lbl">Chosen option</span>
+      <span class="chip chosen-chip" :class="{ none: !decisionOutcome.chosenOption }">
+        <i
+          class="codicon"
+          :class="decisionOutcome.chosenOption ? 'codicon-pass-filled' : 'codicon-circle-large-outline'"
+        ></i>
+        {{ chosenOptionText }}
+      </span>
+      <p v-if="!decisionOutcome.chosenOption" class="hint">Choose one of the considered options above</p>
     </div>
-    <div id="explanation">
-      <h3>because</h3>
-      <div id="explanation-input-container">
+    <div class="because-row">
+      <span class="lbl">because</span>
+      <div class="because-input">
         <textarea
           id="auto-grow-explanation"
-          ref="explanation"
           v-model="v$.decisionOutcome.explanation.$model"
+          class="field"
+          :class="{ invalid: v$.decisionOutcome.explanation.$error }"
+          placeholder="justification for the chosen option…"
           spellcheck="true"
-          :class="v$.decisionOutcome.explanation.$error ? 'invalid-input' : ''"
-          @click.once="updateHeight"
           @input="
             updateHeight();
             $emit('update:explanation', $event.target.value);
             $emit('validate');
           "
         />
-        <h4 v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid" class="error-message">
+        <p v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid" class="error-message">
           {{ error.$message }}
-        </h4>
+        </p>
       </div>
     </div>
   </div>
@@ -79,11 +84,12 @@ export default defineComponent({
     }
   },
   /**
-   * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+   * Sizes the textarea to prefilled content and revalidates without marking
+   * pristine fields as erroneous.
    */
   mounted() {
-    //@ts-ignore
-    this.$refs.explanation.dispatchEvent(new Event("input"));
+    this.updateHeight();
+    this.$emit("validate");
   },
   methods: {
     /**
@@ -114,53 +120,62 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-#chosen-option-container {
+<style scoped>
+.chosen-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 12px;
 }
 
-#chosen-option-text {
-  margin-top: 2rem;
+.hint {
+  font-size: var(--adr-text-xs);
+  color: var(--adr-ink-3);
 }
 
-#chosen-option-error {
-  color: var(--vscode-editorError-foreground);
-  margin-left: 1.5rem;
+.lbl {
+  flex: 0 0 auto;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--adr-ink-2);
 }
 
-#explanation {
+.chosen-chip {
+  font-weight: 600;
+  cursor: default;
+}
+
+.chosen-chip:not(.none) {
+  border-color: var(--adr-success);
+  color: var(--adr-success);
+}
+
+.chosen-chip:not(.none) .codicon {
+  color: var(--adr-success);
+}
+
+.chosen-chip.none {
+  border-style: dashed;
+  color: var(--adr-ink-3);
+}
+
+.because-row {
   display: flex;
-  flex-direction: row;
-  align-items: top;
-  margin-top: 1.5rem;
-  & h3 {
-    margin-right: 2rem;
-    padding-top: 6px;
-  }
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 12px;
 }
 
-#explanation-input-container {
+.because-row .lbl {
+  padding-top: 10px;
+}
+
+.because-input {
   display: flex;
   flex-direction: column;
-  width: 100%;
-
-  & #auto-grow-explanation {
-    height: 39px;
-    resize: none;
-    overflow-y: hidden;
-  }
+  flex: 1 1 auto;
 }
 
-.invalid-input,
-.invalid-input:focus {
-  border: 1.5px solid var(--vscode-editorError-foreground) !important;
-  outline-color: var(--vscode-editorError-foreground) !important;
-}
-
-.error-message {
-  color: var(--vscode-editorError-foreground);
+#auto-grow-explanation {
+  overflow-y: hidden;
 }
 </style>

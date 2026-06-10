@@ -41,8 +41,8 @@
             />
         </div>
 
-        <div v-if="mode === 'professional' && templateVersion === '2.1.2'" class="outcome-cols">
-            <div>
+        <div v-if="mode === 'professional' && templateVersion === '2.1.2' && (fieldVisibility.positiveConsequences || fieldVisibility.negativeConsequences)" class="outcome-cols">
+            <div v-if="fieldVisibility.positiveConsequences">
                 <div class="subhead">
                     <h4>Positive Consequences</h4>
                     <HelpTooltip>
@@ -55,7 +55,7 @@
                     placeholder="a positive consequence…"
                 />
             </div>
-            <div>
+            <div v-if="fieldVisibility.negativeConsequences">
                 <div class="subhead">
                     <h4>Negative Consequences</h4>
                     <HelpTooltip> e.g. afflicted quality attributes, follow-up decisions required, … </HelpTooltip>
@@ -69,7 +69,7 @@
         </div>
 
         <template v-if="mode === 'professional' && templateVersion === '4.0.0'">
-            <div class="v4-block">
+            <div v-if="fieldVisibility.consequences" class="v4-block">
                 <div class="subhead">
                     <h4>Consequences</h4>
                     <span class="ver-tag">4.0</span>
@@ -79,7 +79,7 @@
                 </div>
                 <MadrConsequenceEditor data-cy="consequencesPro" :list="adr.consequences" />
             </div>
-            <div class="v4-block">
+            <div v-if="fieldVisibility.confirmation" class="v4-block">
                 <div class="subhead">
                     <h4>Confirmation</h4>
                     <span class="ver-tag">4.0</span>
@@ -106,11 +106,15 @@ import MadrConsequenceEditor from "./MadrConsequenceEditor.vue";
 import MadrListEditor from "./MadrListEditor.vue";
 import { createShortTitle } from "@/plugins/classes";
 import { useClickOutside } from "@/composables/useClickOutside";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import type { MadrTemplateVersion } from "@adr-manager/core";
+import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
 
-const props = defineProps<{ adr: ArchitecturalDecisionRecord; mode: Mode; templateVersion: MadrTemplateVersion }>();
+const props = withDefaults(
+    defineProps<{ adr: ArchitecturalDecisionRecord; mode: Mode; templateVersion: MadrTemplateVersion; fieldVisibility?: FieldVisibility }>(),
+    { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
+);
 
 const suggestionsOpen = ref(false);
 const chosenWrap = useTemplateRef<HTMLElement>("chosenWrap");

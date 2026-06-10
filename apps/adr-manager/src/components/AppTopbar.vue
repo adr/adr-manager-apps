@@ -33,6 +33,7 @@
                 Professional
             </button>
         </div>
+        <FieldVisibilityPanel v-if="mode === 'professional'" :template-version="templateVersion" />
         <button type="button" class="btn btn-ghost" title="Toggle live preview" @click="emit('toggle-preview')">
             <span
                 class="mdi"
@@ -75,6 +76,7 @@
 import MadrVersionSelect from "./MadrVersionSelect.vue";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
+import FieldVisibilityPanel from "./FieldVisibilityPanel.vue";
 
 defineProps<{
     mode: Mode;

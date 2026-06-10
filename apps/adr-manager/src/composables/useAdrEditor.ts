@@ -6,8 +6,11 @@ import { matchesIgnoringFormatting } from "@adr-manager/core";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { AdrFile } from "@/types/adr";
 
+import { applyFieldVisibilityFilter } from "@adr-manager/core";
+
 function serialize(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {
-    return version === "4.0.0" ? adr2md400(adr) : adr2md(adr);
+    const filtered = applyFieldVisibilityFilter(adr, store.fieldVisibility);
+    return version === "4.0.0" ? adr2md400(filtered) : adr2md(filtered);
 }
 
 function parse(markdown: string, version: MadrTemplateVersion): ArchitecturalDecisionRecord {
@@ -123,6 +126,16 @@ export function useAdrEditor() {
     watch(markdown, (newMarkdown) => {
         store.updateMdOfCurrentAdr(newMarkdown);
     });
+
+    watch(
+    () => store.fieldVisibility,
+    () => {
+        if (!requiresConversion.value) {
+            markdown.value = serialize(adr.value, templateVersion.value);
+        }
+    },
+    { deep: true }
+    );
 
     return {
         adr,

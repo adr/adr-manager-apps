@@ -1,25 +1,26 @@
 <template>
-  <div id="context-and-problem-statement-container" class="input-group">
+  <div class="context-section">
     <TemplateHeader
-      :info-text="'Describe the context and problem statement, e.g., in free form using two to three sentences or in the form of an illustrative story.\nYou may want to articulate the problem in form of a question.'"
+      :info-text="'Describe the context and problem statement, e.g. in free form using two to three sentences or in the form of an illustrative story. You may want to articulate the problem in form of a question.'"
     >
       <h2>Context and Problem Statement</h2>
     </TemplateHeader>
     <textarea
       id="auto-grow-context-problem-statement"
-      ref="contextAndProblemStatement"
       v-model="v$.contextAndProblemStatement.$model"
+      class="field"
+      :class="{ invalid: v$.contextAndProblemStatement.$error }"
+      placeholder="Describe the context and the problem this decision addresses…"
       spellcheck="true"
-      :class="v$.contextAndProblemStatement.$error ? 'invalid-input' : ''"
       @input="
         updateHeight();
         $emit('update:contextAndProblemStatement', $event.target.value);
         $emit('validate');
       "
     />
-    <h4 v-for="error of v$.contextAndProblemStatement.$errors" :key="error.$uid" class="error-message">
+    <p v-for="error of v$.contextAndProblemStatement.$errors" :key="error.$uid" class="error-message">
       {{ error.$message }}
-    </h4>
+    </p>
   </div>
 </template>
 
@@ -48,11 +49,12 @@ export default defineComponent({
     };
   },
   /**
-   * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
+   * Sizes the textarea to prefilled content and revalidates without marking
+   * pristine fields as erroneous.
    */
   mounted() {
-    //@ts-ignore
-    this.$refs.contextAndProblemStatement.dispatchEvent(new Event("input"));
+    this.updateHeight();
+    this.$emit("validate");
   },
   methods: {
     /**
@@ -77,30 +79,9 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-.input-group {
-  margin-bottom: 1.5rem;
-
-  & input {
-    height: 3rem;
-  }
-
-  & #auto-grow-context-problem-statement {
-    min-height: 6rem;
-    resize: none;
-    overflow-y: hidden;
-  }
-}
-
-.invalid-input,
-.invalid-input:focus {
-  border: 1.5px solid var(--vscode-editorError-foreground) !important;
-  outline-color: var(--vscode-editorError-foreground) !important;
-}
-
-.error-message {
-  color: var(--vscode-editorError-foreground);
+<style scoped>
+#auto-grow-context-problem-statement {
+  min-height: 92px;
+  overflow-y: hidden;
 }
 </style>

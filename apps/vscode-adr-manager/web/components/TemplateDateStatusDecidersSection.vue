@@ -1,179 +1,209 @@
 <template>
-  <div id="date-status-deciders-container">
-    <div class="input">
-      <p>Last Updated:</p>
-      <input
-        id="date"
-        type="date"
-        :value="date"
-        @input="
-          $emit('update:date', $event.target.value);
-          $emit('validate');
-        "
-      />
-      <div id="icon" class="tooltip">
-        <div class="bottom">
-          <p>The date where this ADR has been updated the last time.</p>
-          <i></i>
-        </div>
-        <i class="codicon codicon-info"></i>
-      </div>
+  <div class="metabar">
+    <div class="meta-field">
+      <label>
+        Last update
+        <HelpTooltip>The date the decision was last updated (YYYY-MM-DD).</HelpTooltip>
+      </label>
+      <span class="chip">
+        <i class="codicon codicon-calendar"></i>
+        <input
+          type="date"
+          class="chip-input date-input"
+          :value="date"
+          @input="
+            $emit('update:date', $event.target.value);
+            $emit('validate');
+          "
+        />
+      </span>
     </div>
-    <div class="input">
-      <p>Status:</p>
-      <select
-        id="status"
-        name="status"
-        :value="status.toLowerCase()"
-        @input="
-          $emit('update:status', $event.target.value.toLowerCase());
-          $emit('validate');
-        "
-      >
-        <option value="" selected></option>
-        <option value="proposed">Proposed</option>
-        <option value="accepted">Accepted</option>
-        <option value="rejected">Rejected</option>
-        <option value="superseded">Superseded</option>
-      </select>
-      <div id="icon" class="tooltip">
-        <div class="bottom">
-          <p>The current status of this ADR.</p>
-          <i></i>
-        </div>
-        <i class="codicon codicon-info"></i>
-      </div>
+    <div class="meta-field">
+      <label>
+        Status
+        <HelpTooltip>The current status of the ADR.</HelpTooltip>
+      </label>
+      <span class="chip status" :data-tone="statusTone">
+        <select
+          class="chip-input status-select"
+          :value="status.toLowerCase()"
+          @input="
+            $emit('update:status', $event.target.value.toLowerCase());
+            $emit('validate');
+          "
+        >
+          <option value="" selected>no status</option>
+          <option value="proposed">Proposed</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Rejected</option>
+          <option value="deprecated">Deprecated</option>
+          <option value="superseded">Superseded</option>
+        </select>
+        <i class="codicon codicon-chevron-down"></i>
+      </span>
     </div>
-    <div class="input">
-      <p>Deciders:</p>
-      <input
-        id="deciders"
-        type="text"
-        spellcheck="true"
-        :value="deciders"
-        @input="
-          $emit('update:deciders', $event.target.value);
-          $emit('validate');
-        "
-      />
-      <div id="icon" class="tooltip">
-        <div class="bottom">
-          <p>Everyone involved in the decision, separated by commas.</p>
-          <i></i>
-        </div>
-        <i class="codicon codicon-info"></i>
-      </div>
+    <!-- Deciders and decision-makers name the same people, so editing either keeps both in sync. -->
+    <div v-if="templateVersion === '2.1.2'" class="meta-field">
+      <label>
+        Deciders
+        <HelpTooltip>Everyone involved in the decision, e.g. separated with commas.</HelpTooltip>
+      </label>
+      <span class="chip">
+        <i class="codicon codicon-organization"></i>
+        <input
+          type="text"
+          class="chip-input people-input"
+          placeholder="names…"
+          spellcheck="true"
+          :value="deciders"
+          @input="
+            $emit('update:deciders', $event.target.value);
+            $emit('update:decisionMakers', $event.target.value);
+            $emit('validate');
+          "
+        />
+      </span>
     </div>
+    <template v-else>
+      <div class="meta-field">
+        <label>
+          Decision-makers
+          <span class="ver-tag">4.0</span>
+          <HelpTooltip>Everyone who makes the decision (renamed from "deciders" in MADR 4.0.0).</HelpTooltip>
+        </label>
+        <span class="chip">
+          <i class="codicon codicon-organization"></i>
+          <input
+            type="text"
+            class="chip-input people-input"
+            placeholder="names…"
+            spellcheck="true"
+            :value="decisionMakers"
+            @input="
+              $emit('update:decisionMakers', $event.target.value);
+              $emit('update:deciders', $event.target.value);
+              $emit('validate');
+            "
+          />
+        </span>
+      </div>
+      <div class="meta-field">
+        <label>
+          Consulted
+          <span class="ver-tag">4.0</span>
+          <HelpTooltip>Subject-matter experts whose opinions are sought (two-way communication).</HelpTooltip>
+        </label>
+        <span class="chip">
+          <i class="codicon codicon-comment-discussion"></i>
+          <input
+            type="text"
+            class="chip-input people-input-sm"
+            placeholder="names…"
+            spellcheck="true"
+            :value="consulted"
+            @input="
+              $emit('update:consulted', $event.target.value);
+              $emit('validate');
+            "
+          />
+        </span>
+      </div>
+      <div class="meta-field">
+        <label>
+          Informed
+          <span class="ver-tag">4.0</span>
+          <HelpTooltip>People kept up-to-date on progress (one-way communication).</HelpTooltip>
+        </label>
+        <span class="chip">
+          <i class="codicon codicon-megaphone"></i>
+          <input
+            type="text"
+            class="chip-input people-input-sm"
+            placeholder="names…"
+            spellcheck="true"
+            :value="informed"
+            @input="
+              $emit('update:informed', $event.target.value);
+              $emit('validate');
+            "
+          />
+        </span>
+      </div>
+    </template>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import HelpTooltip from "./HelpTooltip.vue";
+
+const STATUS_TONES = ["proposed", "rejected", "accepted", "deprecated", "superseded"];
 
 export default defineComponent({
-  name: "TemplatedateStatusDecidersContainerSection",
+  name: "TemplateDateStatusDecidersSection",
+  components: {
+    HelpTooltip
+  },
   props: {
     date: String,
     status: String,
-    deciders: String
+    deciders: String,
+    decisionMakers: String,
+    consulted: String,
+    informed: String,
+    templateVersion: {
+      type: String,
+      default: "2.1.2"
+    }
+  },
+  computed: {
+    statusTone() {
+      const status = (this.status ?? "").toLowerCase();
+      return STATUS_TONES.includes(status) ? status : "";
+    }
   }
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-body.vscode-dark #date {
-  color-scheme: dark;
-}
-
-#date-status-deciders-container {
-  @include centered-flex(row);
-  width: 100%;
-  margin-bottom: 2rem;
+<style scoped>
+.metabar {
+  display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
+  gap: 12px 26px;
+  margin: 22px 0 6px;
 }
 
-.input {
-  @include centered-flex(row);
-  & p {
-    margin-right: 0.5rem;
-  }
-  margin-right: 2.5rem;
+.meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
-#date {
-  flex: 1;
-  border: 1px solid var(--vscode-input-foreground);
-  border-radius: 5px;
-  margin: 0.25rem;
+.meta-field > label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--adr-ink-2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }
 
-#status {
-  background: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
-  border: 1px solid var(--vscode-input-foreground);
-  border-radius: 5px;
-  flex: 1;
-  padding: 0.5rem 0;
-  margin: 0.25rem;
+.date-input {
+  min-width: 120px;
 }
 
-#deciders {
-  flex: 1;
-  border: 1px solid var(--vscode-input-foreground);
-  margin: 0.25rem;
-  border-radius: 5px;
+.people-input {
+  min-width: 160px;
 }
 
-.tooltip .bottom {
-  min-width: 25rem;
-  max-width: 50rem;
-  top: 40px;
-  left: 50%;
-  margin-left: 20px;
-  transform: translate(-50%, 0);
-  padding: 10px 20px;
-  background: var(--vscode-input-background);
-  color: var(--vscode-descriptionForeground);
-  border-radius: 5px;
-  position: absolute;
-  z-index: 99;
-  box-sizing: border-box;
-  display: none;
+.people-input-sm {
+  min-width: 130px;
 }
 
-.tooltip .bottom p {
-  white-space: pre-line;
-}
-
-.tooltip:hover {
-  z-index: 2;
-}
-
-.tooltip:hover .bottom {
-  display: block;
-}
-
-.tooltip .bottom i {
-  position: absolute;
-  bottom: 100%;
-  left: 45%;
-  margin-left: -15px;
-  width: 24px;
-  height: 12px;
-  overflow: hidden;
-}
-
-.tooltip .bottom i::after {
-  content: "";
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  left: 45%;
-  transform: translate(-45%, 50%) rotate(45deg);
-  background: var(--vscode-input-background);
+.chip.status .codicon {
+  color: inherit;
 }
 </style>

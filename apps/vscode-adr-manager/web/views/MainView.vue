@@ -1,25 +1,41 @@
 <template>
   <div id="main">
-    <img src="../assets/header-dark-theme.png" alt="ADR Manager Header Image" class="logo" />
-    <div id="adr-list">
-      <div v-for="(folder, index) in nonEmptySortedWorkspaceFolders" :key="index" class="adr-folder">
-        <h2>
-          <strong>{{ folder }}</strong>
-        </h2>
-        <div v-for="(adr, adrIndex) in adrsInFolder(folder)" :key="adrIndex" class="adr-folder-list">
-          <ADRContainer
-            :key="index"
-            :adr="adr"
-            @request-delete="requestDelete(adr)"
-            @request-view="requestView(adr)"
-            @request-edit="requestEdit(adr)"
-          ></ADRContainer>
-        </div>
+    <header class="toolbar">
+      <div class="brand">
+        <img src="../assets/logo-badge.png" alt="" />
+        <span class="word">ADR<span> Manager</span></span>
       </div>
-      <h1 v-if="!adrsAvailable">No ADRs detected in the workspace.</h1>
-    </div>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-primary" @click="sendMessage('add')">
+        <i class="codicon codicon-add"></i>
+        Add ADR
+      </button>
+    </header>
 
-    <button id="add-adr-button" @click="sendMessage('add')">Add ADR</button>
+    <main class="content">
+      <section v-for="folder in nonEmptySortedWorkspaceFolders" :key="folder" class="adr-folder">
+        <h2 class="folder-name">
+          <i class="codicon codicon-folder"></i>
+          {{ folder }}
+        </h2>
+        <ADRContainer
+          v-for="adr in adrsInFolder(folder)"
+          :key="adr.fullPath"
+          :adr="adr"
+          @request-delete="requestDelete(adr)"
+          @request-view="requestView(adr)"
+          @request-edit="requestEdit(adr)"
+        ></ADRContainer>
+      </section>
+
+      <div v-if="!adrsAvailable" class="empty">
+        <i class="codicon codicon-files"></i>
+        <h2>No ADRs detected in this workspace</h2>
+        <p>
+          ADRs are loaded from <code>{{ adrDirectory || "docs/decisions" }}</code> in each workspace folder.
+        </p>
+      </div>
+    </main>
   </div>
 </template>
 
@@ -140,51 +156,56 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/reset";
-@use "../static/vscode";
-@use "../static/mixins" as *;
-
-body {
-  @include dynamic-logo;
-}
-
-#main {
-  width: 100%;
-  height: 100%;
-  @include centered-flex(column);
-  padding: 0;
-  margin-top: 2rem;
-}
-
-.logo {
-  width: 40%;
-  height: auto;
-  margin: 1rem 0;
-}
-
-#adr-list {
-  width: 90%;
-  min-height: 40%;
-  max-height: 60%;
-  overflow: scroll;
-  margin: 1rem;
-
-  & h1 {
-    margin-top: 5rem;
-    text-align: center;
-  }
+<style scoped>
+.content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 40px 80px;
 }
 
 .adr-folder {
-  margin-bottom: 2rem;
+  margin-bottom: 28px;
 }
 
-#add-adr-button {
-  @include button-sizing;
-  @include button-styling;
-  background: green;
-  border: 1px solid var(--vscode-contrastBorder);
-  margin: 0.5rem 0 2rem 0;
+.folder-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--adr-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--adr-ink-2);
+  margin-bottom: 10px;
+}
+
+.folder-name .codicon {
+  font-size: 14px;
+  color: var(--adr-ink-3);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 80px 0;
+  color: var(--adr-ink-2);
+}
+
+.empty .codicon {
+  font-size: 44px;
+  color: var(--adr-ink-3);
+}
+
+.empty h2 {
+  font-size: var(--adr-text-h3);
+  font-weight: 600;
+  color: var(--adr-ink);
+}
+
+.empty p {
+  font-size: var(--adr-text-sm);
 }
 </style>

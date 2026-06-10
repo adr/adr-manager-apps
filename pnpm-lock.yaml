@@ -39,9 +39,6 @@ catalogs:
     prettier:
       specifier: ^3.8.3
       version: 3.8.3
-    sass:
-      specifier: ^1.100.0
-      version: 1.100.0
     typescript:
       specifier: 6.0.3
       version: 6.0.3
@@ -204,9 +201,6 @@ importers:
       '@vscode/codicons':
         specifier: ^0.0.45
         version: 0.0.45
-      '@vueform/toggle':
-        specifier: ^2.1.4
-        version: 2.1.4
       '@vuelidate/core':
         specifier: ^2.0.3
         version: 2.0.3(vue@3.5.35(typescript@6.0.3))
@@ -253,9 +247,6 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.8.3
-      sass:
-        specifier: 'catalog:'
-        version: 1.100.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -2182,9 +2173,6 @@ packages:
     peerDependenciesMeta:
       '@vue/server-renderer':
         optional: true
-
-  '@vueform/toggle@2.1.4':
-    resolution: {integrity: sha512-tEITFf5wlqIWoCYZXJdoXvCnrc97weOu2csR/BEoROVvFu1zRsoK0wY1pJG7BR+g5zpGJneGSdLhMUsbx8y1yw==}
 
   '@vuelidate/core@2.0.3':
     resolution: {integrity: sha512-AN6l7KF7+mEfyWG0doT96z+47ljwPpZfi9/JrNMkOGLFv27XVZvKzRLXlmDPQjPl/wOB1GNnHuc54jlCLRNqGA==}
@@ -7454,8 +7442,6 @@ snapshots:
     optionalDependencies:
       '@vue/server-renderer': 3.5.35(vue@3.5.35(typescript@6.0.3))
 
-  '@vueform/toggle@2.1.4': {}
-
   '@vuelidate/core@2.0.3(vue@3.5.35(typescript@6.0.3))':
     dependencies:
       vue: 3.5.35(typescript@6.0.3)
@@ -8698,7 +8684,8 @@ snapshots:
 
   ignore@7.0.5: {}
 
-  immutable@5.1.6: {}
+  immutable@5.1.6:
+    optional: true
 
   imurmurhash@0.1.4: {}
 
@@ -9658,6 +9645,7 @@ snapshots:
       source-map-js: 1.2.1
     optionalDependencies:
       '@parcel/watcher': 2.5.6
+    optional: true
 
   sax@1.6.0: {}
 

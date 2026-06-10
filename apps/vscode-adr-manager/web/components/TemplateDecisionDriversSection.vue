@@ -1,12 +1,13 @@
 <template>
-  <div id="decision-drivers-container" class="input-group">
+  <div class="decision-drivers">
     <TemplateHeader
       :info-text="'Decision Drivers are competing forces or facing concerns that influence the decision.'"
+      optional
     >
       <h2>Decision Drivers</h2>
     </TemplateHeader>
     <draggable
-      class="drag-area"
+      class="list"
       :list="decisionDrivers"
       :sort="true"
       handle=".drivers-grabber"
@@ -15,19 +16,26 @@
         checkMove;
       "
     >
-      <div v-for="(driver, index) in decisionDriversWithBlank" :key="index" ref="decisionDrivers" class="multi-input">
-        <i v-if="decisionDrivers[index] !== ''" class="codicon codicon-grabber drivers-grabber"></i>
+      <div v-for="(driver, index) in decisionDriversWithBlank" :key="index" class="list-row">
+        <span class="gutter" :class="decisionDrivers[index] === '' ? 'dimmed' : 'drivers-grabber'">
+          <i class="codicon" :class="decisionDrivers[index] === '' ? 'codicon-add' : 'codicon-gripper'"></i>
+        </span>
         <textarea
           v-model="decisionDrivers[index]"
-          class="auto-grow-decision-driver"
+          class="field auto-grow-decision-driver"
+          placeholder="a decision driver, e.g. a force or concern…"
           spellcheck="true"
           @input="updateArray($event.target.value, index)"
         />
-        <i
+        <button
           v-if="decisionDrivers[index] !== ''"
-          class="codicon codicon-close multi-input-delete-icon"
+          type="button"
+          class="row-del"
+          title="Remove"
           @click="updateArray('', index)"
-        ></i>
+        >
+          <i class="codicon codicon-trash"></i>
+        </button>
       </div>
     </draggable>
   </div>
@@ -66,16 +74,8 @@ export default defineComponent({
       return decisionDriversWithBlank;
     }
   },
-  /**
-   * Triggers the height update for textareas when first loading the webview (in case existing data is being loaded)
-   */
   mounted() {
-    //@ts-ignore
-    this.$refs.decisionDrivers.forEach((driver) => {
-      if (driver.children[1]) {
-        driver.children[1].dispatchEvent(new Event("input"));
-      }
-    });
+    this.updateHeight();
   },
   methods: {
     /**
@@ -114,55 +114,8 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-.input-group {
-  margin-bottom: 1.5rem;
-
-  & input {
-    height: 3rem;
-  }
-}
-
-.multi-input {
-  @include centered-flex(row);
-  justify-content: left;
-  margin: 0.5rem 0;
-  & .auto-grow-decision-driver {
-    height: 39px;
-    resize: none;
-    overflow-y: hidden;
-  }
-}
-
-.drag-area {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.multi-input-delete-icon {
-  transform: scale(1.5);
-  margin-left: 0.5rem;
-
-  &:hover {
-    cursor: pointer;
-  }
-}
-
-.drivers-grabber {
-  position: initial;
-  margin-right: 0.5rem;
-  transform: scale(1.2);
-
-  &:hover {
-    cursor: grab;
-  }
-
-  &:active {
-    cursor: grabbing;
-  }
+<style scoped>
+.auto-grow-decision-driver {
+  overflow-y: hidden;
 }
 </style>

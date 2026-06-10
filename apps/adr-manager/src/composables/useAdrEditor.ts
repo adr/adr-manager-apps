@@ -2,16 +2,9 @@ import { readonly, ref, watch } from "vue";
 import { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import { adr2md, adr2md400, detectMadrVersion, md2adr, md2adr400 } from "@/plugins/parser";
 import { store } from "@/plugins/store";
+import { matchesIgnoringFormatting } from "@adr-manager/core";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { AdrFile } from "@/types/adr";
-
-/**
- * Ignores whitespace and bullet style, so files written by hand still count as conforming.
- */
-function matchesIgnoringFormatting(left: string, right: string): boolean {
-    const normalize = (md: string): string => md.replace(/[ \r\n]/g, "").replace(/- /g, "* ");
-    return normalize(left) === normalize(right);
-}
 
 function serialize(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {
     return version === "4.0.0" ? adr2md400(adr) : adr2md(adr);

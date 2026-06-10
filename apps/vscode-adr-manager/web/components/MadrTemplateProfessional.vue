@@ -1,10 +1,11 @@
 <template>
-  <div id="template">
+  <div class="template">
     <TemplateTitleSection
       ref="title"
       :key="dataFetched"
       v-model:title="title"
       :title-prop="title"
+      :file-name="fileName"
       @validate="validate('title')"
     ></TemplateTitleSection>
     <TemplateDateStatusDecidersSection
@@ -12,14 +13,13 @@
       v-model:date="date"
       v-model:status="status"
       v-model:deciders="deciders"
+      v-model:decision-makers="decisionMakers"
+      v-model:consulted="consulted"
+      v-model:informed="informed"
+      :template-version="templateVersion"
       @validate="validateAll"
     ></TemplateDateStatusDecidersSection>
-    <TemplateTechnicalStorySection
-      :key="dataFetched"
-      v-model:technical-story="technicalStory"
-      @validate="validateAll"
-    ></TemplateTechnicalStorySection>
-    <hr />
+    <hr class="divider" />
     <TemplateContextAndProblemStatementSection
       ref="contextAndProblemStatement"
       :key="dataFetched"
@@ -27,14 +27,20 @@
       :context-and-problem-statement-prop="contextAndProblemStatement"
       @validate="validate('contextAndProblemStatement')"
     ></TemplateContextAndProblemStatementSection>
-    <hr />
+    <TemplateTechnicalStorySection
+      v-if="templateVersion === '2.1.2'"
+      :key="dataFetched"
+      v-model:technical-story="technicalStory"
+      @validate="validateAll"
+    ></TemplateTechnicalStorySection>
+    <hr class="divider" />
     <TemplateDecisionDriversSection
       :key="dataFetched"
       v-model:decision-drivers="decisionDrivers"
       :decision-drivers-prop="decisionDrivers"
       @update:decision-drivers="validateAll"
     ></TemplateDecisionDriversSection>
-    <hr />
+    <hr class="divider" />
     <TemplateConsideredOptionsProfessionalSection
       ref="consideredOptions"
       :key="dataFetched"
@@ -42,6 +48,7 @@
       v-model:chosen-option="decisionOutcome.chosenOption"
       v-model:selected-index="selectedIndex"
       :considered-options-prop="consideredOptions"
+      :template-version="templateVersion"
       @add-option="addOption"
       @select-option="selectOption"
       @delete-option="deleteOption"
@@ -51,24 +58,34 @@
         validate('chosenOption');
       "
     ></TemplateConsideredOptionsProfessionalSection>
-    <hr />
+    <hr class="divider" />
     <TemplateDecisionOutcomeProfessionalSection
       ref="decisionOutcome"
       :key="dataFetched"
       v-model:explanation="decisionOutcome.explanation"
       v-model:positive-consequences="decisionOutcome.positiveConsequences"
       v-model:negative-consequences="decisionOutcome.negativeConsequences"
+      v-model:confirmation="confirmation"
       :decision-outcome-prop="decisionOutcome"
+      :consequences-prop="consequences"
+      :template-version="templateVersion"
       @validate="validate('explanation')"
       @update-array="validateAll"
     ></TemplateDecisionOutcomeProfessionalSection>
-    <hr />
+    <hr class="divider" />
     <TemplateLinksSection
+      v-if="templateVersion === '2.1.2'"
       :key="dataFetched"
       v-model:links="links"
       :links-prop="links"
       @update:links="validateAll"
     ></TemplateLinksSection>
+    <TemplateMoreInformationSection
+      v-else
+      :key="dataFetched"
+      v-model:more-information="moreInformation"
+      @validate="validateAll"
+    ></TemplateMoreInformationSection>
   </div>
 </template>
 
@@ -86,6 +103,7 @@ import TemplateDecisionDriversSection from "./TemplateDecisionDriversSection.vue
 import TemplateConsideredOptionsProfessionalSection from "./TemplateConsideredOptionsProfessionalSection.vue";
 import TemplateDecisionOutcomeProfessionalSection from "./TemplateDecisionOutcomeProfessionalSection.vue";
 import TemplateLinksSection from "./TemplateLinksSection.vue";
+import TemplateMoreInformationSection from "./TemplateMoreInformationSection.vue";
 
 export default defineComponent({
   name: "MadrTemplateProfessional",
@@ -97,27 +115,9 @@ export default defineComponent({
     TemplateDecisionDriversSection,
     TemplateConsideredOptionsProfessionalSection,
     TemplateDecisionOutcomeProfessionalSection,
-    TemplateLinksSection
+    TemplateLinksSection,
+    TemplateMoreInformationSection
   },
   mixins: [vscode, adrData]
 });
 </script>
-
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-#template {
-  width: 95%;
-  height: auto;
-  background: var(--vscode-textBlockQuote-background);
-  border: 1.5px solid var(--vscode-input-foreground);
-  margin: 1.5rem auto;
-  padding: 1.5rem;
-}
-
-hr {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  border: 0.5px solid var(--vscode-input-foreground);
-}
-</style>

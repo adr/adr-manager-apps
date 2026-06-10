@@ -1,42 +1,23 @@
 <template>
-  <div id="considered-options-container">
-    <div id="options-header">
-      <TemplateHeader
-        :info-text="'List of all considered options.\nClick to select an option, rearrange options by drag and drop.\nOnly write a concise description; you can add a more detailed description when using the Professional MADR template.'"
-      >
-        <h2>Considered Options</h2>
-      </TemplateHeader>
-      <AddOptionButton @add-option="$emit('addOption')"></AddOptionButton>
-    </div>
-    <div id="options">
-      <div v-if="consideredOptions.length === 0" id="no-options-container">
-        <h3>
-          <strong>No options available</strong>
-        </h3>
-      </div>
-      <draggable
-        class="drag-area"
-        :list="consideredOptions"
-        :sort="true"
-        handle="#grabber"
-        @update="$emit('checkSelection', $event)"
-      >
+  <div class="considered-options">
+    <TemplateHeader
+      :info-text="'List all considered options. Click the circle of an option to choose it, rearrange options by drag and drop. Only write a concise title; you can add a detailed description in the Professional editor mode.'"
+    >
+      <h2>Considered Options</h2>
+    </TemplateHeader>
+    <div class="options">
+      <draggable :list="consideredOptions" :sort="true" handle=".opt-grip" @update="$emit('checkSelection', $event)">
         <OptionContainerBasic
           v-for="(option, index) in consideredOptions"
           :key="index"
           :title="option.title"
-          :class="option.title === chosenOption && index === selectedIndex ? 'selected-option' : 'unselected-option'"
+          :chosen="option.title === chosenOption && index === selectedIndex"
           @select-option="$emit('selectOption', index)"
           @edit-option="$emit('editOption', { title: option.title, index: index })"
           @delete-option="$emit('deleteOption', index)"
         ></OptionContainerBasic>
       </draggable>
-      <div v-if="consideredOptions.length >= 2" id="rearrange-message-container">
-        <h4>
-          <i>Click to choose option; rearrange options by dragging</i>
-        </h4>
-        <i class="codicon codicon-grabber"></i>
-      </div>
+      <AddOptionButton @add-option="$emit('addOption')"></AddOptionButton>
     </div>
   </div>
 </template>
@@ -83,41 +64,3 @@ export default defineComponent({
   }
 });
 </script>
-
-<style lang="scss" scoped>
-@use "../static/mixins.scss" as *;
-
-#options-header {
-  display: flex;
-}
-
-#options {
-  @include centered-flex(column);
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-
-#no-options-container {
-  @include centered-flex(column);
-  margin-top: 2rem;
-}
-
-.drag-area {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-body.vscode-high-contrast .selected-option .codicon {
-  color: var(--vscode-editor-background);
-}
-
-#rearrange-message-container {
-  @include centered-flex(row);
-  margin-top: 0.5rem;
-  width: 100%;
-
-  & i {
-    margin-left: 0.5rem;
-  }
-}
-</style>

@@ -2,7 +2,7 @@
 import { Parser, CommonTokenStream, ParseTree } from "antlr4";
 
 export default class MADRParser extends Parser {
-    constructor(input: CommonTokenStream);
-    start(): ParseTree;
-    static readonly ruleNames: string[];
+  constructor(input: CommonTokenStream);
+  start(): ParseTree;
+  static readonly ruleNames: string[];
 }

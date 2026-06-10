@@ -169,7 +169,6 @@
     "esbuild": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "sass": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
@@ -178,7 +177,6 @@
     "@adr-manager/core": "workspace:*",
     "@types/vscode-webview": "^1.57.5",
     "@vscode/codicons": "^0.0.45",
-    "@vueform/toggle": "^2.1.4",
     "@vuelidate/core": "^2.0.3",
     "@vuelidate/validators": "^2.0.4",
     "antlr4": "catalog:",

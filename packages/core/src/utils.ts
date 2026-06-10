@@ -131,6 +131,15 @@ export function naturalCase2titleCase(natural: string): string {
 }
 
 /**
+ * Compares two markdown documents ignoring whitespace and bullet style, so files
+ * written by hand still count as conforming to the template a writer produces.
+ */
+export function matchesIgnoringFormatting(left: string, right: string): boolean {
+  const normalize = (md: string): string => md.replace(/[ \r\n]/g, "").replace(/- /g, "* ");
+  return normalize(left) === normalize(right);
+}
+
+/**
  * Option titles are similar iff they are equal after removing whitespace + lower-casing,
  * one normalized title is a prefix of the other, or the chosen option is a sub-title of
  * the option (compared via {@link createShortTitle}).

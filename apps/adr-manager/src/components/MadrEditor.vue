@@ -2,7 +2,7 @@
     <div class="editor-inner">
         <div class="title-wrap">
             <input v-model="adr.title" data-cy="titleAdr" class="title-input" placeholder="Decision title" autofocus />
-            <HelpTooltip>
+            <HelpTooltip class="align-end">
                 Describe the solved problem and the solution concisely. The title is also used as the file name, so keep
                 it short and avoid special characters.
             </HelpTooltip>

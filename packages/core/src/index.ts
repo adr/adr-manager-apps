@@ -17,5 +17,6 @@ export {
   snakeCase2naturalCase,
   naturalCase2snakeCase,
   naturalCase2titleCase,
+  matchesIgnoringFormatting,
   matchOptionTitleMoreRelaxed
 } from "./utils";

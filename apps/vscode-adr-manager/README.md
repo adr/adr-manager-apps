@@ -1,6 +1,6 @@
 # ADR Manager VS Code Extension
 
-Visual Studio Code (VS Code) extension based on the [ADR Manager](https://github.com/adr/adr-manager-apps), providing features for managing Architectural Decision Records (ADRs) based on the [MADR template](https://adr.github.io/madr/) in the version 2.1.2.
+Visual Studio Code (VS Code) extension based on the [ADR Manager](https://github.com/adr/adr-manager-apps), providing features for managing Architectural Decision Records (ADRs) based on the [MADR template](https://adr.github.io/madr/) in the versions 2.1.2 and 4.0.0. The editor detects the template version of an opened ADR, and a version selector in the editor toolbar rewrites a document from one template to the other.
 
 A quick introduction to all the features of this extension is available [here](https://github.com/adr/vscode-adr-manager-introduction).
 

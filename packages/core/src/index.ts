@@ -1,7 +1,16 @@
-export type { Option, DecisionOutcome, AdrInit, ParseError } from "./types";
+export type {
+  Option,
+  DecisionOutcome,
+  AdrInit,
+  ParseError,
+  Consequence,
+  ConsequenceKind,
+  MadrTemplateVersion
+} from "./types";
 export { ArchitecturalDecisionRecord } from "./classes";
 export { md2adr, adr2md } from "./parser";
 export type { Md2AdrOptions, Adr2MdOptions } from "./parser";
+export { md2adr400, adr2md400, detectMadrVersion } from "./madr400";
 export {
   cleanUpString,
   createShortTitle,

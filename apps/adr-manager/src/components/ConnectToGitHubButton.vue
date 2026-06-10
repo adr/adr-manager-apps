@@ -1,7 +1,8 @@
 <template>
-    <div>
-        <v-btn @click="hasAuthId">Connect to GitHub</v-btn>
-    </div>
+    <button type="button" class="btn btn-primary connect-btn" @click="hasAuthId">
+        <span class="mdi mdi-github" aria-hidden="true"></span>
+        Connect to GitHub
+    </button>
 </template>
 
 <script setup lang="ts">
@@ -36,3 +37,15 @@ async function signInWithGithub(): Promise<void> {
     }
 }
 </script>
+
+<style scoped>
+.connect-btn {
+    height: 44px;
+    padding: 0 22px;
+    font-size: 14px;
+}
+
+.connect-btn .mdi {
+    font-size: 20px;
+}
+</style>

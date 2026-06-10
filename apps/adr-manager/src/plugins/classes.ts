@@ -88,7 +88,7 @@ export function isValidRepoList(repos: unknown): repos is StoredRepository[] {
                 Array.isArray(repo.adrs) &&
                 repo.adrs.every(isValidAdr);
             if (!valid) {
-                console.log("Invalid repository", repo);
+                console.error("Invalid repository", repo);
             }
             return valid;
         })

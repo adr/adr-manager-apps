@@ -1,35 +1,116 @@
 <template>
-    <v-container fluid class="register text-center px-0 py-0">
-        <v-toolbar color="primary" theme="dark">
-            <v-spacer></v-spacer>
-            <img src="../assets/logo.png" alt="ADR-Manager" height="90%" />
-            <v-spacer></v-spacer>
-            <a href="https://github.com/adr/adr-manager" target="_blank" class="text-white">
-                View on GitHub <v-icon>mdi-open-in-new</v-icon></a
-            >
-        </v-toolbar>
-        <v-row class="align-center my-16 mx-0">
-            <v-col cols="12" sm="1">
-                <v-sheet rounded="lg"></v-sheet>
-            </v-col>
-            <v-col cols="12" sm="5">
-                <v-sheet class="text-right" rounded="lg">
-                    <div>
-                        Architectural Decision Records are a way to quickly write down Architectural Decisions. <br />
-                        This tool is meant to make the editing and management of ADRs on GitHub easier.
-                    </div>
-                </v-sheet>
-            </v-col>
-            <v-divider vertical></v-divider>
-            <v-col cols="12" sm="3">
-                <v-sheet class="text-left" rounded="lg">
-                    <ConnectToGitHubButton />
-                </v-sheet>
-            </v-col>
-        </v-row>
-    </v-container>
+    <div class="landing">
+        <header class="landing-topbar">
+            <div class="brand">
+                <img src="../assets/logo-badge.png" alt="ADR Manager" />
+                <span class="word">ADR<span> Manager</span></span>
+            </div>
+            <span class="spacer"></span>
+            <a href="https://github.com/adr/adr-manager" target="_blank" class="github-link">
+                View on GitHub
+                <span class="mdi mdi-open-in-new" aria-hidden="true"></span>
+            </a>
+        </header>
+
+        <main class="hero">
+            <img class="hero-logo" src="../assets/logo-badge.png" alt="" />
+            <h1>Manage your Architectural Decision Records</h1>
+            <p>
+                Architectural Decision Records are a way to quickly write down Architectural Decisions. <br />
+                This tool is meant to make the editing and management of ADRs on GitHub easier.
+            </p>
+            <ConnectToGitHubButton />
+        </main>
+    </div>
 </template>
 
 <script setup lang="ts">
 import ConnectToGitHubButton from "@/components/ConnectToGitHubButton.vue";
 </script>
+
+<style scoped>
+.landing {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--adr-surface-1);
+}
+
+.landing-topbar {
+    height: 60px;
+    flex: 0 0 60px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    background: var(--adr-surface);
+    border-bottom: 1px solid var(--adr-line);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.brand img {
+    width: 32px;
+    height: 32px;
+    display: block;
+}
+
+.brand .word {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--adr-navy);
+    letter-spacing: 0.2px;
+}
+
+.brand .word span {
+    font-weight: 400;
+    color: var(--adr-ink-2);
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.github-link .mdi {
+    font-size: 16px;
+}
+
+.hero {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
+    padding: 0 24px 80px;
+}
+
+.hero-logo {
+    width: 72px;
+    height: 72px;
+}
+
+.hero h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--adr-navy);
+    letter-spacing: -0.02em;
+}
+
+.hero p {
+    margin: 0 0 10px;
+    color: var(--adr-ink-2);
+    font-size: 15px;
+    line-height: 1.6;
+}
+</style>

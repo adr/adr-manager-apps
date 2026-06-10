@@ -2,9 +2,8 @@ import Swal from "sweetalert2";
 import type { SweetAlertIcon, SweetAlertResult } from "sweetalert2";
 
 /**
- * Replacement for the Vue-2-only `vue-simple-alert` plugin (`this.$alert` / `this.$confirm`),
- * backed directly by sweetalert2. `confirm` rejects on cancel, matching the old semantics so
- * existing `.then(...).catch(...)` chains keep working.
+ * Alert and confirm dialogs backed by sweetalert2. `confirm` rejects on cancel,
+ * so callers can chain `.then(...)` for the confirmed path and `.catch(...)` for cancellation.
  */
 export function useAlert() {
     const alert = (text: string, title = "", icon: SweetAlertIcon = "info"): Promise<SweetAlertResult> =>

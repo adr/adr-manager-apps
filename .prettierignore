@@ -6,6 +6,7 @@
 **/dist-web
 **/out
 **/coverage
+**/.nyc_output
 
 # Generated ANTLR parser
 packages/core/src/parser

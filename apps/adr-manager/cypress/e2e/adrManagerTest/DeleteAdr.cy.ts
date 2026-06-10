@@ -16,11 +16,11 @@ context("Deleting an ADR from a repo", () => {
         cy.wait("@showRepos", { timeout: 10000 });
         cy.get("[data-cy=adrList]").then((adrList) => {
             const adrCount = Cypress.$(adrList).length;
-            cy.get("[data-cy=deleteAdrBtn]").eq(0).click();
+            cy.get("[data-cy=deleteAdrBtn]").eq(0).click({ force: true });
             cy.get("[data-cy=dialogDeleteAdrBtn]").click();
             cy.get("[data-cy=adrList]").should("have.length", adrCount - 1);
             cy.get("[data-cy=adrList]").should(() => {
-                const addedRepos = JSON.parse(localStorage.getItem("addedRepositories"));
+                const addedRepos = JSON.parse(localStorage.getItem("addedRepositories") ?? "[]");
                 expect(addedRepos[0].adrs.length).to.eq(adrCount - 1);
                 expect(addedRepos[0].deletedAdrs.length).to.eq(1);
             });

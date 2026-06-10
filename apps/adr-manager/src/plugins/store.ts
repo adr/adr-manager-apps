@@ -1,10 +1,7 @@
 /**
- * The store contains the global state of the ADR-Manager and is used to communicate between
- * components. It is a typed `reactive()` singleton (no longer a Vue event-bus instance).
- *
- * The former bus events map to plain reactive state that consumers `watch`:
- *  - 'open-adr'  -> watch(() => store.currentlyEditedAdr)
- *  - 'set-mode'  -> watch(() => store.mode)
+ * Global state of the ADR-Manager, shared between components as a typed
+ * `reactive()` singleton. Consumers react to changes by watching slices of it,
+ * e.g. `watch(() => store.currentlyEditedAdr, ...)` or `watch(() => store.mode, ...)`.
  */
 import { reactive } from "vue";
 import sanitize from "sanitize-filename";
@@ -34,7 +31,7 @@ export const store = reactive({
             if (isValidRepoList(parsed)) {
                 this.addRepositories(parsed.map((repo) => Repository.constructFromString(JSON.stringify(repo))));
             } else {
-                console.log("Invalid repos: ", parsed);
+                console.error("Invalid repos: ", parsed);
             }
         }
         // Load mode from local storage (default to "basic" for anything unexpected).
@@ -46,7 +43,6 @@ export const store = reactive({
     },
 
     addRepositories(repoList: Repository[]): void {
-        console.log("Add Repositories to store", repoList);
         const alreadyAddedRepos = repoList.filter((repoToAdd) =>
             this.addedRepositories.map((repo) => repo.fullName).includes(repoToAdd.fullName)
         );
@@ -129,17 +125,15 @@ export const store = reactive({
     },
 
     openAdr(adr: AdrFile): void {
-        if (adr !== this.currentlyEditedAdr) {
-            const repo = this.addedRepositories.find((r) => r.adrs.includes(adr));
-            if (isValidAdr(adr) && repo !== undefined) {
-                this.currentRepository = repo;
-                this.currentlyEditedAdr = adr;
-                console.log("Open ADR in store.ts ", adr);
-            } else {
-                console.log("This is not a valid ADR", adr);
-            }
+        if (adr === this.currentlyEditedAdr) {
+            return;
+        }
+        const repo = this.addedRepositories.find((r) => r.adrs.includes(adr));
+        if (isValidAdr(adr) && repo !== undefined) {
+            this.currentRepository = repo;
+            this.currentlyEditedAdr = adr;
         } else {
-            console.log("I won't open the same ADR twice! D:");
+            console.error("This is not a valid ADR", adr);
         }
     },
 
@@ -152,7 +146,9 @@ export const store = reactive({
 
         if (this.currentRepository && this.currentRepository.addedAdrs.includes(current)) {
             const path = current.path.split("/");
-            const title = (md.split("\n")[0] ?? "").replace(/^#+/, "").trim();
+            // The title heading is not necessarily the first line (4.0.0 starts with front matter).
+            const titleLine = md.split("\n").find((line) => /^# /.test(line)) ?? "";
+            const title = titleLine.replace(/^#+/, "").trim();
             path[path.length - 1] = sanitize(
                 current.id.toString().padStart(4, "0") + "-" + naturalCase2snakeCase(title) + ".md"
             );
@@ -164,7 +160,8 @@ export const store = reactive({
 
     createNewAdr(repo: Repository): AdrFile | undefined {
         if (this.addedRepositories.includes(repo)) {
-            const adr = ArchitecturalDecisionRecord.createNewAdr();
+            // Per the MADR template every field is a placeholder, so a new ADR starts empty.
+            const adr = new ArchitecturalDecisionRecord();
             const md = adr2md(adr);
             const id = Math.max(...repo.adrs.map((a) => a.id), 0) + 1;
             const newAdr: AdrFile = {
@@ -182,7 +179,6 @@ export const store = reactive({
     },
 
     deleteAdr(adr: AdrFile, repo: Repository): void {
-        console.log("Deleting requested!", adr, repo);
         const adrIndexAdr = repo.adrs.findIndex((adrEl) => adrEl === adr);
         const adrIndexNewAdr = repo.addedAdrs.findIndex((adrEl) => adrEl === adr);
 
@@ -196,16 +192,12 @@ export const store = reactive({
         this.updateLocalStorageRepositories();
     },
 
-    /**
-     * Sets the current mode and (formerly) emitted the 'set-mode' event; consumers now watch `mode`.
-     */
     setMode(mode: Mode): void {
         if (mode === "basic" || mode === "professional") {
-            console.log("Set mode to", mode);
             this.mode = mode;
             lsSet("mode", mode);
         } else {
-            console.log("Error in Mode Selection");
+            console.error("Invalid mode", mode);
         }
     },
 
@@ -240,7 +232,6 @@ export const store = reactive({
                     }
                 }
             }
-            console.log("[Store] Set user E-Mail to", this.userMail);
         } catch (error) {
             console.error(error);
         }
@@ -382,5 +373,4 @@ export const store = reactive({
     }
 });
 
-// Preserve the original `created() { this.reload() }` behavior: run once at module init.
 store.reload();

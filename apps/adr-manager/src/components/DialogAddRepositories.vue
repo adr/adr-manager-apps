@@ -1,126 +1,88 @@
 <template>
-    <v-dialog v-model="show" width="700" :fullscreen="mobile" scrollable>
-        <template #activator="{ props }">
-            <slot name="activator" :props="props" />
-        </template>
-        <v-card class="d-flex flex-column">
-            <v-card-title>
-                <v-row class="my-1">
-                    <div>
-                        <v-avatar color="primary" size="35" class="mx-1">
-                            <v-icon color="white">mdi-folder-plus</v-icon>
-                        </v-avatar>
-                        <span class="dialogTitle"> Add Repositories </span>
-                    </div>
-                    <v-text-field
-                        data-cy="search-field-for-adding-repository"
-                        v-model="searchText"
-                        class="pl-8 pr-4 pt-0 mt-0"
-                        variant="underlined"
-                        hide-details
-                        clearable
-                        append-inner-icon="mdi-magnify"
-                        placeholder="Search..."
-                        @update:model-value="searchRepositories"
-                        @click:clear="onClearSearch"
-                    />
-                    <v-progress-linear
-                        :active="countLoadingPromises > 0"
-                        :indeterminate="countLoadingPromises > 0"
-                        absolute
-                        location="top"
-                    />
-                </v-row>
-            </v-card-title>
-
-            <v-divider class="mb-0"></v-divider>
-
-            <div v-if="showPagination" class="text-center">
-                <v-btn :disabled="!hasPreviousPage" @click="goToPreviousPage">
-                    <v-icon>mdi-chevron-left</v-icon> Back
-                </v-btn>
-                <v-btn :disabled="!hasNextPage" @click="goToNextPage"> Next <v-icon>mdi-chevron-right</v-icon> </v-btn>
+    <BaseDialog v-model="show" title="Add Repositories" icon="folder-plus" :width="700">
+        <template #header-extra>
+            <div class="search-wrap">
+                <input
+                    v-model="searchText"
+                    data-cy="search-field-for-adding-repository"
+                    class="field"
+                    placeholder="Search…"
+                    @input="searchRepositories"
+                />
+                <span class="mdi mdi-magnify search-icon" aria-hidden="true"></span>
             </div>
+        </template>
 
-            <v-card-text class="my-0">
-                <div
-                    data-cy="noRepo"
-                    v-if="unstagedRepositories.length === 0 && countLoadingPromises === 0"
-                    class="text-center"
-                >
-                    Sorry, no repositories were found!
+        <div class="progress" :class="{ active: countLoadingPromises > 0 }"></div>
+
+        <div v-if="showPagination" class="pagination">
+            <button type="button" class="btn btn-outline" :disabled="!hasPreviousPage" @click="goToPreviousPage">
+                <span class="mdi mdi-chevron-left" aria-hidden="true"></span>
+                Back
+            </button>
+            <button type="button" class="btn btn-outline" :disabled="!hasNextPage" @click="goToNextPage">
+                Next
+                <span class="mdi mdi-chevron-right" aria-hidden="true"></span>
+            </button>
+        </div>
+
+        <div v-if="unstagedRepositories.length === 0 && countLoadingPromises === 0" data-cy="noRepo" class="empty">
+            Sorry, no repositories were found!
+        </div>
+        <ul class="repo-list">
+            <li v-for="repo in unstagedRepositories" :key="repo.name" data-cy="listRepo" @click="stageRepository(repo)">
+                <div class="repo-row">
+                    <div class="repo-info">
+                        <span class="repo-title">
+                            {{ repo.name }}
+                            <span class="repo-updated">updated on {{ repo.updated }}</span>
+                        </span>
+                        <span class="repo-desc">{{ repo.description }}</span>
+                    </div>
+                    <span class="mdi mdi-plus" aria-hidden="true"></span>
                 </div>
-                <v-list>
-                    <v-list-item
-                        data-cy="listRepo"
-                        v-for="(item, index) in unstagedRepositories"
-                        class="my-0 py-0"
-                        :key="`item-${index}`"
-                        :value="item"
-                        @click="stageRepostiory(item)"
-                    >
-                        <v-list-item-title class="d-flex">
-                            {{ item.name }}
-                            <span class="repo-updated"> updated on {{ item.updated }} </span>
-                        </v-list-item-title>
-                        <v-list-item-subtitle>{{ item.description }}</v-list-item-subtitle>
-                        <template #append>
-                            <v-icon>mdi-plus</v-icon>
-                        </template>
-                    </v-list-item>
-                </v-list>
-            </v-card-text>
+            </li>
+        </ul>
 
-            <v-divider class="my-0"></v-divider>
-            <v-card-title>Repositories to be added</v-card-title>
-            <v-card-text class="my-0 flex-grow-0 flex-shrink-0 staged-repos">
-                <v-list>
-                    <v-list-item
-                        v-for="(item, index) in repositoriesSelected"
-                        class="my-0 py-0"
-                        :key="`staged-${index}`"
-                        :value="item"
-                        @click="unstageRepostiory(item)"
-                    >
-                        <v-list-item-title>{{ item.name }}</v-list-item-title>
-                        <v-list-item-subtitle>{{ item.description }}</v-list-item-subtitle>
-                        <template #append>
-                            <v-icon>mdi-close</v-icon>
-                        </template>
-                    </v-list-item>
-                </v-list>
-            </v-card-text>
-            <v-divider></v-divider>
-            <v-card-actions class="buttonPadding">
-                <v-spacer></v-spacer>
-                <v-btn
-                    data-cy="addRepoDialog"
-                    variant="text"
-                    color="success"
-                    :disabled="repositoriesSelected.length === 0"
-                    @click="onAddRepositories"
-                >
-                    Add Repositories
-                </v-btn>
-                <v-btn variant="text" color="error" @click="show = false"> Cancel </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+        <h3 class="staged-title">Repositories to be added</h3>
+        <ul class="repo-list staged">
+            <li v-for="repo in repositoriesSelected" :key="repo.name" @click="unstageRepository(repo)">
+                <div class="repo-row">
+                    <div class="repo-info">
+                        <span class="repo-title">{{ repo.name }}</span>
+                        <span class="repo-desc">{{ repo.description }}</span>
+                    </div>
+                    <span class="mdi mdi-close" aria-hidden="true"></span>
+                </div>
+            </li>
+        </ul>
 
-    <v-overlay v-model="showLoadingOverlay" data-cy="loadReposBool" class="align-center justify-center" persistent>
-        <v-progress-circular indeterminate size="64"></v-progress-circular>
-    </v-overlay>
+        <template #actions>
+            <button
+                type="button"
+                data-cy="addRepoDialog"
+                class="btn btn-text-success"
+                :disabled="repositoriesSelected.length === 0"
+                @click="onAddRepositories"
+            >
+                Add Repositories
+            </button>
+            <button type="button" class="btn btn-text-error" @click="show = false">Cancel</button>
+        </template>
+    </BaseDialog>
+
+    <LoadingOverlay data-cy="loadReposBool" :show="showLoadingOverlay" />
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useDisplay } from "vuetify";
+import BaseDialog from "./BaseDialog.vue";
+import LoadingOverlay from "./LoadingOverlay.vue";
 import { loadRepositoryList, searchRepositoryList, loadAllRepositoryContent } from "@/plugins/api";
 import { store } from "@/plugins/store";
 import { useAlert } from "@/composables/useAlert";
 import { debounce } from "@/utils/debounce";
 import type { GitHubRepoSummary } from "@/types/github";
-import type { Repository } from "@/plugins/classes";
 
 interface StagedRepo {
     name: string;
@@ -130,9 +92,7 @@ interface StagedRepo {
 }
 
 const show = defineModel<boolean>({ default: false });
-const emit = defineEmits<{ "repo-added-name": [Repository[]] }>();
 
-const { mobile } = useDisplay();
 const { alert } = useAlert();
 
 const repositoriesSelected = ref<StagedRepo[]>([]);
@@ -149,15 +109,12 @@ const showPagination = computed(() => hasNextPage.value || hasPreviousPage.value
 
 const unstagedRepositories = computed<StagedRepo[]>(() =>
     filterUnstagedRepositories(repositoriesCurrentPage.value)
-        .map((repo) => {
-            const date = new Date(repo.updated_at);
-            return {
-                name: repo.full_name,
-                description: repo.description,
-                repoData: repo,
-                updated: date.toDateString().substr(4, 11)
-            };
-        })
+        .map((repo) => ({
+            name: repo.full_name,
+            description: repo.description,
+            repoData: repo,
+            updated: new Date(repo.updated_at).toDateString().substring(4, 15)
+        }))
         .slice(0, perPage)
 );
 
@@ -174,50 +131,34 @@ void loadRepositories();
 async function loadRepositories(): Promise<void> {
     countLoadingPromises.value++;
     try {
-        const res = await loadRepositoryList();
+        const res = await loadRepositoryList("", page.value, perPage);
         if (!Array.isArray(res)) {
             throw new Error("Could not load repository list.");
         }
         repositoriesCurrentPage.value = res;
-        countLoadingPromises.value--;
     } catch (error) {
         console.error(error);
+    } finally {
+        countLoadingPromises.value--;
     }
-}
-
-function onClearSearch(): void {
-    searchText.value = "";
-    void loadRepositories();
 }
 
 const searchRepositories = debounce(() => {
-    if (searchText.value.startsWith("https://")) {
+    if (searchText.value.trim() === "" || searchText.value.startsWith("https://")) {
         void loadRepositories();
+        return;
     }
-    if (searchText.value.trim() === "") {
-        void loadRepositories();
-    } else {
-        countLoadingPromises.value++;
-        repositoriesCurrentPage.value = [];
-        searchRepositoryList(searchText.value, perPage, repositoriesCurrentPage.value)
-            .then((repos) => {
-                if (!Array.isArray(repos)) {
-                    throw new Error("Could not search repository list.");
-                }
-                countLoadingPromises.value--;
-            })
-            .catch((error: unknown) => console.error(error));
-    }
+    countLoadingPromises.value++;
+    repositoriesCurrentPage.value = [];
+    searchRepositoryList(searchText.value, perPage, repositoriesCurrentPage.value)
+        .then(() => countLoadingPromises.value--)
+        .catch((error: unknown) => console.error(error));
 }, 500);
 
-function filterUnaddedRepositories(repoList: GitHubRepoSummary[]): GitHubRepoSummary[] {
-    return repoList.filter((repo) => !store.addedRepositories.map((r) => r.fullName).includes(repo.full_name));
-}
-
 function filterUnstagedRepositories(repoList: GitHubRepoSummary[]): GitHubRepoSummary[] {
-    return filterUnaddedRepositories(repoList).filter(
-        (repo) => !repositoriesSelected.value.map((r) => r.name).includes(repo.full_name)
-    );
+    const addedNames = store.addedRepositories.map((repo) => repo.fullName);
+    const stagedNames = repositoriesSelected.value.map((repo) => repo.name);
+    return repoList.filter((repo) => !addedNames.includes(repo.full_name) && !stagedNames.includes(repo.full_name));
 }
 
 function goToNextPage(): void {
@@ -234,11 +175,11 @@ function goToPreviousPage(): void {
     }
 }
 
-function stageRepostiory(repo: StagedRepo): void {
+function stageRepository(repo: StagedRepo): void {
     repositoriesSelected.value.push(repo);
 }
 
-function unstageRepostiory(repo: StagedRepo): void {
+function unstageRepository(repo: StagedRepo): void {
     repositoriesSelected.value = repositoriesSelected.value.filter((item) => item !== repo);
 }
 
@@ -256,33 +197,147 @@ async function addRepositories(): Promise<void> {
                 branch: repo.repoData.default_branch
             }))
         );
-        showLoadingOverlay.value = false;
-        emit("repo-added-name", repoObjectList);
         store.addRepositories(repoObjectList);
         repositoriesSelected.value = [];
         searchText.value = "";
-    } catch (e) {
-        errorDialog();
-        console.log(e);
+    } catch (error) {
+        void alert("Sorry, we couldn't load the repositories you requested!", "Error", "error");
+        console.error(error);
+    } finally {
         showLoadingOverlay.value = false;
     }
-}
-
-function errorDialog(): void {
-    void alert("Sorry, we couldn't load the repositories you requested!", "Error", "error");
 }
 </script>
 
 <style scoped>
-/* The "Repositories to be added" list stays compact so the search list keeps most of the dialog. */
-.staged-repos {
-    max-height: 25%;
+.search-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    margin-left: 12px;
 }
 
-/* Styled like the Vuetify 2 v-card-subtitle that sat inline after the repo name. */
+.search-wrap .field {
+    padding-right: 38px;
+}
+
+.search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--adr-ink-3);
+    font-size: 19px;
+    pointer-events: none;
+}
+
+.progress {
+    height: 3px;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.progress.active::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    animation: progress-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes progress-slide {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.empty {
+    text-align: center;
+    color: var(--adr-ink-2);
+    padding: 16px 0;
+}
+
+.repo-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.repo-list.staged {
+    max-height: 140px;
+}
+
+.repo-list li {
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 8px 10px;
+}
+
+.repo-list li:hover {
+    background: var(--adr-surface-2);
+}
+
+.repo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.repo-row > .mdi {
+    color: var(--adr-ink-2);
+    font-size: 18px;
+    flex: 0 0 auto;
+}
+
+.repo-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.repo-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--adr-ink);
+}
+
 .repo-updated {
-    font-size: 0.875rem;
-    color: rgba(0, 0, 0, 0.6);
-    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--adr-ink-2);
+    padding-left: 10px;
+}
+
+.repo-desc {
+    font-size: 12px;
+    color: var(--adr-ink-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.staged-title {
+    margin: 14px 0 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--adr-ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-top: 1px solid var(--adr-line);
+    padding-top: 12px;
 }
 </style>

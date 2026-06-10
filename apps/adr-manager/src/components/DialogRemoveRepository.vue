@@ -1,42 +1,23 @@
 <template>
-    <v-dialog v-model="show" width="600">
-        <template #activator="{ props }">
-            <slot name="activator" :props="props" />
+    <BaseDialog :model-value="show" title="Remove Repository" icon="folder-remove" @update:model-value="emit('close')">
+        <p>Are you sure you want to remove '{{ repoName }}'? Your changes will be deleted!</p>
+        <p>You can always add it again using the 'Add repository' button.</p>
+        <template #actions>
+            <button type="button" data-cy="removeRepoBtn" class="btn btn-text-success" @click="emit('confirm')">
+                Remove
+            </button>
+            <button type="button" class="btn btn-text-error" @click="emit('close')">Cancel</button>
         </template>
-        <v-card>
-            <v-card-title>
-                <div>
-                    <v-avatar color="primary" size="35"> <v-icon color="white">mdi-folder-remove</v-icon></v-avatar>
-                    <span class="dialogTitle"> Remove Repository</span>
-                </div>
-            </v-card-title>
-            <v-divider></v-divider>
-
-            <v-card-text>
-                <div>Are you sure you want to remove '{{ repo?.name }}'? Your changes will be deleted!</div>
-                You can always add it again using the 'Add Repository' button.
-            </v-card-text>
-            <v-divider></v-divider>
-
-            <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn data-cy="removeRepoBtn" variant="text" color="success" @click="removeRepo"> Remove </v-btn>
-                <v-btn variant="text" color="error" @click="show = false"> Cancel </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
+    </BaseDialog>
 </template>
 
 <script setup lang="ts">
-const show = defineModel<boolean>({ default: false });
+import BaseDialog from "./BaseDialog.vue";
 
-defineProps<{ repo?: { name: string } }>();
-const emit = defineEmits<{ "remove-repo": [] }>();
+defineProps<{ show: boolean; repoName: string }>();
 
-function removeRepo(): void {
-    emit("remove-repo");
-    show.value = false;
-}
+const emit = defineEmits<{
+    close: [];
+    confirm: [];
+}>();
 </script>
-
-<style scoped></style>

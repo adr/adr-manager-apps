@@ -15,7 +15,6 @@ export default defineConfig({
         },
         setupNodeEvents(on, config) {
             on("file:preprocessor", vitePreprocessor());
-            // Folded in from the (now removed) deprecated cypress/plugins/index.js.
             codeCoverageTask(on, config);
             return config;
         }

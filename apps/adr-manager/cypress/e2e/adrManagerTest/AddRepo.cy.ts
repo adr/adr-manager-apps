@@ -14,7 +14,7 @@ context("Listing and adding repositories", () => {
         cy.get("[data-cy=listRepo]").should("have.length.greaterThan", 0);
     });
     it("Add all repositories", () => {
-        cy.get("[data-cy=listRepo]").then((listing) => {
+        cy.get("[data-cy=listRepo]").then(() => {
             const numberOfAddedRepositories = 3;
             let counter = 0;
             cy.get("[data-cy=listRepo]").each(() => {

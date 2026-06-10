@@ -1,124 +1,11 @@
 import axios from "axios";
 import { Repository } from "@/plugins/classes";
-import { BASE_URL_REPO, BASE_URL_USER } from "@/plugins/apiConfig/config";
+import { BASE_URL_REPO, BASE_URL_USER } from "./config";
+import { request } from "./request";
 import type { AdrFile } from "@/types/adr";
-import type {
-    GitHubBranch,
-    GitHubCommitAuthor,
-    GitHubContent,
-    GitHubEmail,
-    GitHubFileTree,
-    GitHubRef,
-    GitHubRepoSummary,
-    GitHubShaResponse,
-    GitHubTreeEntry,
-    GitHubTreeInput,
-    GitHubUser
-} from "@/types/github";
+import type { GitHubBranch, GitHubContent, GitHubFileTree, GitHubRepoSummary, GitHubTreeEntry } from "@/types/github";
 
-let repoOwner = "";
-let repoName = "";
-let branch = "";
-
-export function setInfosForApi(currRepoOwner: string, currRepoName: string, currBranch: string): void {
-    repoName = currRepoName;
-    repoOwner = currRepoOwner;
-    branch = currBranch;
-}
-
-export async function getUserEmail(): Promise<GitHubEmail[] | undefined> {
-    return axios
-        .get<GitHubEmail[]>(`${BASE_URL_USER}/public_emails`)
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
-}
-
-export async function getUserName(): Promise<GitHubUser | undefined> {
-    return axios
-        .get<GitHubUser>(BASE_URL_USER)
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
-}
-
-export async function getCommitSha(): Promise<GitHubBranch | undefined> {
-    return axios
-        .get<GitHubBranch>(`${BASE_URL_REPO}/${repoOwner}/${repoName}/branches/${branch}`)
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
-}
-
-export async function createBlobs(file: string): Promise<GitHubShaResponse | undefined> {
-    return axios
-        .post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoOwner}/${repoName}/git/blobs`, {
-            content: file,
-            encoding: "utf-8"
-        })
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
-}
-
-export async function createFileTree(
-    lastCommitSha: string,
-    folderTree: GitHubTreeInput[]
-): Promise<GitHubShaResponse | undefined> {
-    return axios
-        .post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoOwner}/${repoName}/git/trees`, {
-            base_tree: lastCommitSha,
-            tree: folderTree
-        })
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
-}
-
-export async function createCommit(
-    commitMessage: string,
-    authorInfos: GitHubCommitAuthor,
-    lastCommitSha: string,
-    treeSha: string
-): Promise<GitHubShaResponse | undefined> {
-    return axios
-        .post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoOwner}/${repoName}/git/commits`, {
-            message: commitMessage,
-            author: authorInfos,
-            parents: [lastCommitSha],
-            tree: treeSha
-        })
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
-}
-
-export async function pushToGitHub(newCommitSha: string): Promise<GitHubRef | undefined> {
-    return axios
-        .post<GitHubRef>(`${BASE_URL_REPO}/${repoOwner}/${repoName}/git/refs/heads/${branch}`, {
-            ref: "refs/heads/" + branch,
-            sha: newCommitSha
-        })
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
-}
-
-// On error, this returns the message string to preserve the original UI behavior.
+// Returns the error message string on failure so callers can show it inline.
 export async function loadRepositoryList(
     _searchText = "",
     page = 1,
@@ -175,23 +62,11 @@ export async function loadFileTreeOfRepository(
     repoFullName: string,
     branchName: string
 ): Promise<GitHubFileTree | undefined> {
-    return axios
-        .get<GitHubFileTree>(`${BASE_URL_REPO}/${repoFullName}/git/trees/${branchName}?recursive=1`)
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
+    return request(axios.get<GitHubFileTree>(`${BASE_URL_REPO}/${repoFullName}/git/trees/${branchName}?recursive=1`));
 }
 
 export async function loadBranchesName(repo: string, username: string): Promise<GitHubBranch[] | undefined> {
-    return axios
-        .get<GitHubBranch[]>(`${BASE_URL_REPO}/${username}/${repo}/branches?per_page=999`)
-        .then((response) => response.data)
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
+    return request(axios.get<GitHubBranch[]>(`${BASE_URL_REPO}/${username}/${repo}/branches?per_page=999`));
 }
 
 export async function loadRawFile(
@@ -200,7 +75,7 @@ export async function loadRawFile(
     filePath: string
 ): Promise<string | undefined> {
     if (typeof branchName !== "string") {
-        console.log(
+        console.error(
             "Invalid values for loadContentsForRepository. Given Repository full name: " +
                 repoFullName +
                 ", Branch:" +
@@ -210,13 +85,10 @@ export async function loadRawFile(
         );
         return undefined;
     }
-    return axios
-        .get<GitHubContent>(`${BASE_URL_REPO}/${repoFullName}/contents/${filePath}?ref=${branchName}`)
-        .then((response) => decodeUnicode(response.data.content))
-        .catch((err) => {
-            console.log(err);
-            return undefined;
-        });
+    const content = await request(
+        axios.get<GitHubContent>(`${BASE_URL_REPO}/${repoFullName}/contents/${filePath}?ref=${branchName}`)
+    );
+    return content ? decodeUnicode(content.content) : undefined;
 }
 
 function decodeUnicode(str: string): string {
@@ -295,7 +167,6 @@ export async function loadARepositoryContent(repoFullName: string, branchName: s
                 })
             );
         });
-        console.log("adrList", repoObject.adrs);
     }
 
     await Promise.all(adrPromises);

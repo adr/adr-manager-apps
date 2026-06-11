@@ -131,13 +131,16 @@ export function isSingleRootWorkspace(): boolean {
  */
 export async function containsOnlyRootFolders(folderUri: vscode.Uri): Promise<boolean> {
   const directory = await vscode.workspace.fs.readDirectory(folderUri);
+  let folderCount = 0;
   for (const [name, type] of directory) {
-    // skip ".DS_Store" files which may cause problems with macOS users
-    if (type !== vscode.FileType.Directory && name !== ".DS_Store") {
+    if (type === vscode.FileType.Directory) {
+      folderCount++;
+    } else if (name !== ".DS_Store") {
+      // skip ".DS_Store" files which may cause problems with macOS users
       return false;
     }
   }
-  return true;
+  return folderCount > 0;
 }
 
 /**

@@ -36,7 +36,7 @@
       </div>
     </div>
     <template v-if="templateVersion === '4.0.0'">
-      <div class="v4-block">
+      <div v-if="fieldVisibility.consequences" class="v4-block">
         <div class="subhead">
           <h4>Consequences</h4>
           <span class="ver-tag">4.0</span>
@@ -44,7 +44,7 @@
         </div>
         <ConsequenceListEditor :list="consequences" @changed="$emit('updateArray')"></ConsequenceListEditor>
       </div>
-      <div class="v4-block">
+      <div v-if="fieldVisibility.confirmation" class="v4-block">
         <div class="subhead">
           <h4>Confirmation</h4>
           <span class="ver-tag">4.0</span>
@@ -66,8 +66,8 @@
         />
       </div>
     </template>
-    <div v-else class="outcome-cols">
-      <div>
+    <div v-else-if="fieldVisibility.positiveConsequences || fieldVisibility.negativeConsequences" class="outcome-cols">
+      <div v-if="fieldVisibility.positiveConsequences">
         <div class="subhead">
           <h4>Positive Consequences</h4>
           <HelpTooltip>e.g. improvement of a quality attribute, follow-up decisions required, …</HelpTooltip>
@@ -111,7 +111,7 @@
           </div>
         </draggable>
       </div>
-      <div>
+      <div v-if="fieldVisibility.negativeConsequences">
         <div class="subhead">
           <h4>Negative Consequences</h4>
           <HelpTooltip>e.g. afflicted quality attributes, follow-up decisions required, …</HelpTooltip>
@@ -168,6 +168,8 @@ import ConsequenceListEditor from "./ConsequenceListEditor.vue";
 import HelpTooltip from "./HelpTooltip.vue";
 import TemplateHeader from "./TemplateHeader.vue";
 import { createShortTitle } from "../../src/plugins/utils";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import type { FieldVisibility } from "@adr-manager/core";
 
 export default defineComponent({
   name: "TemplateDecisionOutcomeProfessionalSection",
@@ -203,6 +205,10 @@ export default defineComponent({
     templateVersion: {
       type: String,
       default: "2.1.2"
+    },
+    fieldVisibility: {
+      type: Object as PropType<FieldVisibility>,
+      default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
     }
   },
   setup() {

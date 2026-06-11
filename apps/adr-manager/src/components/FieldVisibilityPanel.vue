@@ -1,12 +1,12 @@
 <template>
     <div ref="wrap" class="fvp">
-        <button type="button" class="btn btn-ghost fvp-btn" @click="open = !open">
+        <button type="button" data-cy="fieldsBtn" class="btn btn-ghost fvp-btn" @click="open = !open">
             <span class="mdi mdi-tune-variant" aria-hidden="true"></span>
             Fields
         </button>
-        <div v-if="open" class="menu fvp-panel">
+        <div v-if="open" data-cy="fvp-panel" class="menu fvp-panel">
             <div class="fvp-title">Visible fields</div>
-            <label v-for="item in visibleFields" :key="item.key" class="fvp-row">
+            <label v-for="item in visibleFields" :key="item.key" :data-cy="'fvp-toggle-' + item.key" class="fvp-row">
                 <span class="fvp-label">{{ item.label }}</span>
                 <span class="fvp-switch" :class="{ on: store.fieldVisibility[item.key] }">
                     <input

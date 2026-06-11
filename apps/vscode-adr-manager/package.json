@@ -171,7 +171,9 @@
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@vue/test-utils": "^2.4.6", 
+    "jsdom": "^26.1.0"
   },
   "dependencies": {
     "@adr-manager/core": "workspace:*",

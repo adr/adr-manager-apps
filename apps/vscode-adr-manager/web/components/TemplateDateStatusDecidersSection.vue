@@ -1,6 +1,6 @@
 <template>
   <div class="metabar">
-    <div class="meta-field">
+    <div v-if="fieldVisibility.date" class="meta-field">
       <label>
         Last update
         <HelpTooltip>The date the decision was last updated (YYYY-MM-DD).</HelpTooltip>
@@ -18,7 +18,7 @@
         />
       </span>
     </div>
-    <div class="meta-field">
+    <div v-if="fieldVisibility.status" class="meta-field">
       <label>
         Status
         <HelpTooltip>The current status of the ADR.</HelpTooltip>
@@ -43,7 +43,7 @@
       </span>
     </div>
     <!-- Deciders and decision-makers name the same people, so editing either keeps both in sync. -->
-    <div v-if="templateVersion === '2.1.2'" class="meta-field">
+    <div v-if="templateVersion === '2.1.2' && fieldVisibility.deciders" class="meta-field">
       <label>
         Deciders
         <HelpTooltip>Everyone involved in the decision, e.g. separated with commas.</HelpTooltip>
@@ -64,8 +64,8 @@
         />
       </span>
     </div>
-    <template v-else>
-      <div class="meta-field">
+    <template v-else-if="templateVersion !== '2.1.2'">
+      <div v-if="fieldVisibility.deciders" class="meta-field">
         <label>
           Decision-makers
           <span class="ver-tag">4.0</span>
@@ -87,7 +87,7 @@
           />
         </span>
       </div>
-      <div class="meta-field">
+      <div v-if="fieldVisibility.consulted" class="meta-field">
         <label>
           Consulted
           <span class="ver-tag">4.0</span>
@@ -108,7 +108,7 @@
           />
         </span>
       </div>
-      <div class="meta-field">
+      <div v-if="fieldVisibility.informed" class="meta-field">
         <label>
           Informed
           <span class="ver-tag">4.0</span>
@@ -134,8 +134,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, PropType } from "vue";
 import HelpTooltip from "./HelpTooltip.vue";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import type { FieldVisibility } from "@adr-manager/core";
 
 const STATUS_TONES = ["proposed", "rejected", "accepted", "deprecated", "superseded"];
 
@@ -154,6 +156,10 @@ export default defineComponent({
     templateVersion: {
       type: String,
       default: "2.1.2"
+    },
+    fieldVisibility: {
+      type: Object as PropType<FieldVisibility>,
+      default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
     }
   },
   computed: {

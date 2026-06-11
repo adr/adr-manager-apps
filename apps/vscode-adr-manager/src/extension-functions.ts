@@ -1,10 +1,14 @@
 // Functions using the VS Code Extension API
 import * as vscode from "vscode";
 import type { AdrInit, Option } from "@adr-manager/core";
+
+let _extensionContext: vscode.ExtensionContext;
+export function setExtensionContext(ctx: vscode.ExtensionContext): void {
+  _extensionContext = ctx;
+}
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import {
   adrTemplatemarkdownContent,
-  EXTENSION_URI,
   initialMarkdownContent,
   readmeMarkdownContent
 } from "./plugins/constants";
@@ -513,7 +517,7 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
             fileName
           );
           await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
-          WebPanel.createOrShow(EXTENSION_URI, "main");
+          WebPanel.createOrShow(_extensionContext, "main");
           // Show success message and potentially open file in separate editor
           const open = await vscode.window.showInformationMessage(
             "ADR created. Do you want to open the Markdown file?",

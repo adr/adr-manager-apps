@@ -15,7 +15,8 @@ import {
   treatAsMultiRoot,
   getAllMDs,
   getAdrDirectoryString,
-  isDiagnosticsEnabled
+  isDiagnosticsEnabled,
+  setExtensionContext
 } from "./extension-functions";
 import { WebPanel } from "./WebPanel";
 import { parseAdr } from "./plugins/parser";
@@ -28,6 +29,8 @@ import { AdrManagerCodeActionProvider } from "./AdrManagerCodeActionProvider";
  * @param context The context of the extension (automatically provided by the extension)
  */
 export function activate(context: vscode.ExtensionContext) {
+  setExtensionContext(context);
+
   // Add custom when clause context for ADR Directory
   updateWhenClauseContexts();
 
@@ -37,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Open ADR Manager Main Webview
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.openMainWebView", () => {
-      WebPanel.createOrShow(context.extensionUri, "main");
+      WebPanel.createOrShow(context, "main");
     })
   );
 
@@ -46,12 +49,12 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("vscode-adr-manager.openAddAdrWebView", (page?: string) => {
       if (!page) {
         if (getAddEditorMode() === "basic") {
-          WebPanel.createOrShow(context.extensionUri, "add-basic");
+          WebPanel.createOrShow(context, "add-basic");
         } else {
-          WebPanel.createOrShow(context.extensionUri, "add-professional");
+          WebPanel.createOrShow(context, "add-professional");
         }
       } else {
-        WebPanel.createOrShow(context.extensionUri, page);
+        WebPanel.createOrShow(context, page);
       }
     })
   );
@@ -64,17 +67,17 @@ export function activate(context: vscode.ExtensionContext) {
         if (!page) {
           if (getViewEditorMode() === "sufficient") {
             if ((await determineViewEditorMode(mdString)) === "basic") {
-              WebPanel.createOrShow(context.extensionUri, "view-basic");
+              WebPanel.createOrShow(context, "view-basic");
             } else {
-              WebPanel.createOrShow(context.extensionUri, "view-professional");
+              WebPanel.createOrShow(context, "view-professional");
             }
           } else if (getViewEditorMode() === "basic") {
-            WebPanel.createOrShow(context.extensionUri, "view-basic");
+            WebPanel.createOrShow(context, "view-basic");
           } else {
-            WebPanel.createOrShow(context.extensionUri, "view-professional");
+            WebPanel.createOrShow(context, "view-professional");
           }
         } else {
-          WebPanel.createOrShow(context.extensionUri, page);
+          WebPanel.createOrShow(context, page);
         }
       }
     )
@@ -140,7 +143,7 @@ export function activate(context: vscode.ExtensionContext) {
           );
         } else {
           if (!WebPanel.currentPanel) {
-            WebPanel.createOrShow(context.extensionUri, "main");
+            WebPanel.createOrShow(context, "main");
           }
           WebPanel.currentPanel!.viewAdr(file.uri);
           if (
@@ -166,7 +169,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
       } else {
         if (!WebPanel.currentPanel) {
-          WebPanel.createOrShow(context.extensionUri, "main");
+          WebPanel.createOrShow(context, "main");
         }
         WebPanel.currentPanel!.viewAdr(uri);
         if (

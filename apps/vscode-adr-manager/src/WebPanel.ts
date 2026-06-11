@@ -16,6 +16,8 @@ import {
 } from "./extension-functions";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { detectMadrVersion, parseAdr } from "./plugins/parser";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import type { FieldVisibility } from "@adr-manager/core";
 
 export class WebPanel {
   /**
@@ -27,14 +29,15 @@ export class WebPanel {
 
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
+  private readonly _context: vscode.ExtensionContext;
   private _disposables: vscode.Disposable[] = [];
 
   /**
    * Creates or shows a panel that displays a webview with the specified view using a string key.
-   * @param extensionUri The URI of the context the extension is running in (provided by VS Code)
+   * @param context The extension context, used for extensionUri and globalState persistence
    * @param page A string key for a specific web view page
    */
-  public static createOrShow(extensionUri: vscode.Uri, page: string) {
+  public static createOrShow(context: vscode.ExtensionContext, page: string) {
     const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
     // If we already have a panel, show it.
@@ -50,18 +53,19 @@ export class WebPanel {
       retainContextWhenHidden: true
     });
 
-    WebPanel.currentPanel = new WebPanel(panel, extensionUri, page);
+    WebPanel.currentPanel = new WebPanel(panel, context, page);
   }
 
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, page: string) {
+  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, page: string) {
     this._panel = panel;
-    this._extensionUri = extensionUri;
+    this._extensionUri = context.extensionUri;
+    this._context = context;
 
     // Set the webview's initial html content
     this._update(page);
 
     // Set the panel icon
-    this._panel.iconPath = vscode.Uri.joinPath(extensionUri, "assets/logo.png");
+    this._panel.iconPath = vscode.Uri.joinPath(this._extensionUri, "assets/logo.png");
 
     // listen for changes on Markdown files to dynamically update ADR list in webview
     this.watchForWorkspaceChanges();
@@ -83,6 +87,7 @@ export class WebPanel {
           }
           case "add": {
             vscode.commands.executeCommand("vscode-adr-manager.openAddAdrWebView");
+            this._pushFieldVisibility();
             return;
           }
           case "view": {
@@ -175,6 +180,7 @@ export class WebPanel {
             vscode.commands.executeCommand("vscode-adr-manager.openAddAdrWebView", "add-professional");
             // restore data from before the switch
             this._panel.webview.postMessage({ command: "fetchAdrValues", adr: e.data });
+            this._pushFieldVisibility();
             return;
           }
           case "switchAddViewProfessionalToBasic": {
@@ -188,6 +194,7 @@ export class WebPanel {
             vscode.commands.executeCommand("vscode-adr-manager.openViewAdrWebView", "", "view-professional");
             // restore data from before the switch
             this._panel.webview.postMessage({ command: "fetchAdrValues", adr: e.data });
+            this._pushFieldVisibility();
             return;
           }
           case "switchViewingViewProfessionalToBasic": {
@@ -204,6 +211,18 @@ export class WebPanel {
               vscode.window.showErrorMessage("The ADR file has changed unexpectedly.");
               vscode.commands.executeCommand("vscode-adr-manager.openMainWebView");
             }
+            return;
+          }
+          case "getFieldVisibility": {
+            const saved = this._context.globalState.get<FieldVisibility>("fieldVisibility", {
+              ...DEFAULT_FIELD_VISIBILITY
+            });
+            this._panel.webview.postMessage({ command: "fieldVisibility", fieldVisibility: saved });
+            return;
+          }
+          case "updateFieldVisibility": {
+            await this._context.globalState.update("fieldVisibility", e.data);
+            return;
           }
         }
       },
@@ -250,6 +269,7 @@ export class WebPanel {
         fullPath: fileUri.path
       })
     });
+    this._pushFieldVisibility();
   }
 
   /**
@@ -270,13 +290,28 @@ export class WebPanel {
   }
 
   /**
+   * Reads the saved field-visibility map from globalState and pushes it to the
+   * webview as a "fieldVisibility" message.  Called proactively whenever a
+   * professional view loads so the webview never has to wait for a round-trip.
+   */
+  private _pushFieldVisibility(): void {
+    const saved = this._context.globalState.get<FieldVisibility>("fieldVisibility", {
+      ...DEFAULT_FIELD_VISIBILITY
+    });
+    this._panel.webview.postMessage({ command: "fieldVisibility", fieldVisibility: saved });
+  }
+
+  /**
    * Renders the specified view in the webview using a string key.
    * @param page A string key for a specific web view page
    */
   private _update(page: string) {
     const webview = this._panel.webview;
     this._updatePanelTitle(page);
-    this._panel.webview.html = this._getHtmlForWebview(webview, page);
+    const fieldVisibility = this._context.globalState.get<FieldVisibility>("fieldVisibility", {
+      ...DEFAULT_FIELD_VISIBILITY
+    });
+    this._panel.webview.html = this._getHtmlForWebview(webview, page, fieldVisibility);
   }
 
   /**
@@ -319,7 +354,7 @@ export class WebPanel {
    * @returns The HTML content to be rendered by the webview as a string. Note that Vue mounts the div with the
    * 			ID "app" depending on the specified web view page.
    */
-  private _getHtmlForWebview(webview: vscode.Webview, page: string) {
+  private _getHtmlForWebview(webview: vscode.Webview, page: string, fieldVisibility: FieldVisibility) {
     // Local path to main script run in the webview
     const SCRIPT_URI = vscode.Uri.joinPath(this._extensionUri, "dist/web", `${page}.js`);
     // URI to load the script in the webview
@@ -352,6 +387,7 @@ export class WebPanel {
 				<div id="app"></div>
 				<script NONCE="${NONCE}">
 					const vscode = acquireVsCodeApi();
+					window.__INITIAL_FIELD_VISIBILITY__ = ${JSON.stringify(fieldVisibility)};
 				</script>
 				<script NONCE="${NONCE}" src="${SCRIPT_WEB_URI}"></script>
 			</body>

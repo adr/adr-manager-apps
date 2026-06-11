@@ -35,7 +35,7 @@
             </span>
         </div>
 
-        <template v-else>
+        <template v-else-if="templateVersion !== '2.1.2'">
             <div v-if="fieldVisibility.deciders" class="meta-field">
                 <label>
                     Decision-makers

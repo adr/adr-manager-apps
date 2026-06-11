@@ -1,6 +1,7 @@
 //@ts-nocheck
 // Vue mixin which holds all the data used by the webview to save a new/edited ADR
 import { naturalCase2titleCase } from "../../src/plugins/utils";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 
 export default {
   data() {
@@ -35,7 +36,8 @@ export default {
       confirmation: "",
       moreInformation: "",
       templateVersion: "2.1.2",
-      fullPath: ""
+      fullPath: "",
+      fieldVisibility: { ...DEFAULT_FIELD_VISIBILITY }
     };
   },
   computed: {
@@ -201,6 +203,53 @@ export default {
       this.validated = false;
     },
     /**
+     * Toggles a single field's visibility, then persists the full map to globalState via the extension host.
+     */
+    setFieldVisibility(key: string, value: boolean) {
+      this.fieldVisibility[key] = value;
+      // Spread into a plain object — Vue 3's reactive proxy fails to serialize
+      // when passed directly to vscode.postMessage (structured-clone can't handle it).
+      this.sendMessage("updateFieldVisibility", { ...this.fieldVisibility });
+    },
+    /**
+     * Builds a field payload with hidden fields cleared, mirroring applyFieldVisibilityFilter from core.
+     * Operating inline here avoids importing ArchitecturalDecisionRecord into the webview bundle.
+     */
+    _filteredProfessionalPayload() {
+      const fv = this.fieldVisibility;
+      return {
+        yaml: this.yaml,
+        title: this.title,
+        date: fv.date ? this.date : "",
+        status: fv.status ? this.status : "",
+        deciders: fv.deciders ? this.deciders : "",
+        technicalStory: fv.technicalStory ? this.technicalStory : "",
+        contextAndProblemStatement: this.contextAndProblemStatement,
+        decisionDrivers: fv.decisionDrivers ? this.decisionDrivers : [],
+        consideredOptions: this.consideredOptions.map((opt) => ({
+          ...opt,
+          description: fv.optionDescription ? opt.description : "",
+          pros: fv.optionProsAndCons ? opt.pros : [],
+          neutrals: fv.optionProsAndCons ? opt.neutrals : [],
+          cons: fv.optionProsAndCons ? opt.cons : []
+        })),
+        decisionOutcome: {
+          chosenOption: this.decisionOutcome.chosenOption,
+          explanation: this.decisionOutcome.explanation,
+          positiveConsequences: fv.positiveConsequences ? this.decisionOutcome.positiveConsequences : [],
+          negativeConsequences: fv.negativeConsequences ? this.decisionOutcome.negativeConsequences : []
+        },
+        links: fv.links ? this.links.filter((link) => link) : [],
+        decisionMakers: fv.deciders ? this.decisionMakers : "",
+        consulted: fv.consulted ? this.consulted : "",
+        informed: fv.informed ? this.informed : "",
+        consequences: fv.consequences ? this.consequences : [],
+        confirmation: fv.confirmation ? this.confirmation : "",
+        moreInformation: fv.moreInformation ? this.moreInformation : "",
+        templateVersion: this.templateVersion
+      };
+    },
+    /**
      * Sends a message to the extension to create and save the ADR as a Markdown file
      * in the ADR directory.
      */
@@ -219,59 +268,21 @@ export default {
           })
         );
       } else {
-        this.sendMessage(
-          type,
-          JSON.stringify({
-            yaml: this.yaml,
-            title: this.title,
-            date: this.date,
-            status: this.status,
-            deciders: this.deciders,
-            technicalStory: this.technicalStory,
-            contextAndProblemStatement: this.contextAndProblemStatement,
-            decisionDrivers: this.decisionDrivers,
-            consideredOptions: this.consideredOptions,
-            decisionOutcome: this.decisionOutcome,
-            links: this.links.filter((link) => link),
-            decisionMakers: this.decisionMakers,
-            consulted: this.consulted,
-            informed: this.informed,
-            consequences: this.consequences,
-            confirmation: this.confirmation,
-            moreInformation: this.moreInformation,
-            templateVersion: this.templateVersion
-          })
-        );
+        this.sendMessage(type, JSON.stringify(this._filteredProfessionalPayload()));
       }
     },
     /**
-     * Sends a message to the extension to create and save the ADR as a Markdown file
-     * in the ADR directory.
+     * Sends a message to the extension to save an existing ADR as a Markdown file.
      */
     saveAdr() {
+      const payload = this._filteredProfessionalPayload();
       this.sendMessage(
         "saveAdr",
         JSON.stringify({
           adr: {
-            yaml: this.yaml,
-            title: this.title,
+            ...payload,
+            status: this.templateVersion === "4.0.0" ? payload.status : naturalCase2titleCase(payload.status),
             oldTitle: this.oldTitle,
-            date: this.date,
-            status: this.templateVersion === "4.0.0" ? this.status : naturalCase2titleCase(this.status),
-            deciders: this.deciders,
-            technicalStory: this.technicalStory,
-            contextAndProblemStatement: this.contextAndProblemStatement,
-            decisionDrivers: this.decisionDrivers,
-            consideredOptions: this.consideredOptions,
-            decisionOutcome: this.decisionOutcome,
-            links: this.links,
-            decisionMakers: this.decisionMakers,
-            consulted: this.consulted,
-            informed: this.informed,
-            consequences: this.consequences,
-            confirmation: this.confirmation,
-            moreInformation: this.moreInformation,
-            templateVersion: this.templateVersion,
             fullPath: this.fullPath
           }
         })
@@ -285,6 +296,17 @@ export default {
     }
   },
   mounted() {
+    // Apply the field visibility baked into the webview HTML by the extension host.
+    // Reading it synchronously here avoids a race where async message delivery could
+    // arrive before window.addEventListener is registered below.
+    if (window.__INITIAL_FIELD_VISIBILITY__) {
+      this.fieldVisibility = window.__INITIAL_FIELD_VISIBILITY__;
+    }
+
+    // Request persisted field visibility from the extension host (updates fieldVisibility
+    // when the round-trip completes, confirming the embedded value).
+    this.sendMessage("getFieldVisibility");
+
     // add listeners to receive data from extension
     window.addEventListener("message", (event) => {
       const message = event.data;
@@ -299,6 +321,10 @@ export default {
         }
         case "updateFileStatus": {
           this.sendMessage("updateFileStatus", { fullPath: this.fullPath });
+          break;
+        }
+        case "fieldVisibility": {
+          this.fieldVisibility = message.fieldVisibility;
           break;
         }
       }

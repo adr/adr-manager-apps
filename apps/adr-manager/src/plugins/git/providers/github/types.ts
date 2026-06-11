@@ -1,6 +1,5 @@
 /**
- * Minimal typings for the GitHub REST responses the app actually reads.
- * Only the fields consumed by `api.ts` / the commit + add-repository dialogs are modeled.
+ * Minimal typings for the GitHub REST responses the provider actually reads.
  */
 
 export interface GitHubUser {
@@ -50,11 +49,6 @@ export interface GitHubShaResponse {
 export interface GitHubRef {
     ref: string;
     object: { sha: string };
-}
-
-export interface GitHubCommitAuthor {
-    name: string;
-    email: string;
 }
 
 /** A single entry in the tree sent when creating a commit (`sha: null` deletes a file). */

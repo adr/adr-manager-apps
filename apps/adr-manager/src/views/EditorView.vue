@@ -91,6 +91,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { getActiveProvider } from "@/plugins/git";
 import { store } from "@/plugins/store";
 import { useAdrEditor } from "@/composables/useAdrEditor";
 import { useBranchSelection } from "@/composables/useBranchSelection";
@@ -163,6 +164,7 @@ function copyMarkdown(): void {
 }
 
 function logOut(): void {
+    getActiveProvider().signOut();
     localStorage.clear();
     store.setMode("basic");
     router.push("/");

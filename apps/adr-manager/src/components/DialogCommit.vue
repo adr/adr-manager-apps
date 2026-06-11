@@ -87,7 +87,8 @@ import { computed, ref, watch } from "vue";
 import AutoGrowTextarea from "./AutoGrowTextarea.vue";
 import BaseDialog from "./BaseDialog.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
-import { pushSelectedFilesToGitHub } from "@/composables/useCommitPush";
+import { pushSelectedFiles } from "@/composables/useCommitPush";
+import { getActiveProvider } from "@/plugins/git";
 import { store } from "@/plugins/store";
 import { useAlert } from "@/composables/useAlert";
 import type { CommitFile } from "@/types/commit";
@@ -115,7 +116,7 @@ const branch = ref("");
 const commitMessage = ref("");
 const loading = ref(false);
 const openGroups = ref<string[]>([]);
-const gitHubTimeout = ref(false);
+const commitCooldown = ref(false);
 
 const fileGroups = computed<FileGroup[]>(() =>
     [
@@ -148,8 +149,8 @@ watch(show, (visible) => {
     if (!visible) {
         return;
     }
-    if (gitHubTimeout.value) {
-        alert("Latency problem with GitHub Api. Please wait ~60 seconds!", "Warning", "warning").then(
+    if (commitCooldown.value) {
+        alert("Latency problem with the git provider API. Please wait ~60 seconds!", "Warning", "warning").then(
             () => (show.value = false)
         );
         return;
@@ -157,7 +158,7 @@ watch(show, (visible) => {
     commitMessage.value = "";
     openGroups.value = [];
     store.setCurrentRepositoryForCommit(props.repoFullName);
-    store.setInfoForCommit();
+    store.loadUserInfo();
     branch.value = store.getBranchCommit();
     changedFiles.value = store.changedFilesInRepo();
     newFiles.value = store.newFilesInRepo();
@@ -183,28 +184,30 @@ function onCommit(): void {
     push();
 }
 
-/**
- * GitHub needs ~a minute before the new commit sha is consistently readable, so a push
- * within that window risks overwriting the previous one with an outdated parent sha.
- */
-function startGitHubTimeout(): void {
-    gitHubTimeout.value = true;
+function startCommitCooldown(): void {
+    const cooldownMs = getActiveProvider().commitCooldownMs;
+    if (cooldownMs === 0) {
+        return;
+    }
+    commitCooldown.value = true;
     setTimeout(() => {
-        gitHubTimeout.value = false;
-    }, 60000);
+        commitCooldown.value = false;
+    }, cooldownMs);
 }
 
 async function push(): Promise<void> {
     loading.value = true;
     try {
-        const pushedFiles = await pushSelectedFilesToGitHub({
+        const pushedFiles = await pushSelectedFiles({
+            repoFullName: props.repoFullName,
+            branch: branch.value,
             changedFiles: changedFiles.value,
             newFiles: newFiles.value,
             deletedFiles: deletedFiles.value,
             commitMessage: commitMessage.value,
             author: { name: store.getUserName(), email: store.getUserEmail() }
         });
-        startGitHubTimeout();
+        startCommitCooldown();
         store.updateLocalStorageAfterCommit(pushedFiles);
         alert("Successfully pushed", "Success", "success");
     } catch (error) {

@@ -17,15 +17,27 @@
             <h1>Manage your Architectural Decision Records</h1>
             <p>
                 Architectural Decision Records are a way to quickly write down Architectural Decisions. <br />
-                This tool is meant to make the editing and management of ADRs on GitHub easier.
+                This tool is meant to make the editing and management of ADRs on GitHub and GitLab easier.
             </p>
-            <ConnectToGitHubButton />
+            <div class="connect-actions">
+                <ProviderSignInButton provider="github" label="Connect to GitHub" icon="github" />
+                <button type="button" class="btn btn-primary connect-btn" @click="showGitLabDialog = true">
+                    <span class="mdi mdi-gitlab" aria-hidden="true"></span>
+                    Connect to GitLab
+                </button>
+            </div>
         </main>
     </div>
+
+    <DialogConnectGitLab v-model="showGitLabDialog" />
 </template>
 
 <script setup lang="ts">
-import ConnectToGitHubButton from "@/components/ConnectToGitHubButton.vue";
+import { ref } from "vue";
+import DialogConnectGitLab from "@/components/DialogConnectGitLab.vue";
+import ProviderSignInButton from "@/components/ProviderSignInButton.vue";
+
+const showGitLabDialog = ref(false);
 </script>
 
 <style scoped>
@@ -112,5 +124,22 @@ import ConnectToGitHubButton from "@/components/ConnectToGitHubButton.vue";
     color: var(--adr-ink-2);
     font-size: 15px;
     line-height: 1.6;
+}
+
+.connect-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.connect-btn {
+    height: 44px;
+    padding: 0 22px;
+    font-size: 14px;
+}
+
+.connect-btn .mdi {
+    font-size: 20px;
 }
 </style>

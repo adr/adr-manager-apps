@@ -1,7 +1,17 @@
-import type { GitHubRepoSummary } from "@/types/github";
+import type { GitHubRepoSummary } from "@/plugins/git/providers/github/types";
+import type { RepoSummary } from "@/types/git";
 
 /** A GitHub repo payload fixture: the fields the app reads, plus the rest of the noise. */
 type RepoFixture = GitHubRepoSummary & Record<string, unknown>;
+
+export function toExpectedSummaries(repos: RepoFixture[]): RepoSummary[] {
+    return repos.map((repo) => ({
+        fullName: repo.full_name,
+        defaultBranch: repo.default_branch,
+        description: repo.description,
+        updatedAt: repo.updated_at
+    }));
+}
 
 /**
  * Data for mocking the GitHub API

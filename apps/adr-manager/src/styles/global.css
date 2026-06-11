@@ -1,5 +1,4 @@
-/* Input and mono typefaces used by the design system (Roboto ships with the app). */
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap");
+/* Typefaces are self-hosted via fontsource imports in main.ts (offline requirement). */
 @import "./tokens.css";
 
 *,

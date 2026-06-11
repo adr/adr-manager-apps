@@ -37,7 +37,12 @@ export function useEditorRouteSync(props: EditorRouteProps) {
         }
         // Push to the named sub-route that actually declares these params (Router 4 discards
         // params that the target route's path doesn't define).
-        const [organization, repo] = (newRouteData.repoFullName ?? "").split("/");
+        // Split on the last slash: GitLab subgroup paths put extra slashes in the organization
+        // part, and the route props reassemble the two params back into the full path.
+        const fullName = newRouteData.repoFullName ?? "";
+        const lastSlash = fullName.lastIndexOf("/");
+        const organization = lastSlash > 0 ? fullName.slice(0, lastSlash) : "";
+        const repo = lastSlash > 0 ? fullName.slice(lastSlash + 1) : "";
         if (organization && repo && newRouteData.branch && newRouteData.adrName) {
             router.push({
                 name: "EditorWithSpecifiedAdr",

@@ -1,13 +1,15 @@
-import { createBlobs, createCommit, createFileTree, getCommitSha, pushToGitHub } from "@/plugins/api";
+import { getActiveProvider } from "@/plugins/git";
+import type { CommitAuthor, FileChange } from "@/types/git";
 import type { CommitFile, PushedFile } from "@/types/commit";
-import type { GitHubCommitAuthor, GitHubTreeInput } from "@/types/github";
 
 interface CommitPushInput {
+    repoFullName: string;
+    branch: string;
     changedFiles: CommitFile[];
     newFiles: CommitFile[];
     deletedFiles: CommitFile[];
     commitMessage: string;
-    author: GitHubCommitAuthor;
+    author: CommitAuthor;
 }
 
 function selectedFiles(files: CommitFile[]): CommitFile[] {
@@ -18,7 +20,9 @@ function pushedFile(file: CommitFile): PushedFile {
     return { path: file.path, type: file.fileStatus };
 }
 
-export async function pushSelectedFilesToGitHub({
+export async function pushSelectedFiles({
+    repoFullName,
+    branch,
     changedFiles,
     newFiles,
     deletedFiles,
@@ -29,39 +33,24 @@ export async function pushSelectedFilesToGitHub({
     const selectedDeletedFiles = selectedFiles(deletedFiles);
     const pushedFiles = [...selectedChangedAndNewFiles, ...selectedDeletedFiles].map(pushedFile);
 
-    const lastCommit = await getCommitSha();
-    if (!lastCommit) {
-        throw new Error("Could not load the latest commit.");
-    }
+    const changes: FileChange[] = [
+        ...selectedChangedAndNewFiles.map(
+            (file): FileChange => ({
+                action: file.fileStatus === "new" ? "create" : "update",
+                path: file.path,
+                content: file.value
+            })
+        ),
+        ...selectedDeletedFiles.map((file): FileChange => ({ action: "delete", path: file.path, content: "" }))
+    ];
 
-    const fileTree: GitHubTreeInput[] = await Promise.all(
-        selectedChangedAndNewFiles.map(async (file) => {
-            const blob = await createBlobs(file.value);
-            if (!blob) {
-                throw new Error(`Could not create blob for ${file.path}.`);
-            }
-            return { path: file.path, mode: "100644", type: "blob", sha: blob.sha };
-        })
-    );
-
-    selectedDeletedFiles.forEach((file) => {
-        fileTree.push({ path: file.path, mode: "100644", type: "blob", sha: null });
+    await getActiveProvider().commitFiles({
+        repoFullName,
+        branch,
+        message: commitMessage,
+        author,
+        changes
     });
-
-    const tree = await createFileTree(lastCommit.commit.sha, fileTree);
-    if (!tree) {
-        throw new Error("Could not create the file tree.");
-    }
-
-    const commit = await createCommit(commitMessage, author, lastCommit.commit.sha, tree.sha);
-    if (!commit) {
-        throw new Error("Could not create the commit.");
-    }
-
-    const pushedRef = await pushToGitHub(commit.sha);
-    if (!pushedRef) {
-        throw new Error("Could not push the commit.");
-    }
 
     return pushedFiles;
 }

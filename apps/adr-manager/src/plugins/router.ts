@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 import LandingPage from "@/views/LandingPage.vue";
 import EditorView from "@/views/EditorView.vue";
 import ErrorPage from "@/views/ErrorPage.vue";
-import { lsGet } from "@/plugins/storage";
+import { getActiveProvider } from "@/plugins/git";
 
 const routes: RouteRecordRaw[] = [
     {
@@ -81,7 +81,7 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
     if (to.matched.some((record) => record.meta.requiresAuth)) {
-        if (!lsGet("authId")) {
+        if (!getActiveProvider().isAuthenticated()) {
             next({ path: "/login", query: { redirect: to.fullPath } });
         } else {
             next();

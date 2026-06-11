@@ -78,16 +78,16 @@
 import { computed, ref, watch } from "vue";
 import BaseDialog from "./BaseDialog.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
-import { loadRepositoryList, searchRepositoryList, loadAllRepositoryContent } from "@/plugins/api";
+import { getActiveProvider, loadAllRepositoryContent } from "@/plugins/git";
 import { store } from "@/plugins/store";
 import { useAlert } from "@/composables/useAlert";
 import { debounce } from "@/utils/debounce";
-import type { GitHubRepoSummary } from "@/types/github";
+import type { RepoSummary } from "@/types/git";
 
 interface StagedRepo {
     name: string;
     description: string | null;
-    repoData: GitHubRepoSummary;
+    repoData: RepoSummary;
     updated: string;
 }
 
@@ -96,7 +96,7 @@ const show = defineModel<boolean>({ default: false });
 const { alert } = useAlert();
 
 const repositoriesSelected = ref<StagedRepo[]>([]);
-const repositoriesCurrentPage = ref<GitHubRepoSummary[]>([]);
+const repositoriesCurrentPage = ref<RepoSummary[]>([]);
 const showLoadingOverlay = ref(false);
 const countLoadingPromises = ref(0);
 const searchText = ref("");
@@ -110,10 +110,10 @@ const showPagination = computed(() => hasNextPage.value || hasPreviousPage.value
 const unstagedRepositories = computed<StagedRepo[]>(() =>
     filterUnstagedRepositories(repositoriesCurrentPage.value)
         .map((repo) => ({
-            name: repo.full_name,
+            name: repo.fullName,
             description: repo.description,
             repoData: repo,
-            updated: new Date(repo.updated_at).toDateString().substring(4, 15)
+            updated: new Date(repo.updatedAt).toDateString().substring(4, 15)
         }))
         .slice(0, perPage)
 );
@@ -131,11 +131,7 @@ loadRepositories();
 async function loadRepositories(): Promise<void> {
     countLoadingPromises.value++;
     try {
-        const res = await loadRepositoryList("", page.value, perPage);
-        if (!Array.isArray(res)) {
-            throw new Error("Could not load repository list.");
-        }
-        repositoriesCurrentPage.value = res;
+        repositoriesCurrentPage.value = await getActiveProvider().listRepositories(page.value, perPage);
     } catch (error) {
         console.error(error);
     } finally {
@@ -150,15 +146,19 @@ const searchRepositories = debounce(() => {
     }
     countLoadingPromises.value++;
     repositoriesCurrentPage.value = [];
-    searchRepositoryList(searchText.value, perPage, repositoriesCurrentPage.value)
-        .then(() => countLoadingPromises.value--)
-        .catch((error: unknown) => console.error(error));
+    getActiveProvider()
+        .searchRepositories(searchText.value, perPage)
+        .then((results) => {
+            repositoriesCurrentPage.value = results;
+        })
+        .catch((error: unknown) => console.error(error))
+        .finally(() => countLoadingPromises.value--);
 }, 500);
 
-function filterUnstagedRepositories(repoList: GitHubRepoSummary[]): GitHubRepoSummary[] {
+function filterUnstagedRepositories(repoList: RepoSummary[]): RepoSummary[] {
     const addedNames = store.addedRepositories.map((repo) => repo.fullName);
     const stagedNames = repositoriesSelected.value.map((repo) => repo.name);
-    return repoList.filter((repo) => !addedNames.includes(repo.full_name) && !stagedNames.includes(repo.full_name));
+    return repoList.filter((repo) => !addedNames.includes(repo.fullName) && !stagedNames.includes(repo.fullName));
 }
 
 function goToNextPage(): void {
@@ -193,8 +193,8 @@ async function addRepositories(): Promise<void> {
     try {
         const repoObjectList = await loadAllRepositoryContent(
             repositoriesSelected.value.map((repo) => ({
-                fullName: repo.repoData.full_name,
-                branch: repo.repoData.default_branch
+                fullName: repo.repoData.fullName,
+                branch: repo.repoData.defaultBranch
             }))
         );
         store.addRepositories(repoObjectList);

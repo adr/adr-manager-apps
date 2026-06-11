@@ -7,7 +7,7 @@ import { reactive } from "vue";
 import sanitize from "sanitize-filename";
 import { ArchitecturalDecisionRecord, Repository, isValidAdr, isValidRepoList } from "@/plugins/classes";
 import { adr2md, naturalCase2snakeCase } from "@/plugins/parser";
-import { setInfosForApi, getUserName, getUserEmail } from "@/plugins/api";
+import { getActiveProvider } from "@/plugins/git";
 import { lsGet, lsSet } from "@/plugins/storage";
 import type { AdrFile } from "@/types/adr";
 import type { Mode } from "@/types/store";
@@ -210,28 +210,14 @@ export const store = reactive({
         }
     },
 
-    async setName(): Promise<void> {
+    async loadUserInfo(): Promise<void> {
         try {
-            const res = await getUserName();
-            if (!res) {
+            const user = await getActiveProvider().getUser();
+            if (!user) {
                 return;
             }
-            this.name = res.name === null ? res.login : res.name;
-        } catch (error) {
-            console.error(error);
-        }
-    },
-
-    async setEmail(): Promise<void> {
-        try {
-            const res = await getUserEmail();
-            if (res && res.length >= 1) {
-                for (const emailEntry of res) {
-                    if (!this.userMail || emailEntry.primary) {
-                        this.userMail = emailEntry.email;
-                    }
-                }
-            }
+            this.name = user.displayName;
+            this.userMail = user.email;
         } catch (error) {
             console.error(error);
         }
@@ -298,17 +284,6 @@ export const store = reactive({
             fileSelected: false,
             fileStatus: fileType
         };
-    },
-
-    async setInfoForCommit(): Promise<void> {
-        await this.setName();
-        await this.setEmail();
-        const repo = this.currentRepositoryForCommit;
-        if (!repo) {
-            return;
-        }
-        const [owner, name] = repo.fullName.split("/");
-        setInfosForApi(owner ?? "", name ?? "", repo.activeBranch);
     },
 
     updateLocalStorageAfterCommit(pushedFiles: PushedFile[]): void {

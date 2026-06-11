@@ -1,6 +1,6 @@
 import { ref, watch } from "vue";
 import type { ComputedRef } from "vue";
-import { loadBranchesName, loadARepositoryContent } from "@/plugins/api";
+import { getActiveProvider, loadRepositoryContent } from "@/plugins/git";
 import { store } from "@/plugins/store";
 import { useAlert } from "@/composables/useAlert";
 import type { EditorRouteData } from "@/composables/useEditorRouteSync";
@@ -34,7 +34,7 @@ export function useBranchSelection(routeData: ComputedRef<EditorRouteData>) {
     function onSelectedBranch(): void {
         confirm("Do you really want to change branch?")
             .then(() => {
-                loadARepositoryContent(currentRepo.value, selected.value).then((repoObject) => {
+                loadRepositoryContent(currentRepo.value, selected.value).then((repoObject) => {
                     oldSelected.value = selected.value;
                     store.updateRepository(repoObject);
                 });
@@ -46,13 +46,14 @@ export function useBranchSelection(routeData: ComputedRef<EditorRouteData>) {
     }
 
     function loadBranchNames(): void {
-        const [owner, name] = currentRepo.value.split("/");
-        loadBranchesName(name ?? "", owner ?? "").then((branches) => {
-            if (!branches) {
-                return;
-            }
-            branchNames.value = [...new Set(branches.map((branch) => branch.name))];
-        });
+        getActiveProvider()
+            .listBranches(currentRepo.value)
+            .then((branches) => {
+                if (!branches) {
+                    return;
+                }
+                branchNames.value = [...new Set(branches.map((branch) => branch.name))];
+            });
     }
 
     function updateBranches(repoName: string): void {

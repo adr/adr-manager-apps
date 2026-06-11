@@ -3,8 +3,8 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
 export default defineConfig({
-    // URL base for production (static sub-path deploy, e.g. GitHub Pages)
-    base: "/adr-manager-apps/",
+    // Production URL base (GitHub Pages sub-path by default). VITE_BASE_PATH overrides it for self-hosted deployments.
+    base: process.env["VITE_BASE_PATH"] ?? "/adr-manager-apps/",
     server: {
         host: "localhost",
         port: 8000

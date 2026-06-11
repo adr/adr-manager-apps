@@ -26,8 +26,9 @@ function resize(): void {
     if (!el) {
         return;
     }
-    el.style.height = "auto";
-    el.style.height = `${Math.max(el.scrollHeight, props.minRows * 24 + 20)}px`;
+
+    const contentHeight = el.value === "" ? 0 : el.scrollHeight;
+    el.style.height = `${Math.max(contentHeight, props.minRows * 24 + 20)}px`;
 }
 
 function onInput(event: Event): void {

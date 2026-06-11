@@ -14,12 +14,15 @@
         <i class="codicon codicon-go-to-file"></i>
         Open file
       </button>
+      <button type="button" class="icon-btn" title="Show editor tips" @click="startTour">
+        <i class="codicon codicon-question"></i>
+      </button>
       <span class="seg-label">Editor mode</span>
-      <div class="seg">
+      <div class="seg" data-tour="mode-toggle">
         <button type="button" @click="switchToBasicTemplate">Basic</button>
         <button type="button" class="on">Professional</button>
       </div>
-      <button type="button" class="btn btn-primary" :disabled="!validated" @click="saveAdr">
+      <button type="button" class="btn btn-primary" data-tour="editor-primary" :disabled="!validated" @click="saveAdr">
         <i class="codicon codicon-save"></i>
         Save ADR
       </button>
@@ -33,22 +36,33 @@
         @invalidated="disableButton"
       ></MadrTemplateProfessional>
     </div>
+
+    <TourOverlay v-model:active="tourActive" :steps="tourSteps" @closed="onTourClosed"></TourOverlay>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import MadrTemplateProfessional from "../components/MadrTemplateProfessional.vue";
+import TourOverlay from "../components/TourOverlay.vue";
 import VersionSelect from "../components/VersionSelect.vue";
 import vscode from "../mixins/vscode-api-mixin";
 import saveAdr from "../mixins/save-adr";
+import createTourMixin from "../mixins/tour";
+import { buildEditorTourSteps } from "../tour/editor-steps";
 
 export default defineComponent({
   components: {
     MadrTemplateProfessional,
+    TourOverlay,
     VersionSelect
   },
-  mixins: [vscode, saveAdr],
+  mixins: [vscode, saveAdr, createTourMixin("editor")],
+  data() {
+    return {
+      tourSteps: buildEditorTourSteps()
+    };
+  },
   methods: {
     /**
      * Switches to the basic MADR template, hiding the professional fields while keeping the current

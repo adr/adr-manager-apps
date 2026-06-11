@@ -1,5 +1,5 @@
 <template>
-    <aside v-if="rail" class="explorer rail">
+    <aside v-if="rail && !forceExpanded" class="explorer rail">
         <div class="rail-head">
             <button type="button" class="icon-btn" title="Expand panel" @click="expand">
                 <span class="mdi mdi-chevron-double-right" aria-hidden="true"></span>
@@ -43,7 +43,12 @@
         <DialogAddRepositories v-model="addRepositoriesOpen" />
     </aside>
 
-    <aside v-else class="explorer" :style="{ flexBasis: `${width}px`, width: `${width}px` }">
+    <aside
+        v-else
+        class="explorer"
+        data-tour="explorer"
+        :style="{ flexBasis: `${expandedWidth}px`, width: `${expandedWidth}px` }"
+    >
         <div class="exp-head">
             <span class="etitle">Repositories</span>
             <span class="spacer"></span>
@@ -109,6 +114,9 @@ const MIN_WIDTH = 208;
 const MAX_WIDTH = 440;
 const SNAP_BELOW = 170;
 const DEFAULT_WIDTH = 288;
+
+// Bypasses the rail without calling expand(), which would persist a new width to localStorage.
+const props = defineProps<{ forceExpanded?: boolean }>();
 
 const emit = defineEmits<{
     "repo-name": [string];
@@ -208,6 +216,9 @@ const {
     collapseBelow: SNAP_BELOW,
     collapseTo: RAIL_WIDTH
 });
+
+// A rail-collapsed panel keeps its narrow width, so the forced view needs a usable one.
+const expandedWidth = computed(() => (props.forceExpanded ? Math.max(width.value, DEFAULT_WIDTH) : width.value));
 </script>
 
 <style scoped>

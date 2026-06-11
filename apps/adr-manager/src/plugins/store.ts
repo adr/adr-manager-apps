@@ -9,6 +9,7 @@ import { ArchitecturalDecisionRecord, Repository, isValidAdr, isValidRepoList } 
 import { adr2md, naturalCase2snakeCase } from "@/plugins/parser";
 import { getActiveProvider } from "@/plugins/git";
 import { lsGet, lsSet } from "@/plugins/storage";
+import { DEMO_REPO_FULL_NAME } from "@/plugins/tour/constants";
 import type { AdrFile } from "@/types/adr";
 import type { Mode } from "@/types/store";
 import type { CommitFile, FileStatus, PushedFile } from "@/types/commit";
@@ -29,7 +30,12 @@ export const store = reactive({
         if (addedRepos !== null) {
             const parsed: unknown = JSON.parse(addedRepos);
             if (isValidRepoList(parsed)) {
-                this.addRepositories(parsed.map((repo) => Repository.constructFromString(JSON.stringify(repo))));
+                this.addRepositories(
+                    parsed
+                        // Backstop: drop tour demo data that an interrupted tour might have leaked.
+                        .filter((repo) => repo.fullName !== DEMO_REPO_FULL_NAME)
+                        .map((repo) => Repository.constructFromString(JSON.stringify(repo)))
+                );
             } else {
                 console.error("Invalid repos: ", parsed);
             }
@@ -39,7 +45,7 @@ export const store = reactive({
     },
 
     updateLocalStorageRepositories(): void {
-        lsSet("addedRepositories", JSON.stringify(this.addedRepositories));
+        lsSet("addedRepositories", JSON.stringify(this.addedRepositories.filter((repo) => !repo.transient)));
     },
 
     addRepositories(repoList: Repository[]): void {

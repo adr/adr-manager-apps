@@ -13,18 +13,20 @@
             @copy-md="copyMarkdown"
             @commit="openCommitDialog(store.currentRepository?.fullName)"
             @disconnect="logOut"
+            @start-tour="tour.start()"
         />
 
         <div class="shell-body">
             <RepositoryExplorer
                 v-if="showFileExplorer"
                 v-show="showExplorer"
+                :force-expanded="tour.active.value"
                 @repo-name="updateBranches"
                 @active-branch="setActiveBranch"
                 @commit="openCommitDialog"
             />
 
-            <main class="pane-editor">
+            <main class="pane-editor" data-tour="editor">
                 <template v-if="showEditor">
                     <MadrEditor
                         v-if="!requiresConversion"
@@ -62,7 +64,7 @@
 
         <footer class="statusbar">
             <span class="mdi mdi-folder-outline" aria-hidden="true"></span>
-            <span class="file text-truncate">{{ adrPath }}</span>
+            <span class="file text-truncate" data-tour="adr-path">{{ adrPath }}</span>
             <span class="spacer"></span>
             <label class="branch">
                 <span class="mdi mdi-source-branch" aria-hidden="true"></span>
@@ -84,28 +86,34 @@
 
         <DialogAddRepositories v-model="addRepositoriesOpen" />
         <DialogCommit v-model="commitDialogOpen" :repo-full-name="commitRepoFullName" />
+        <DialogTourWelcome v-model="welcomeOpen" @start="tour.start()" />
+        <TourOverlay />
         <AppToast />
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { getActiveProvider } from "@/plugins/git";
 import { store } from "@/plugins/store";
+import { lsGet, lsSet } from "@/plugins/storage";
 import { useAdrEditor } from "@/composables/useAdrEditor";
 import { useBranchSelection } from "@/composables/useBranchSelection";
 import { useEditorRouteSync } from "@/composables/useEditorRouteSync";
 import { useToast } from "@/composables/useToast";
+import { useTour } from "@/composables/useTour";
 
 import AppToast from "@/components/AppToast.vue";
 import AppTopbar from "@/components/AppTopbar.vue";
 import DialogAddRepositories from "@/components/DialogAddRepositories.vue";
 import DialogCommit from "@/components/DialogCommit.vue";
+import DialogTourWelcome from "@/components/DialogTourWelcome.vue";
 import EditorConvert from "@/components/EditorConvert.vue";
 import MadrEditor from "@/components/MadrEditor.vue";
 import MarkdownPreviewPane from "@/components/MarkdownPreviewPane.vue";
 import RepositoryExplorer from "@/components/RepositoryExplorer.vue";
+import TourOverlay from "@/components/TourOverlay.vue";
 
 const props = defineProps<{ repoFullName?: string; branch?: string; adr?: string }>();
 
@@ -117,6 +125,38 @@ const showPreview = ref(true);
 const addRepositoriesOpen = ref(false);
 const commitDialogOpen = ref(false);
 const commitRepoFullName = ref("");
+const welcomeOpen = ref(false);
+
+const tour = useTour();
+let panesBeforeTour: { explorer: boolean; preview: boolean } | undefined;
+
+// Force the panes open so every step has its anchor. The body class reveals
+// hover-only controls (e.g. the delete button) so they can be spotlighted.
+watch(
+    () => tour.active.value,
+    (isActive) => {
+        if (isActive) {
+            panesBeforeTour = { explorer: showExplorer.value, preview: showPreview.value };
+            showExplorer.value = true;
+            showPreview.value = true;
+            document.body.classList.add("tour-active");
+        } else {
+            if (panesBeforeTour) {
+                showExplorer.value = panesBeforeTour.explorer;
+                showPreview.value = panesBeforeTour.preview;
+                panesBeforeTour = undefined;
+            }
+            document.body.classList.remove("tour-active");
+        }
+    }
+);
+
+// Closing the offer either way counts as seen, the tour stays replayable from the help button.
+watch(welcomeOpen, (open) => {
+    if (!open) {
+        lsSet("tourSeen", "1");
+    }
+});
 
 const {
     adr: adrRecord,
@@ -146,6 +186,9 @@ const adrPath = computed(() => {
 onMounted(() => {
     store.reload();
     store.openAdrBy(props.repoFullName ?? "", props.adr);
+    if (lsGet("tourSeen") === null) {
+        welcomeOpen.value = true;
+    }
 });
 
 function openCommitDialog(repoFullName: string | undefined): void {

@@ -26,15 +26,19 @@ export class WebPanel {
   public static readonly viewType = "adrManager";
 
   private readonly _panel: vscode.WebviewPanel;
+  private readonly _context: vscode.ExtensionContext;
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
+  // Consumed-on-read replay flag: createOrShow always remounts the page, so a pushed
+  // "start tour" message would be lost. The webview pulls it via getTourState instead.
+  private _startTourOnNextLoad = false;
 
   /**
    * Creates or shows a panel that displays a webview with the specified view using a string key.
-   * @param extensionUri The URI of the context the extension is running in (provided by VS Code)
+   * @param context The context of the extension (provides the extension URI and global state)
    * @param page A string key for a specific web view page
    */
-  public static createOrShow(extensionUri: vscode.Uri, page: string) {
+  public static createOrShow(context: vscode.ExtensionContext, page: string) {
     const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
     if (WebPanel.currentPanel) {
@@ -48,15 +52,23 @@ export class WebPanel {
       retainContextWhenHidden: true
     });
 
-    WebPanel.currentPanel = new WebPanel(panel, extensionUri, page);
+    WebPanel.currentPanel = new WebPanel(panel, context, page);
   }
 
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, page: string) {
+  /**
+   * Makes the next main page load start the tour.
+   */
+  public queueTourStart() {
+    this._startTourOnNextLoad = true;
+  }
+
+  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, page: string) {
     this._panel = panel;
-    this._extensionUri = extensionUri;
+    this._context = context;
+    this._extensionUri = context.extensionUri;
 
     this._update(page);
-    this._panel.iconPath = vscode.Uri.joinPath(extensionUri, "assets/logo.png");
+    this._panel.iconPath = vscode.Uri.joinPath(this._extensionUri, "assets/logo.png");
 
     this.watchForWorkspaceChanges();
     this.watchForConfigurationChanges();
@@ -90,6 +102,25 @@ export class WebPanel {
           }
           case "getAdrDirectory": {
             this.sendAdrDirectory();
+            return;
+          }
+          case "getTourState": {
+            // Only a main page load consumes the queued replay; editor pages just read the flags.
+            const forceStart = this._startTourOnNextLoad && this._panel.title === "ADR Manager";
+            if (forceStart) {
+              this._startTourOnNextLoad = false;
+            }
+            this._panel.webview.postMessage({
+              command: "getTourState",
+              seenMainTour: this._context.globalState.get<boolean>("adrManager.hasSeenMainTour") ?? false,
+              seenEditorTour: this._context.globalState.get<boolean>("adrManager.hasSeenEditorTour") ?? false,
+              forceStart: forceStart
+            });
+            return;
+          }
+          case "setTourSeen": {
+            const key = e.data.tour === "editor" ? "adrManager.hasSeenEditorTour" : "adrManager.hasSeenMainTour";
+            this._context.globalState.update(key, true);
             return;
           }
           case "requestEdit": {

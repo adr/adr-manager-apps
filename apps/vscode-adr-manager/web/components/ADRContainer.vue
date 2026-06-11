@@ -19,6 +19,7 @@
           type="button"
           class="icon-btn"
           title="Open Markdown file"
+          data-tour="adr-edit"
           @click.stop="$emit('requestEdit')"
           @keydown.enter.stop
         >
@@ -28,6 +29,7 @@
           type="button"
           class="icon-btn danger"
           title="Delete ADR"
+          data-tour="adr-delete"
           @click.stop="$emit('requestDelete')"
           @keydown.enter.stop
         >
@@ -178,6 +180,12 @@ export default defineComponent({
 
 .adr-card:hover .adr-actions,
 .adr-card:focus-within .adr-actions {
+  opacity: 1;
+}
+
+/* The tour reveals the actions while it points at them (class set by MainView).
+   This rule must live in this component's scoped block to match. */
+.adr-card.tour-reveal .adr-actions {
   opacity: 1;
 }
 

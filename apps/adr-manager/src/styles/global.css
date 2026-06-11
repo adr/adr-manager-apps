@@ -477,3 +477,9 @@ body.resizing-x * {
     border: 3px solid transparent;
     background-clip: content-box;
 }
+
+/* Hover-only controls are invisible at rest and could not be spotlighted by the tour. */
+body.tour-active [data-cy="deleteAdrBtn"],
+body.tour-active .repo-acts {
+    opacity: 1 !important;
+}

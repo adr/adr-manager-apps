@@ -50,6 +50,11 @@
         "category": "ADR Manager"
       },
       {
+        "command": "vscode-adr-manager.showTour",
+        "title": "Show Tour",
+        "category": "ADR Manager"
+      },
+      {
         "command": "vscode-adr-manager.viewInAdrManager",
         "title": "Open ADR Manager on This File",
         "category": "ADR Manager"

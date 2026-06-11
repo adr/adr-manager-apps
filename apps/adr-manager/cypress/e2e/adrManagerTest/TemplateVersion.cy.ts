@@ -4,6 +4,7 @@ context("Switching the MADR template version", () => {
     it("Switch a new ADR to MADR 4.0.0 and fill the 4.0 fields", () => {
         window.localStorage.clear();
         window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
+        window.localStorage.setItem("tourSeen", "1");
         window.localStorage.setItem("user", Cypress.env("USER"));
         cy.visit(TEST_BASE_URL);
         cy.intercept("GET", REST_LIST_REPO_URL).as("getRepos");

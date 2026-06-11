@@ -10,12 +10,21 @@
       </div>
       <VersionSelect v-model="templateVersion"></VersionSelect>
       <span class="spacer"></span>
+      <button type="button" class="icon-btn" title="Show editor tips" @click="startTour">
+        <i class="codicon codicon-question"></i>
+      </button>
       <span class="seg-label">Editor mode</span>
-      <div class="seg">
+      <div class="seg" data-tour="mode-toggle">
         <button type="button" class="on">Basic</button>
         <button type="button" @click="switchToProfessionalTemplate">Professional</button>
       </div>
-      <button type="button" class="btn btn-primary" :disabled="!validated" @click="createAdr('createBasicAdr')">
+      <button
+        type="button"
+        class="btn btn-primary"
+        data-tour="editor-primary"
+        :disabled="!validated"
+        @click="createAdr('createBasicAdr')"
+      >
         <i class="codicon codicon-check"></i>
         Create ADR
       </button>
@@ -36,22 +45,33 @@
         @invalidated="disableButton"
       ></MadrTemplateBasic>
     </div>
+
+    <TourOverlay v-model:active="tourActive" :steps="tourSteps" @closed="onTourClosed"></TourOverlay>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import MadrTemplateBasic from "../components/MadrTemplateBasic.vue";
+import TourOverlay from "../components/TourOverlay.vue";
 import VersionSelect from "../components/VersionSelect.vue";
 import vscode from "../mixins/vscode-api-mixin";
 import saveAdr from "../mixins/save-adr";
+import createTourMixin from "../mixins/tour";
+import { buildEditorTourSteps } from "../tour/editor-steps";
 
 export default defineComponent({
   components: {
     MadrTemplateBasic,
+    TourOverlay,
     VersionSelect
   },
-  mixins: [vscode, saveAdr],
+  mixins: [vscode, saveAdr, createTourMixin("editor")],
+  data() {
+    return {
+      tourSteps: buildEditorTourSteps()
+    };
+  },
   methods: {
     /**
      * Switches to the professional MADR template, revealing more fields while keeping the current

@@ -15,7 +15,7 @@
         <MadrVersionSelect :model-value="templateVersion" @update:model-value="emit('set-version', $event)" />
         <span class="spacer"></span>
         <span class="seg-label">Editor mode</span>
-        <div class="seg">
+        <div class="seg" data-tour="mode-toggle">
             <button
                 type="button"
                 data-cy="modeBasic"
@@ -61,6 +61,15 @@
         </button>
         <button
             type="button"
+            data-cy="startTour"
+            class="btn btn-ghost"
+            title="Replay the introduction tour"
+            @click="emit('start-tour')"
+        >
+            <span class="mdi mdi-help-circle-outline" aria-hidden="true"></span>
+        </button>
+        <button
+            type="button"
             data-cy="disconnect"
             class="btn btn-ghost"
             title="Disconnect from GitHub"
@@ -92,6 +101,7 @@ const emit = defineEmits<{
     "copy-md": [];
     commit: [];
     disconnect: [];
+    "start-tour": [];
 }>();
 </script>
 

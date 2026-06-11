@@ -1,5 +1,5 @@
 <template>
-    <aside class="pane-preview" :style="{ flexBasis: `${width}px`, width: `${width}px` }">
+    <aside class="pane-preview" data-tour="preview" :style="{ flexBasis: `${width}px`, width: `${width}px` }">
         <div class="prev-resize" title="Drag to resize, drag past the edge to close" @mousedown="startResize">
             <span class="grip"></span>
         </div>

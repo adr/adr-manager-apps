@@ -1,15 +1,9 @@
 import * as vscode from "vscode";
 import type { AdrInit, Option } from "@adr-manager/core";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
-import {
-  adrTemplatemarkdownContent,
-  EXTENSION_URI,
-  initialMarkdownContent,
-  readmeMarkdownContent
-} from "./plugins/constants";
+import { adrTemplatemarkdownContent, initialMarkdownContent, readmeMarkdownContent } from "./plugins/constants";
 import { parseAdr, serializeAdr, type MadrTemplateVersion } from "./plugins/parser";
 import { cleanPathString, matchesMadrTitleFormat, naturalCase2snakeCase } from "./plugins/utils";
-import { WebPanel } from "./WebPanel";
 
 /**
  * Returns the workspace folders opened in the current VS Code instance.
@@ -485,7 +479,8 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
             fileName
           );
           await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
-          WebPanel.createOrShow(EXTENSION_URI, "main");
+          // This module has no ExtensionContext, the command route supplies it.
+          vscode.commands.executeCommand("vscode-adr-manager.openMainWebView");
           const open = await vscode.window.showInformationMessage(
             "ADR created. Do you want to open the Markdown file?",
             "Yes",

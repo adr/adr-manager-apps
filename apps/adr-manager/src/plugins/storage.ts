@@ -11,7 +11,8 @@ export type StorageKey =
     | "gitProvider"
     | "gitlabBaseUrl"
     | "gitlabClientId"
-    | "gitlabTokens";
+    | "gitlabTokens"
+    | "tourSeen";
 
 export function lsGet(key: StorageKey): string | null {
     return localStorage.getItem(key);

@@ -11,6 +11,8 @@ export class Repository {
     adrPath: string;
     addedAdrs: AdrFile[];
     deletedAdrs: AdrFile[];
+    /** Tour demo repositories live only in memory and are never written to localStorage. */
+    transient = false;
 
     constructor({ fullName, activeBranch, branches, adrs, adrPath }: RepositoryInit = {}) {
         if (adrs && adrs.length > 0 && !adrPath) {

@@ -119,7 +119,7 @@ function commitDraft(text: string): void {
     rows.value.push(row);
     draft.value = "";
     writeBack();
-    void nextTick(() => rowRefs.get(row.id)?.focus());
+    nextTick(() => rowRefs.get(row.id)?.focus());
 }
 
 function removeRow(index: number): void {

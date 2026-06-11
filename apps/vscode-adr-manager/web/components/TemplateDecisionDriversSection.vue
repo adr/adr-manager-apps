@@ -16,7 +16,7 @@
         checkMove;
       "
     >
-      <div v-for="(driver, index) in decisionDriversWithBlank" :key="index" class="list-row">
+      <div v-for="(_, index) in decisionDriversWithBlank" :key="index" class="list-row">
         <span class="gutter" :class="decisionDrivers[index] === '' ? 'dimmed' : 'drivers-grabber'">
           <i class="codicon" :class="decisionDrivers[index] === '' ? 'codicon-add' : 'codicon-gripper'"></i>
         </span>
@@ -25,7 +25,7 @@
           class="field auto-grow-decision-driver"
           placeholder="a decision driver, e.g. a force or concern…"
           spellcheck="true"
-          @input="updateArray($event.target.value, index)"
+          @input="updateArray(($event.target as HTMLTextAreaElement).value, index)"
         />
         <button
           v-if="decisionDrivers[index] !== ''"

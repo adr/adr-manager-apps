@@ -37,14 +37,12 @@ export class WebPanel {
   public static createOrShow(extensionUri: vscode.Uri, page: string) {
     const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
-    // If we already have a panel, show it.
     if (WebPanel.currentPanel) {
       WebPanel.currentPanel._update(page);
       WebPanel.currentPanel._panel.reveal(column);
       return;
     }
 
-    // Otherwise, create a new panel.
     const panel = vscode.window.createWebviewPanel(WebPanel.viewType, "ADR Manager", column || vscode.ViewColumn.One, {
       enableScripts: true,
       retainContextWhenHidden: true
@@ -57,23 +55,14 @@ export class WebPanel {
     this._panel = panel;
     this._extensionUri = extensionUri;
 
-    // Set the webview's initial html content
     this._update(page);
-
-    // Set the panel icon
     this._panel.iconPath = vscode.Uri.joinPath(extensionUri, "assets/logo.png");
 
-    // listen for changes on Markdown files to dynamically update ADR list in webview
     this.watchForWorkspaceChanges();
-
-    // listen for configuration changes of the extension
     this.watchForConfigurationChanges();
 
-    // Listen for when the panel is disposed
-    // This happens when the user closes the panel or when the panel is closed programmatically
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-    // Handle messages from the webview to the VS Code API, mainly used for page navigation
     this._panel.webview.onDidReceiveMessage(
       async (e) => {
         switch (e.command) {
@@ -155,19 +144,17 @@ export class WebPanel {
           }
           case "saveAdr": {
             const uri = await saveAdr(JSON.parse(e.data).adr);
-            if (uri) {
-              this._panel.webview.postMessage({
-                command: "saveSuccessful",
-                newPath: uri.path
-              });
-              const open = await vscode.window.showInformationMessage(
-                "ADR saved. Do you want to open the Markdown file?",
-                "Yes",
-                "No"
-              );
-              if (open === "Yes") {
-                vscode.window.showTextDocument(await vscode.workspace.openTextDocument(uri));
-              }
+            this._panel.webview.postMessage({
+              command: "saveSuccessful",
+              newPath: uri.path
+            });
+            const open = await vscode.window.showInformationMessage(
+              "ADR saved. Do you want to open the Markdown file?",
+              "Yes",
+              "No"
+            );
+            if (open === "Yes") {
+              vscode.window.showTextDocument(await vscode.workspace.openTextDocument(uri));
             }
             return;
           }
@@ -200,7 +187,7 @@ export class WebPanel {
           case "updateFileStatus": {
             try {
               await vscode.workspace.fs.readFile(vscode.Uri.file(e.data.fullPath));
-            } catch (FileSystemError) {
+            } catch {
               vscode.window.showErrorMessage("The ADR file has changed unexpectedly.");
               vscode.commands.executeCommand("vscode-adr-manager.openMainWebView");
             }
@@ -258,7 +245,6 @@ export class WebPanel {
   public dispose() {
     WebPanel.currentPanel = undefined;
 
-    // Clean up resources
     this._panel.dispose();
 
     while (this._disposables.length) {
@@ -300,12 +286,9 @@ export class WebPanel {
       }
       case "view-basic":
       case "view-professional": {
+        // Mode switches re-render without a number and must not reset the numbered title.
         if (adrNumber) {
-          if (!this._panel.title.startsWith("ADR Manager - View ADR", 0)) {
-            this._panel.title = `ADR Manager - View ADR ${"#" + adrNumber}`;
-          } else {
-            this._panel.title = "ADR Manager - View ADR";
-          }
+          this._panel.title = `ADR Manager - View ADR #${adrNumber}`;
         }
         return;
       }
@@ -320,14 +303,10 @@ export class WebPanel {
    * 			ID "app" depending on the specified web view page.
    */
   private _getHtmlForWebview(webview: vscode.Webview, page: string) {
-    // Local path to main script run in the webview
     const SCRIPT_URI = vscode.Uri.joinPath(this._extensionUri, "dist/web", `${page}.js`);
-    // URI to load the script in the webview
     const SCRIPT_WEB_URI = webview.asWebviewUri(SCRIPT_URI);
 
-    // Local path to css styles
     const STYLE_URI = vscode.Uri.joinPath(this._extensionUri, "dist/web", `${page}.css`);
-    // URI to load styles into webview
     const STYLE_WEB_URI = webview.asWebviewUri(STYLE_URI);
 
     // Codicons web URI. The font is copied into dist/web/codicons by the webview build
@@ -393,7 +372,7 @@ export class WebPanel {
       async () => {
         this.fetchAdrs();
         this.sendWorkspaceFolders();
-        if (this._panel.title.startsWith("ADR Manager - View ADR", 0)) {
+        if (this._panel.title.startsWith("ADR Manager - View ADR")) {
           this._panel.webview.postMessage({ command: "updateFileStatus" });
         }
       },
@@ -404,7 +383,7 @@ export class WebPanel {
       async () => {
         this.fetchAdrs();
         this.sendWorkspaceFolders();
-        if (this._panel.title.startsWith("ADR Manager - View ADR", 0)) {
+        if (this._panel.title.startsWith("ADR Manager - View ADR")) {
           this._panel.webview.postMessage({ command: "updateFileStatus" });
         }
       },
@@ -435,7 +414,7 @@ export class WebPanel {
    */
   private async fetchAdrs() {
     // only refetch ADRs if the main webview is currently open
-    if (WebPanel.currentPanel && this._panel.title !== "ADR Manager") {
+    if (this._panel.title !== "ADR Manager") {
       return;
     }
     const allAdrs: {

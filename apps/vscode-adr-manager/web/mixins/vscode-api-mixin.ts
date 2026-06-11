@@ -1,13 +1,15 @@
-// Declare that the VS Code API has already been acquired in the WebPanel under the constant "vscode"
-declare const vscode: any;
+import { defineComponent } from "vue";
 
-export default {
+// The VS Code API is acquired once in the webview HTML (see WebPanel) under the constant "vscode"
+declare const vscode: { postMessage(message: { command: string; data?: unknown }): void };
+
+export default defineComponent({
   methods: {
-    sendMessage(command: string, data?: any | undefined) {
+    sendMessage(command: string, data?: unknown) {
       vscode.postMessage({
         command: command,
         data: data
       });
     }
   }
-};
+});

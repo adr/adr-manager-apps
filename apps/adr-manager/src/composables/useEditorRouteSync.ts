@@ -39,17 +39,17 @@ export function useEditorRouteSync(props: EditorRouteProps) {
         // params that the target route's path doesn't define).
         const [organization, repo] = (newRouteData.repoFullName ?? "").split("/");
         if (organization && repo && newRouteData.branch && newRouteData.adrName) {
-            void router.push({
+            router.push({
                 name: "EditorWithSpecifiedAdr",
                 params: { organization, repo, branch: newRouteData.branch, adr: newRouteData.adrName }
             });
         } else if (organization && repo && newRouteData.branch) {
-            void router.push({
+            router.push({
                 name: "EditorWithSpecifiedRepo",
                 params: { organization, repo, branch: newRouteData.branch }
             });
         } else {
-            void router.push({ name: "EditorUnspecified" });
+            router.push({ name: "EditorUnspecified" });
         }
     });
 

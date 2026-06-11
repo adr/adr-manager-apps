@@ -19,11 +19,9 @@ export async function getDiagnostics(doc: vscode.TextDocument): Promise<vscode.D
   const rawText = doc.getText();
   const textLines = rawText.split(/\r\n|\n/);
 
-  // Array of considered options under 'Considered Options' subheader
   const consideredOptions = await extractListItems(doc.uri, "Considered Options");
 
   for (let i = 0; i < textLines.length; i++) {
-    // check required fields
     if (indicesOfRequiredFields.title === -1 && /^#\s.*/.test(textLines[i])) {
       indicesOfRequiredFields.title = i;
     }
@@ -40,12 +38,10 @@ export async function getDiagnostics(doc: vscode.TextDocument): Promise<vscode.D
       indicesOfRequiredFields.decisionOutcome = i;
     }
 
-    // check header lines
-    if (textLines[i].startsWith("#", 0)) {
+    if (textLines[i].startsWith("#")) {
       diagnostics.push(...getHeaderDiagnostics(textLines[i], i));
     }
 
-    // check if chosen option exists in considered options
     if (/^Chosen option:/i.test(textLines[i])) {
       if (
         consideredOptions.findIndex((option) => {
@@ -60,7 +56,6 @@ export async function getDiagnostics(doc: vscode.TextDocument): Promise<vscode.D
     }
   }
 
-  // add diagnostics regarding required fields
   diagnostics.push(...getRequiredFieldsDiagnostics(indicesOfRequiredFields, textLines));
 
   return diagnostics;
@@ -73,7 +68,6 @@ export async function getDiagnostics(doc: vscode.TextDocument): Promise<vscode.D
 function getHeaderDiagnostics(line: string, lineNumber: number): vscode.Diagnostic[] {
   const headerDiagnostics = new Array<vscode.Diagnostic>();
 
-  // Check header and subheader lines for title casing
   if (/^#{1,2}\s.*/.test(line) && !isHeaderInTitleCase(line)) {
     headerDiagnostics.push(allDiagnostics.headerNotInTitleCase(lineNumber, 0, lineNumber, line.length));
   }
@@ -98,7 +92,6 @@ function getRequiredFieldsDiagnostics(
 ): vscode.Diagnostic[] {
   const requiredFieldsDiagnostics = new Array<vscode.Diagnostic>();
 
-  // check presence of required fields
   if (indices.title === -1) {
     requiredFieldsDiagnostics.push(allDiagnostics.title.missing(0, 0, 0, 1));
   }
@@ -112,7 +105,6 @@ function getRequiredFieldsDiagnostics(
     requiredFieldsDiagnostics.push(allDiagnostics.decisionOutcome.missing(0, 0, 0, 1));
   }
 
-  // check if present required fields are empty
   Object.entries(indices).forEach(([key, value]) => {
     if (value !== -1) {
       // also check if a section is the last section of the ADR (i.e., there is no (sub)header line after it)
@@ -149,7 +141,7 @@ function getRequiredFieldsDiagnostics(
  * @param line The line containing the chosen option
  */
 function getInvalidChosenOptionDiagnostic(line: string, lineNumber: number): vscode.Diagnostic {
-  const indexOfFirstQuote = line.indexOf('"', 0);
+  const indexOfFirstQuote = line.indexOf('"');
   const indexOfSecondQuote = line.indexOf('"', indexOfFirstQuote + 1);
   return {
     severity: vscode.DiagnosticSeverity.Error,
@@ -176,7 +168,6 @@ function isHeaderInTitleCase(line: string): boolean {
  * @returns A Promise object which resolves to a string array of list items under the specified heading
  */
 async function extractListItems(fileUri: vscode.Uri, heading: string): Promise<string[]> {
-  // Get text from file
   const file = await vscode.workspace.openTextDocument(fileUri);
   const text = file.getText();
 
@@ -186,11 +177,8 @@ async function extractListItems(fileUri: vscode.Uri, heading: string): Promise<s
   const regex = /(?<=#{1,6} (.*)\n(?:(?!#).*\n)*)(?=[+*-] (.*(?:\n(?![#+*-]).+)?))/g;
   const matches = [...text.matchAll(regex)];
 
-  // Clean matches
   const result = matches.reduce((acc: string[], curr) => {
-    // remove zero-width character
     const [title, item] = curr.slice(1);
-    // check for correct heading
     if (title.toLowerCase() === heading.toLowerCase()) {
       acc.push(item);
     }
@@ -208,7 +196,7 @@ function getChosenOptionFromLine(line: string): string {
   if (!/^Chosen option: /i.test(line)) {
     return "";
   }
-  const indexOfFirstQuote = line.indexOf('"', 0);
+  const indexOfFirstQuote = line.indexOf('"');
   const indexOfSecondQuote = line.indexOf('"', indexOfFirstQuote + 1);
   return line.substring(indexOfFirstQuote + 1, indexOfSecondQuote);
 }
@@ -220,6 +208,6 @@ function getChosenOptionFromLine(line: string): string {
  */
 function getIndexOfFirstHeaderLine(lines: string[]) {
   return lines.findIndex((line) => {
-    return line.startsWith("#", 0);
+    return line.startsWith("#");
   });
 }

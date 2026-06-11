@@ -122,11 +122,11 @@ const unstagedRepositories = computed<StagedRepo[]>(() =>
 watch(show, (open) => {
     if (open) {
         page.value = 1;
-        void loadRepositories();
+        loadRepositories();
     }
 });
 
-void loadRepositories();
+loadRepositories();
 
 async function loadRepositories(): Promise<void> {
     countLoadingPromises.value++;
@@ -145,7 +145,7 @@ async function loadRepositories(): Promise<void> {
 
 const searchRepositories = debounce(() => {
     if (searchText.value.trim() === "" || searchText.value.startsWith("https://")) {
-        void loadRepositories();
+        loadRepositories();
         return;
     }
     countLoadingPromises.value++;
@@ -164,14 +164,14 @@ function filterUnstagedRepositories(repoList: GitHubRepoSummary[]): GitHubRepoSu
 function goToNextPage(): void {
     if (hasNextPage.value) {
         page.value++;
-        void loadRepositories();
+        loadRepositories();
     }
 }
 
 function goToPreviousPage(): void {
     if (hasPreviousPage.value) {
         page.value--;
-        void loadRepositories();
+        loadRepositories();
     }
 }
 
@@ -185,7 +185,7 @@ function unstageRepository(repo: StagedRepo): void {
 
 function onAddRepositories(): void {
     show.value = false;
-    void addRepositories();
+    addRepositories();
 }
 
 async function addRepositories(): Promise<void> {
@@ -201,7 +201,7 @@ async function addRepositories(): Promise<void> {
         repositoriesSelected.value = [];
         searchText.value = "";
     } catch (error) {
-        void alert("Sorry, we couldn't load the repositories you requested!", "Error", "error");
+        alert("Sorry, we couldn't load the repositories you requested!", "Error", "error");
         console.error(error);
     } finally {
         showLoadingOverlay.value = false;

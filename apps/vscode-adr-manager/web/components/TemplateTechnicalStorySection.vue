@@ -12,7 +12,7 @@
       :value="technicalStory"
       @input="
         updateHeight();
-        $emit('update:technicalStory', $event.target.value);
+        $emit('update:technicalStory', ($event.target as HTMLTextAreaElement).value);
         $emit('validate');
       "
     />

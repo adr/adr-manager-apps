@@ -1,5 +1,5 @@
 <template>
-    <button type="button" class="btn btn-primary connect-btn" @click="hasAuthId">
+    <button type="button" class="btn btn-primary connect-btn" @click="handleConnectClick">
         <span class="mdi mdi-github" aria-hidden="true"></span>
         Connect to GitHub
     </button>
@@ -13,11 +13,11 @@ import { lsGet, lsSet } from "@/plugins/storage";
 
 const router = useRouter();
 
-function hasAuthId(): void {
+function handleConnectClick(): void {
     if (lsGet("authId") === null) {
-        void signInWithGithub();
+        signInWithGithub();
     } else {
-        void router.push({ name: "Editor" });
+        router.push({ name: "Editor" });
     }
 }
 
@@ -31,7 +31,7 @@ async function signInWithGithub(): Promise<void> {
         }
         lsSet("authId", credential.accessToken);
         lsSet("user", getAdditionalUserInfo(result)?.username ?? "");
-        void router.push({ name: "Editor" });
+        router.push({ name: "Editor" });
     } catch (error) {
         console.error("SignIn Error", error);
     }

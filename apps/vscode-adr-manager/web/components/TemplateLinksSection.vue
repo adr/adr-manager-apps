@@ -13,7 +13,7 @@
         checkMove;
       "
     >
-      <div v-for="(link, index) in linksWithBlank" :key="index" class="list-row">
+      <div v-for="(_, index) in linksWithBlank" :key="index" class="list-row">
         <span class="gutter" :class="links[index] === '' ? 'dimmed' : 'links-grabber'">
           <i class="codicon" :class="links[index] === '' ? 'codicon-add' : 'codicon-gripper'"></i>
         </span>
@@ -22,7 +22,7 @@
           class="field auto-grow-link"
           placeholder="a link or reference, e.g. Refined by ADR-0005…"
           spellcheck="true"
-          @input="updateArray($event.target.value, index)"
+          @input="updateArray(($event.target as HTMLTextAreaElement).value, index)"
         />
         <button v-if="links[index] !== ''" type="button" class="row-del" title="Remove" @click="updateArray('', index)">
           <i class="codicon codicon-trash"></i>

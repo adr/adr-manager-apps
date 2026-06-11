@@ -1,8 +1,10 @@
-//@ts-nocheck
 // Vue mixin which holds all the data used by the webview to save a new/edited ADR
+import { defineComponent } from "vue";
 import { naturalCase2titleCase } from "../../src/plugins/utils";
+import vscodeApiMixin from "./vscode-api-mixin";
 
-export default {
+export default defineComponent({
+  mixins: [vscodeApiMixin],
   data() {
     return {
       validated: false,
@@ -127,6 +129,25 @@ export default {
       return `The fields ${fields.join(", ")} of this ADR have values, but are not shown in the basic editor mode.`;
     }
   },
+  mounted() {
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+      switch (message.command) {
+        case "fetchAdrValues": {
+          this.getInput(JSON.parse(message.adr));
+          break;
+        }
+        case "saveSuccessful": {
+          this.fullPath = message.newPath;
+          break;
+        }
+        case "updateFileStatus": {
+          this.sendMessage("updateFileStatus", { fullPath: this.fullPath });
+          break;
+        }
+      }
+    });
+  },
   methods: {
     /**
      * Saves the values of the MADR template in the view component's data variables.
@@ -245,8 +266,8 @@ export default {
       }
     },
     /**
-     * Sends a message to the extension to create and save the ADR as a Markdown file
-     * in the ADR directory.
+     * Sends a message to the extension to save the changes made to an existing ADR
+     * in its Markdown file.
      */
     saveAdr() {
       this.sendMessage(
@@ -255,7 +276,6 @@ export default {
           adr: {
             yaml: this.yaml,
             title: this.title,
-            oldTitle: this.oldTitle,
             date: this.date,
             status: this.templateVersion === "4.0.0" ? this.status : naturalCase2titleCase(this.status),
             deciders: this.deciders,
@@ -283,25 +303,5 @@ export default {
     openEditor() {
       this.sendMessage("requestEdit", { fullPath: this.fullPath });
     }
-  },
-  mounted() {
-    // add listeners to receive data from extension
-    window.addEventListener("message", (event) => {
-      const message = event.data;
-      switch (message.command) {
-        case "fetchAdrValues": {
-          this.getInput(JSON.parse(message.adr));
-          break;
-        }
-        case "saveSuccessful": {
-          this.fullPath = message.newPath;
-          break;
-        }
-        case "updateFileStatus": {
-          this.sendMessage("updateFileStatus", { fullPath: this.fullPath });
-          break;
-        }
-      }
-    });
   }
-};
+});

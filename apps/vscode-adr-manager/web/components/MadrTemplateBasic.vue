@@ -2,7 +2,7 @@
   <div class="template">
     <TemplateTitleSection
       ref="title"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:title="title"
       :title-prop="title"
       :file-name="fileName"
@@ -11,7 +11,7 @@
     <hr class="divider" />
     <TemplateContextAndProblemStatementSection
       ref="contextAndProblemStatement"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:context-and-problem-statement="contextAndProblemStatement"
       :context-and-problem-statement-prop="contextAndProblemStatement"
       @validate="validate('contextAndProblemStatement')"
@@ -19,7 +19,7 @@
     <hr class="divider" />
     <TemplateConsideredOptionsBasicSection
       ref="consideredOptions"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:considered-options="consideredOptions"
       v-model:chosen-option="decisionOutcome.chosenOption"
       v-model:selected-index="selectedIndex"
@@ -33,7 +33,7 @@
     <hr class="divider" />
     <TemplateDecisionOutcomeBasicSection
       ref="decisionOutcome"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:explanation="decisionOutcome.explanation"
       :decision-outcome-prop="decisionOutcome"
       @validate="validate('explanation')"
@@ -42,7 +42,6 @@
 </template>
 
 <script lang="ts">
-// Mixin defining all methods, variables etc. to hold the data of an ADR
 import adrData from "../mixins/adr-data";
 
 import { defineComponent } from "vue";
@@ -62,7 +61,6 @@ export default defineComponent({
   },
   mixins: [vscode, adrData],
   mounted() {
-    // add listeners to receive data from extension
     window.addEventListener("message", (event) => {
       const message = event.data;
       switch (message.command) {

@@ -1,4 +1,3 @@
-// Functions using the VS Code Extension API
 import * as vscode from "vscode";
 import type { AdrInit, Option } from "@adr-manager/core";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
@@ -35,7 +34,6 @@ export function getAdrDirectoryString(): string {
 /**
  * Returns true iff the user wants the extension to treat single-root workspaces with only subdirectories like multi-root workspaces.
  * Defaults to true if the extension received an undefined value.
- * @returns The ADR Directory specified by the user
  */
 export function treatAsMultiRoot(): boolean {
   return vscode.workspace.getConfiguration("adrManager").get("treatSingleRootAsMultiRoot") ?? true;
@@ -62,7 +60,6 @@ export function getViewEditorMode(): string {
 /**
  * Returns true iff the user wants the extension to display diagnostics related to MADR in ADR files.
  * Defaults to true if the extension received an undefined value.
- * @returns The ADR Directory specified by the user
  */
 export function isDiagnosticsEnabled(): boolean {
   return vscode.workspace.getConfiguration("adrManager").get("showDiagnostics") ?? true;
@@ -222,7 +219,6 @@ export async function adrDirectoryExists(folderUri: vscode.Uri) {
     let currentUri = folderUri;
     let currentDirectoryFound = true;
 
-    // Iterate through subdirectories
     for (let i = 0; i < subDirectories.length; i++) {
       if (currentDirectoryFound) {
         currentDirectoryFound = false;
@@ -304,7 +300,6 @@ export async function getAllMDs(): Promise<
   let mds: { adr: string; fullPath: string; relativePath: string; fileName: string }[] = [];
   if (isWorkspaceOpened()) {
     const workspaceFolders = getWorkspaceFolders();
-    // Check if single-root folder is root folder of other root folders
     if (isSingleRootWorkspace() && treatAsMultiRoot() && (await containsOnlyRootFolders(workspaceFolders[0].uri))) {
       const childRootFolderUris = await getAllChildRootFolders(workspaceFolders[0].uri);
       for (let i = 0; i < childRootFolderUris.length; i++) {
@@ -402,38 +397,33 @@ export function createProfessionalAdr(fields: AdrInit & { templateVersion?: Madr
  */
 export async function saveAdr(
   fields: AdrInit & { fullPath: string; templateVersion?: MadrTemplateVersion }
-): Promise<vscode.Uri | undefined> {
+): Promise<vscode.Uri> {
   const fileUri = vscode.Uri.file(fields.fullPath);
-  if (fileUri) {
-    const adr = parseAdr(new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri)));
-    adr.update({
-      yaml: fields.yaml,
-      title: fields.title,
-      date: fields.date,
-      status: fields.status,
-      deciders: fields.deciders,
-      technicalStory: fields.technicalStory,
-      contextAndProblemStatement: fields.contextAndProblemStatement,
-      decisionDrivers: fields.decisionDrivers,
-      consideredOptions: fields.consideredOptions,
-      decisionOutcome: fields.decisionOutcome ? { ...adr.decisionOutcome, ...fields.decisionOutcome } : undefined,
-      links: fields.links,
-      decisionMakers: fields.decisionMakers,
-      consulted: fields.consulted,
-      informed: fields.informed,
-      confirmation: fields.confirmation,
-      consequences: fields.consequences,
-      moreInformation: fields.moreInformation
-    });
-    const newUri = getRenamedUri(fileUri, adr.title);
-    await vscode.workspace.fs.rename(fileUri, newUri);
-    const newMD = serializeAdr(adr, fields.templateVersion ?? "2.1.2");
-    await vscode.workspace.fs.writeFile(newUri, new TextEncoder().encode(newMD));
-    return newUri;
-  } else {
-    vscode.window.showWarningMessage("ADR could not be found in the workspace.");
-    return undefined;
-  }
+  const adr = parseAdr(new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri)));
+  adr.update({
+    yaml: fields.yaml,
+    title: fields.title,
+    date: fields.date,
+    status: fields.status,
+    deciders: fields.deciders,
+    technicalStory: fields.technicalStory,
+    contextAndProblemStatement: fields.contextAndProblemStatement,
+    decisionDrivers: fields.decisionDrivers,
+    consideredOptions: fields.consideredOptions,
+    decisionOutcome: fields.decisionOutcome ? { ...adr.decisionOutcome, ...fields.decisionOutcome } : undefined,
+    links: fields.links,
+    decisionMakers: fields.decisionMakers,
+    consulted: fields.consulted,
+    informed: fields.informed,
+    confirmation: fields.confirmation,
+    consequences: fields.consequences,
+    moreInformation: fields.moreInformation
+  });
+  const newUri = getRenamedUri(fileUri, adr.title);
+  await vscode.workspace.fs.rename(fileUri, newUri);
+  const newMD = serializeAdr(adr, fields.templateVersion ?? "2.1.2");
+  await vscode.workspace.fs.writeFile(newUri, new TextEncoder().encode(newMD));
+  return newUri;
 }
 
 /**
@@ -462,26 +452,6 @@ function getRenamedUri(fileUri: vscode.Uri, newName: string): vscode.Uri {
 }
 
 /**
- * Returns an array of strings that each represent the title of one considered option.
- * @param options An array of considered option objects
- * @returns An array of strings which each represent an option
- */
-export function getOptionStringsFromConsideredOptions(
-  options: {
-    title: string;
-    description: string;
-    pros: string[];
-    cons: string[];
-  }[]
-): string[] {
-  const optionStrings: string[] = [];
-  for (const option of options) {
-    optionStrings.push(option.title);
-  }
-  return optionStrings;
-}
-
-/**
  * Saves the specified Markdown string in the ADR Directory specified by the user
  * @param md The content of the Markdown file as a string
  * @param title The title of the ADR
@@ -491,7 +461,6 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
     vscode.window.showErrorMessage("Please open a workspace folder to initialize ADR Directory");
   } else {
     if (isSingleRootWorkspace()) {
-      // Check if single-root folder is root folder of other root folders
       if (treatAsMultiRoot() && (await containsOnlyRootFolders(getWorkspaceFolders()[0].uri))) {
         const childRootFolder = await vscode.window.showQuickPick(
           getAllChildRootFoldersAsStrings(getWorkspaceFolders()[0].uri),
@@ -514,7 +483,6 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
           );
           await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
           WebPanel.createOrShow(EXTENSION_URI, "main");
-          // Show success message and potentially open file in separate editor
           const open = await vscode.window.showInformationMessage(
             "ADR created. Do you want to open the Markdown file?",
             "Yes",
@@ -535,7 +503,6 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
         )}-${naturalCase2snakeCase(title)}.md`;
         const fileUri = vscode.Uri.joinPath(getWorkspaceFolders()[0].uri, getAdrDirectoryString(), fileName);
         await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
-        // Show success message and potentially open file in separate editor
         const open = await vscode.window.showInformationMessage(
           "ADR created successfully. Do you want to open the Markdown file?",
           "Yes",
@@ -558,7 +525,6 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
         )}-${naturalCase2snakeCase(title)}.md`;
         const fileUri = vscode.Uri.joinPath(destinationFolder.uri, getAdrDirectoryString(), fileName);
         await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(md));
-        // Show success message and potentially open file in separate editor
         const open = await vscode.window.showInformationMessage(
           "ADR created. Do you want to open the Markdown file?",
           "Yes",
@@ -573,23 +539,13 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
 }
 
 /**
- * Returns the highest ADR number of the ADR Directory of the specified root folder.
- * @returns The highest ADR number of the ADR Directory in the specified root folder.
+ * Returns the highest ADR number of the ADR Directory of the specified root folder, or -1 if there are no ADRs.
  */
 async function getHighestAdrNumber(folderUri: vscode.Uri): Promise<number> {
   const adrFolderUri = vscode.Uri.joinPath(folderUri, getAdrDirectoryString());
   const allAdrs = await getMDsFromFolder(adrFolderUri);
-  const titleNumbers = allAdrs.map((md) => {
-    return Number.parseInt(md.fileName.substring(md.fileName.lastIndexOf("/") + 1, md.fileName.lastIndexOf("/") + 5));
-  });
-  const highestNumber = titleNumbers.sort(function (a, b) {
-    return a - b;
-  })[titleNumbers.length - 1];
-  if (!highestNumber && highestNumber !== 0) {
-    return -1;
-  } else {
-    return highestNumber;
-  }
+  const titleNumbers = allAdrs.map((md) => Number.parseInt(md.fileName.substring(0, 4)));
+  return titleNumbers.sort((a, b) => a - b)[titleNumbers.length - 1] ?? -1;
 }
 
 /**

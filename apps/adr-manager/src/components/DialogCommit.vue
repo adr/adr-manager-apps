@@ -149,7 +149,7 @@ watch(show, (visible) => {
         return;
     }
     if (gitHubTimeout.value) {
-        void alert("Latency problem with GitHub Api. Please wait ~60 seconds!", "Warning", "warning").then(
+        alert("Latency problem with GitHub Api. Please wait ~60 seconds!", "Warning", "warning").then(
             () => (show.value = false)
         );
         return;
@@ -157,13 +157,13 @@ watch(show, (visible) => {
     commitMessage.value = "";
     openGroups.value = [];
     store.setCurrentRepositoryForCommit(props.repoFullName);
-    void store.setInfoForCommit();
+    store.setInfoForCommit();
     branch.value = store.getBranchCommit();
     changedFiles.value = store.changedFilesInRepo();
     newFiles.value = store.newFilesInRepo();
     deletedFiles.value = store.deletedFilesInRepo();
     if (fileGroups.value.length === 0) {
-        void alert("No changes have been made since the last push", "Everything up to date", "success").then(
+        alert("No changes have been made since the last push", "Everything up to date", "success").then(
             () => (show.value = false)
         );
     }
@@ -180,7 +180,7 @@ function toggleGroup(key: string): void {
 function onCommit(): void {
     show.value = false;
     emit("commit");
-    void push();
+    push();
 }
 
 /**
@@ -206,10 +206,10 @@ async function push(): Promise<void> {
         });
         startGitHubTimeout();
         store.updateLocalStorageAfterCommit(pushedFiles);
-        void alert("Successfully pushed", "Success", "success");
+        alert("Successfully pushed", "Success", "success");
     } catch (error) {
         console.error(error);
-        void alert(
+        alert(
             "Error during pushing. Your changes were not pushed. Please try again later. \nError code: " +
                 String(error),
             "Error",

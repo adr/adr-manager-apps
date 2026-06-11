@@ -147,12 +147,12 @@
     "build": "pnpm run package",
     "compile": "node scripts/build-host.mjs",
     "compile-web": "node scripts/build-webviews.mjs",
-    "watch": "concurrently -n host,web,tsc \"node scripts/build-host.mjs --watch\" \"node scripts/build-webviews.mjs --watch\" \"tsc -p . --noEmit -w\"",
+    "watch": "concurrently -n host,web,tsc \"node scripts/build-host.mjs --watch\" \"node scripts/build-webviews.mjs --watch\" \"vue-tsc -p . --noEmit -w\"",
     "watch:host": "node scripts/build-host.mjs --watch",
     "watch:web": "node scripts/build-webviews.mjs --watch",
-    "watch:tsc": "tsc -p . --noEmit -w",
+    "watch:tsc": "vue-tsc -p . --noEmit -w",
     "package": "node scripts/build-host.mjs --production && node scripts/build-webviews.mjs --production",
-    "typecheck": "tsc -p . --noEmit",
+    "typecheck": "vue-tsc -p . --noEmit",
     "pretest": "pnpm run typecheck && pnpm run compile && pnpm run lint",
     "lint": "eslint src web",
     "format": "prettier --write . --ignore-unknown",
@@ -171,7 +171,8 @@
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "vue-tsc": "catalog:"
   },
   "dependencies": {
     "@adr-manager/core": "workspace:*",

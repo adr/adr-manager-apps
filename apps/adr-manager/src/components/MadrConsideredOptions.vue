@@ -219,7 +219,7 @@ function addOption(title: string): void {
     if (professional.value) {
         expandedIds.value.push(option.id);
     }
-    void nextTick(() => titleRefs.get(option.id)?.focus());
+    nextTick(() => titleRefs.get(option.id)?.focus());
 }
 
 function removeOption(option: Option): void {

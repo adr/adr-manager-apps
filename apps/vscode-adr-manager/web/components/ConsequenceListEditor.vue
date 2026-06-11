@@ -32,7 +32,7 @@
         class="field"
         placeholder="add a consequence…"
         spellcheck="true"
-        @input="commitDraft($event.target.value)"
+        @input="commitDraft(($event.target as HTMLTextAreaElement).value)"
       />
     </div>
   </div>

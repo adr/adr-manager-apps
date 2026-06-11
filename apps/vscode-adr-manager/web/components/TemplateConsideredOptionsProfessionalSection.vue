@@ -9,7 +9,7 @@
       <draggable :list="consideredOptions" :sort="true" handle=".opt-grip" @update="$emit('checkSelection', $event)">
         <OptionContainerProfessional
           v-for="(option, index) in consideredOptions"
-          :key="option"
+          :key="index"
           v-model:title="option.title"
           v-model:description="option.description"
           v-model:pros="option.pros"

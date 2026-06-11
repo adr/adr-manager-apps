@@ -47,3 +47,5 @@ catalog:
   eslint-config-prettier: ^10.1.8
   # Test runner (all packages).
   vitest: ^4.1.8
+  # Type-checks .vue SFCs (web app and extension webviews).
+  vue-tsc: ^3.3.3

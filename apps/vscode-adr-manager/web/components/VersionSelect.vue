@@ -70,7 +70,7 @@ export default defineComponent({
       this.open = false;
     },
     onDocumentClick(event: MouseEvent) {
-      if (!(this.$refs.wrap as HTMLElement).contains(event.target as Node)) {
+      if (!(this.$refs["wrap"] as HTMLElement).contains(event.target as Node)) {
         this.open = false;
       }
     }

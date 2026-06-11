@@ -278,11 +278,11 @@ export function adr2md(adrToParse: ArchitecturalDecisionRecord, opts: Adr2MdOpti
   const title = opts.titleCase ? naturalCase2titleCase(adr.title) : adr.title;
   let md = opts.emitYaml && adr.yaml ? adr.yaml + "\n# " + title + "\n" : "# " + title + "\n";
 
-  if ((adr.status !== "" && adr.status !== "null") || adr.deciders.length > 0 || adr.date !== "") {
+  if ((adr.status !== "" && adr.status !== "null") || adr.deciders !== "" || adr.date !== "") {
     if (adr.status !== "" && adr.status !== "null") {
       md = md.concat("\n* Status: " + adr.status.trim());
     }
-    if (adr.deciders.length > 0) {
+    if (adr.deciders !== "") {
       md = md.concat("\n* Deciders: " + adr.deciders);
     }
     if (adr.date !== "") {

@@ -34,7 +34,7 @@ export function useBranchSelection(routeData: ComputedRef<EditorRouteData>) {
     function onSelectedBranch(): void {
         confirm("Do you really want to change branch?")
             .then(() => {
-                void loadARepositoryContent(currentRepo.value, selected.value).then((repoObject) => {
+                loadARepositoryContent(currentRepo.value, selected.value).then((repoObject) => {
                     oldSelected.value = selected.value;
                     store.updateRepository(repoObject);
                 });
@@ -47,7 +47,7 @@ export function useBranchSelection(routeData: ComputedRef<EditorRouteData>) {
 
     function loadBranchNames(): void {
         const [owner, name] = currentRepo.value.split("/");
-        void loadBranchesName(name ?? "", owner ?? "").then((branches) => {
+        loadBranchesName(name ?? "", owner ?? "").then((branches) => {
             if (!branches) {
                 return;
             }

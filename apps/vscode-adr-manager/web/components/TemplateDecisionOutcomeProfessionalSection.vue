@@ -19,18 +19,18 @@
       <div class="because-input">
         <textarea
           id="auto-grow-explanation"
-          v-model="v$.decisionOutcome.explanation.$model"
+          v-model="v$['decisionOutcome'].explanation.$model"
           class="field"
-          :class="{ invalid: v$.decisionOutcome.explanation.$error }"
+          :class="{ invalid: v$['decisionOutcome'].explanation.$error }"
           placeholder="justification for the chosen option…"
           spellcheck="true"
           @input="
             updateHeight('explanation');
-            $emit('update:explanation', $event.target.value);
+            $emit('update:explanation', ($event.target as HTMLTextAreaElement).value);
             $emit('validate');
           "
         />
-        <p v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid" class="error-message">
+        <p v-for="error of v$['decisionOutcome'].explanation.$errors" :key="error.$uid" class="error-message">
           {{ error.$message }}
         </p>
       </div>
@@ -60,7 +60,7 @@
           :value="confirmation"
           @input="
             updateHeight('confirmation');
-            $emit('update:confirmation', $event.target.value);
+            $emit('update:confirmation', ($event.target as HTMLTextAreaElement).value);
             $emit('updateArray');
           "
         />
@@ -82,7 +82,7 @@
             checkMove('positiveConsequences', $event);
           "
         >
-          <div v-for="(positive, index) in positiveConsequencesWithBlank" :key="index" class="list-row">
+          <div v-for="(_, index) in positiveConsequencesWithBlank" :key="index" class="list-row">
             <span
               class="gutter"
               :class="decisionOutcome.positiveConsequences[index] === '' ? 'dimmed' : 'positive-consequences-grabber'"
@@ -97,7 +97,9 @@
               class="field auto-grow-positive-consequence"
               placeholder="a positive consequence…"
               spellcheck="true"
-              @input="updateArray('positiveConsequences', $event.target.value, index, 'positives')"
+              @input="
+                updateArray('positiveConsequences', ($event.target as HTMLTextAreaElement).value, index, 'positives')
+              "
             />
             <button
               v-if="decisionOutcome.positiveConsequences[index] !== ''"
@@ -126,7 +128,7 @@
             checkMove('negativeConsequences', $event);
           "
         >
-          <div v-for="(negative, index) in negativeConsequencesWithBlank" :key="index" class="list-row">
+          <div v-for="(_, index) in negativeConsequencesWithBlank" :key="index" class="list-row">
             <span
               class="gutter"
               :class="decisionOutcome.negativeConsequences[index] === '' ? 'dimmed' : 'negative-consequences-grabber'"
@@ -141,7 +143,9 @@
               class="field auto-grow-negative-consequence"
               placeholder="a negative consequence…"
               spellcheck="true"
-              @input="updateArray('negativeConsequences', $event.target.value, index, 'negatives')"
+              @input="
+                updateArray('negativeConsequences', ($event.target as HTMLTextAreaElement).value, index, 'negatives')
+              "
             />
             <button
               v-if="decisionOutcome.negativeConsequences[index] !== ''"

@@ -31,6 +31,14 @@ import { VueDraggableNext } from "vue-draggable-next";
 import OptionContainerBasic from "./OptionContainerBasic.vue";
 import AddOptionButton from "./AddOptionButton.vue";
 
+type ConsideredOption = {
+  title: string;
+  description: string;
+  pros: string[];
+  neutrals: string[];
+  cons: string[];
+};
+
 export default defineComponent({
   name: "TemplateConsideredOptionsBasicSection",
   components: {
@@ -40,7 +48,7 @@ export default defineComponent({
     draggable: VueDraggableNext
   },
   props: {
-    consideredOptionsProp: Array as PropType<string[]>,
+    consideredOptionsProp: Array as PropType<ConsideredOption[]>,
     chosenOption: String,
     selectedIndex: Number
   },

@@ -15,7 +15,7 @@
       :value="moreInformation"
       @input="
         updateHeight();
-        $emit('update:moreInformation', $event.target.value);
+        $emit('update:moreInformation', ($event.target as HTMLTextAreaElement).value);
         $emit('validate');
       "
     />

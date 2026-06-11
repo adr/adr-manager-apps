@@ -21,18 +21,18 @@
       <div class="because-input">
         <textarea
           id="auto-grow-explanation"
-          v-model="v$.decisionOutcome.explanation.$model"
+          v-model="v$['decisionOutcome'].explanation.$model"
           class="field"
-          :class="{ invalid: v$.decisionOutcome.explanation.$error }"
+          :class="{ invalid: v$['decisionOutcome'].explanation.$error }"
           placeholder="justification for the chosen option…"
           spellcheck="true"
           @input="
             updateHeight();
-            $emit('update:explanation', $event.target.value);
+            $emit('update:explanation', ($event.target as HTMLTextAreaElement).value);
             $emit('validate');
           "
         />
-        <p v-for="error of v$.decisionOutcome.explanation.$errors" :key="error.$uid" class="error-message">
+        <p v-for="error of v$['decisionOutcome'].explanation.$errors" :key="error.$uid" class="error-message">
           {{ error.$message }}
         </p>
       </div>

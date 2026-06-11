@@ -78,7 +78,7 @@ function commitDraft(text: string): void {
     props.list.push({ kind: "good", text });
     draft.value = "";
     const newIndex = props.list.length - 1;
-    void nextTick(() => rowRefs.get(newIndex)?.focus());
+    nextTick(() => rowRefs.get(newIndex)?.focus());
 }
 
 function remove(index: number): void {

@@ -1,8 +1,19 @@
-//@ts-nocheck
 // Vue mixin which holds all the data used by a MADR template component
+import { defineComponent } from "vue";
 import { createShortTitle } from "../../src/plugins/utils";
+import vscodeApiMixin from "./vscode-api-mixin";
 
-export default {
+// Typed by hand because the .vue imports only yield generic component types (see shims-vue.d.ts).
+type FieldValidation = { $error: boolean };
+type SectionRefs = {
+  title: { v$: { title: FieldValidation } };
+  contextAndProblemStatement: { v$: { contextAndProblemStatement: FieldValidation } };
+  consideredOptions: { v$: { consideredOptions: FieldValidation } };
+  decisionOutcome: { v$: { decisionOutcome: { chosenOption: FieldValidation; explanation: FieldValidation } } };
+};
+
+export default defineComponent({
+  mixins: [vscodeApiMixin],
   props: {
     templateVersion: {
       type: String,
@@ -52,6 +63,14 @@ export default {
       dataFetched: false
     };
   },
+  computed: {
+    /**
+     * The file name of the ADR being edited, empty when adding a new ADR.
+     */
+    fileName(): string {
+      return this.fullPath.split("/").pop() ?? "";
+    }
+  },
   watch: {
     /**
      * Deciders and decision-makers name the same people, so switching the template
@@ -67,13 +86,29 @@ export default {
       this.sendInput();
     }
   },
-  computed: {
-    /**
-     * The file name of the ADR being edited, empty when adding a new ADR.
-     */
-    fileName(): string {
-      return this.fullPath.split("/").pop() ?? "";
-    }
+  mounted() {
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+      switch (message.command) {
+        case "addOption": {
+          this.consideredOptions.push({ title: message.option, description: "", pros: [], neutrals: [], cons: [] });
+          if (this.consideredOptions.length === 1) {
+            this.selectOption(0);
+          }
+          this.validate("consideredOptions");
+          this.validate("chosenOption");
+          break;
+        }
+        case "fetchAdrValues": {
+          this.fillFields(JSON.parse(message.adr));
+          break;
+        }
+        case "saveSuccessful": {
+          this.fullPath = message.newPath;
+          break;
+        }
+      }
+    });
   },
   methods: {
     /**
@@ -155,11 +190,7 @@ export default {
      */
     selectOption(index: number) {
       this.selectedIndex = index;
-      if (index !== -1) {
-        this.decisionOutcome.chosenOption = this.consideredOptions[this.selectedIndex].title;
-      } else {
-        this.decisionOutcome.chosenOption = "";
-      }
+      this.decisionOutcome.chosenOption = this.consideredOptions[index]?.title ?? "";
       this.validate("consideredOptions");
       this.validate("chosenOption");
     },
@@ -182,9 +213,9 @@ export default {
      * Re-selects the correct option after dragging to prevent inconsistencies.
      * @param evt The event object
      */
-    checkSelection(evt: any) {
+    checkSelection(evt: { newIndex: number }) {
       // check if the dragged option is the chosen option
-      if (this.decisionOutcome.chosenOption === this.consideredOptions[evt.newIndex].title) {
+      if (this.decisionOutcome.chosenOption === this.consideredOptions[evt.newIndex]?.title) {
         this.selectOption(evt.newIndex);
       } else {
         const correctIndex = this.consideredOptions.findIndex(
@@ -232,60 +263,29 @@ export default {
      * @param field The ADR field to be validated
      */
     validate(field: string) {
+      const refs = this.$refs as SectionRefs;
       switch (field) {
         case "title":
-          //@ts-ignore
-          if (!this.$refs.title.v$.title.$error && this.title !== "") {
-            this.valid.title = true;
-          } else {
-            this.valid.title = false;
-          }
+          this.valid.title = !refs.title.v$.title.$error && this.title !== "";
           break;
         case "contextAndProblemStatement":
-          if (
-            //@ts-ignore
-            !this.$refs.contextAndProblemStatement.v$.contextAndProblemStatement.$error &&
-            this.contextAndProblemStatement !== ""
-          ) {
-            this.valid.contextAndProblemStatement = true;
-          } else {
-            this.valid.contextAndProblemStatement = false;
-          }
+          this.valid.contextAndProblemStatement =
+            !refs.contextAndProblemStatement.v$.contextAndProblemStatement.$error &&
+            this.contextAndProblemStatement !== "";
           break;
         case "consideredOptions":
-          if (
-            //@ts-ignore
-            !this.$refs.consideredOptions.v$.consideredOptions.$error &&
-            this.consideredOptions.length > 0
-          ) {
-            this.valid.consideredOptions = true;
-          } else {
-            this.valid.consideredOptions = false;
-          }
+          this.valid.consideredOptions =
+            !refs.consideredOptions.v$.consideredOptions.$error && this.consideredOptions.length > 0;
           break;
         case "chosenOption":
-          if (
-            //@ts-ignore
-            !this.$refs.decisionOutcome.v$.decisionOutcome.chosenOption.$error &&
-            this.selectedIndex !== -1 &&
-            this.consideredOptions[this.selectedIndex].title === this.decisionOutcome.chosenOption &&
-            this.decisionOutcome.chosenOption !== ""
-          ) {
-            this.valid.chosenOption = true;
-          } else {
-            this.valid.chosenOption = false;
-          }
+          this.valid.chosenOption =
+            !refs.decisionOutcome.v$.decisionOutcome.chosenOption.$error &&
+            this.consideredOptions[this.selectedIndex]?.title === this.decisionOutcome.chosenOption &&
+            this.decisionOutcome.chosenOption !== "";
           break;
         case "explanation":
-          if (
-            //@ts-ignore
-            !this.$refs.decisionOutcome.v$.decisionOutcome.explanation.$error &&
-            this.decisionOutcome.explanation !== ""
-          ) {
-            this.valid.explanation = true;
-          } else {
-            this.valid.explanation = false;
-          }
+          this.valid.explanation =
+            !refs.decisionOutcome.v$.decisionOutcome.explanation.$error && this.decisionOutcome.explanation !== "";
           break;
       }
       this.sendInput();
@@ -322,30 +322,5 @@ export default {
         this.$emit("invalidated");
       }
     }
-  },
-  mounted() {
-    // add listeners to receive data from extension
-    window.addEventListener("message", (event) => {
-      const message = event.data;
-      switch (message.command) {
-        case "addOption": {
-          this.consideredOptions.push({ title: message.option, description: "", pros: [], neutrals: [], cons: [] });
-          if (this.consideredOptions.length === 1) {
-            this.selectOption(0);
-          }
-          this.validate("consideredOptions");
-          this.validate("chosenOption");
-          break;
-        }
-        case "fetchAdrValues": {
-          this.fillFields(JSON.parse(message.adr));
-          break;
-        }
-        case "saveSuccessful": {
-          this.fullPath = message.newPath;
-          break;
-        }
-      }
-    });
   }
-};
+});

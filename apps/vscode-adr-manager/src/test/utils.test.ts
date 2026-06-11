@@ -1,7 +1,7 @@
 // Tests for the extension-specific utilities. The shared parser/title/casing
 // logic is tested in @adr-manager/core (packages/core/tests).
 import { describe, expect, test } from "vitest";
-import { cleanPathString, matchesMadrTitleFormat, validateDirectoryName } from "../plugins/utils";
+import { cleanPathString, matchesMadrTitleFormat } from "../plugins/utils";
 
 describe("Test MADR Title Format Match", () => {
   test("Valid MADR titles", () => {
@@ -65,36 +65,5 @@ describe("Test Cleaning Path Strings", () => {
     for (let i = 0; i < uncleanedPaths.length; i++) {
       expect(cleanPathString(uncleanedPaths[i]!)).toBe(cleanedPaths[i]);
     }
-  });
-});
-
-describe("Test Directory Name Validation", () => {
-  test("Valid directory names", () => {
-    const validNames = ["docs", "decision records", "0001-decisions", "docs.adr"];
-    validNames.forEach((name) => {
-      expect(validateDirectoryName(name)).toBe(true);
-    });
-  });
-
-  test("Invalid directory names", () => {
-    const invalidNames = [
-      " starts-with-whitespace",
-      "ends-with-whitespace ",
-      "ends-with-dot.",
-      "contains/slash",
-      "contains\\backslash",
-      'contains"quote',
-      "contains|pipe",
-      "contains?question",
-      "contains*asterisk",
-      "contains:colon"
-    ];
-    invalidNames.forEach((name) => {
-      expect(validateDirectoryName(name)).toBe(false);
-    });
-  });
-
-  test("Undefined is rejected", () => {
-    expect(validateDirectoryName(undefined)).toBe(false);
   });
 });

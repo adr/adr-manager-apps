@@ -165,7 +165,7 @@ function copyMarkdown(): void {
 function logOut(): void {
     localStorage.clear();
     store.setMode("basic");
-    void router.push("/");
+    router.push("/");
 }
 </script>
 

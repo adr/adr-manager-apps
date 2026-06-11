@@ -2,14 +2,14 @@
   <div class="title-section">
     <div class="title-wrap">
       <input
-        v-model="v$.title.$model"
+        v-model="v$['title'].$model"
         type="text"
         class="title-input"
-        :class="{ invalid: v$.title.$error }"
+        :class="{ invalid: v$['title'].$error }"
         placeholder="Decision title"
         spellcheck="true"
         @input="
-          $emit('update:title', $event.target.value);
+          $emit('update:title', ($event.target as HTMLInputElement).value);
           $emit('validate');
         "
       />
@@ -18,7 +18,7 @@
         short and avoid special characters.
       </HelpTooltip>
     </div>
-    <p v-for="error of v$.title.$errors" :key="error.$uid" class="error-message">{{ error.$message }}</p>
+    <p v-for="error of v$['title'].$errors" :key="error.$uid" class="error-message">{{ error.$message }}</p>
     <div v-if="fileName" class="title-hint">
       <i class="codicon codicon-info"></i>
       Changing the title changes the file name: <code>{{ fileName }}</code>

@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { cleanPathString, matchesMadrTitleFormat } from "./plugins/utils";
 import {
@@ -28,20 +26,15 @@ import { AdrManagerCodeActionProvider } from "./AdrManagerCodeActionProvider";
  * @param context The context of the extension (automatically provided by the extension)
  */
 export function activate(context: vscode.ExtensionContext) {
-  // Add custom when clause context for ADR Directory
   updateWhenClauseContexts();
-
-  // Create diagnostics for ADR files
   createAdrDiagnostics(context);
 
-  // Open ADR Manager Main Webview
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.openMainWebView", () => {
       WebPanel.createOrShow(context.extensionUri, "main");
     })
   );
 
-  // Open ADR Manager Add ADR Webview
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.openAddAdrWebView", (page?: string) => {
       if (!page) {
@@ -56,7 +49,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // Open ADR Manager View ADR Webview
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "vscode-adr-manager.openViewAdrWebView",
@@ -80,14 +72,12 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // Initialize ADR Directory based on configuration
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.initializeAdrDirectory", async () => {
       if (!isWorkspaceOpened()) {
         vscode.window.showErrorMessage("Please open a workspace folder to initialize ADR Directory");
       } else {
         if (isSingleRootWorkspace()) {
-          // Check if single-root folder is root folder of other root folders
           if (treatAsMultiRoot() && (await containsOnlyRootFolders(getWorkspaceFolders()[0].uri))) {
             const childRootFolder = await vscode.window.showQuickPick(
               getAllChildRootFoldersAsStrings(getWorkspaceFolders()[0].uri),
@@ -109,7 +99,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // Change the ADR Directory
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.changeAdrDirectory", async () => {
       const newDirectory = await vscode.window.showInputBox({
@@ -128,7 +117,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // Open ADR Manager on currently open Markdown file
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.viewInAdrManager", async () => {
       if (vscode.window.activeTextEditor) {
@@ -155,7 +143,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // Open ADR Manager on Markdown file from context menu
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.viewAdrFromContextMenu", async (uri: vscode.Uri) => {
       const mdString = new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
@@ -180,7 +167,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // Update ADR Directory when clause context when user changes ADR
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("adrManager.adrDirectory")) {
@@ -207,7 +193,6 @@ async function createAdrDiagnostics(context: vscode.ExtensionContext) {
     diagnosticCollection.set(doc.uri, diagnostics);
   };
 
-  // set up event listeners
   const didOpen = vscode.workspace.onDidOpenTextDocument((doc) => diagnosticsHandler(doc));
   const didChange = vscode.workspace.onDidChangeTextDocument((e) => diagnosticsHandler(e.document));
   const didClose = vscode.workspace.onDidCloseTextDocument((doc) => diagnosticCollection.set(doc.uri, undefined));
@@ -223,7 +208,6 @@ async function createAdrDiagnostics(context: vscode.ExtensionContext) {
     new AdrManagerCodeActionProvider()
   );
 
-  // add diagnostics if VS Code opens with an active text editor
   if (vscode.window.activeTextEditor) {
     await diagnosticsHandler(vscode.window.activeTextEditor.document);
   }
@@ -238,13 +222,12 @@ async function createAdrDiagnostics(context: vscode.ExtensionContext) {
 }
 
 /**
- * Sets  custom when clause contexts for the extension.
+ * Sets custom when clause contexts for the extension.
  */
 export function updateWhenClauseContexts() {
-  // Add custom when clause context to show/hide commands in the command palette
+  // Custom when clause context to show/hide commands in the command palette
   vscode.commands.executeCommand("setContext", "vscode-adr-manager.hideCommand", false);
 
-  // Add custom when clause context for the current ADR Directory
   const contextKeys = [...cleanPathString(getAdrDirectoryString()).split("/")];
   vscode.commands.executeCommand("setContext", "vscode-adr-manager.adrDirectory", contextKeys);
 }

@@ -45,15 +45,28 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 
 const STATUS_TONES = ["proposed", "rejected", "accepted", "deprecated", "superseded"];
+
+// Shape of one entry of the JSON-parsed ADR list sent by the extension host (see WebPanel.fetchAdrs).
+type AdrListEntry = {
+  adr: {
+    title: string;
+    status: string;
+    conforming: boolean;
+    parseErrors: { line: number; charPosition: number; message: string }[];
+  };
+  fullPath: string;
+  relativePath: string;
+  fileName: string;
+};
 
 export default defineComponent({
   name: "ADRContainer",
   props: {
     adr: {
-      type: Object,
+      type: Object as PropType<AdrListEntry>,
       required: true
     }
   },

@@ -19,20 +19,6 @@ export function getNonce(): string {
 }
 
 /**
- * Returns true if the specified string is a valid directory name. The name must not start
- * with whitespace, end with a dot or whitespace, or contain any of: ? * : " ; < > | / \
- */
-export function validateDirectoryName(name?: string | undefined): boolean {
-  if (typeof name === "undefined") {
-    return false;
-  }
-
-  const test = /^[^\s\x00-\x1f\\?*:"";<>|\/][^\x00-\x1f\\?*:"";<>|\/]*[^\s^\x00-\x1f\\?*:"";<>|\/.]+$/g;
-
-  return test.test(name);
-}
-
-/**
  * Returns true if the given string matches the MADR file-name format: starts with a
  * four-digit number, is in kebab-case / snake_case (or a mix), and ends in .md.
  * The characters '#' and '?' are prohibited to avoid URI parsing issues.
@@ -45,8 +31,5 @@ export function matchesMadrTitleFormat(name: string) {
  * Replaces every "\\" with "/" and collapses repeated "/" into a single "/".
  */
 export function cleanPathString(path: string): string {
-  return path
-    .replace(/\\/g, "/")
-    .replace(/(\\\\)+\\*/g, "/")
-    .replace(/(\/\/)+\/*/g, "/");
+  return path.replace(/\\/g, "/").replace(/(\/\/)+\/*/g, "/");
 }

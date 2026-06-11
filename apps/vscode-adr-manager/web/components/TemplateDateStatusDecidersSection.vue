@@ -12,7 +12,7 @@
           class="chip-input date-input"
           :value="date"
           @input="
-            $emit('update:date', $event.target.value);
+            $emit('update:date', ($event.target as HTMLInputElement).value);
             $emit('validate');
           "
         />
@@ -26,9 +26,9 @@
       <span class="chip status" :data-tone="statusTone">
         <select
           class="chip-input status-select"
-          :value="status.toLowerCase()"
+          :value="(status ?? '').toLowerCase()"
           @input="
-            $emit('update:status', $event.target.value.toLowerCase());
+            $emit('update:status', ($event.target as HTMLSelectElement).value.toLowerCase());
             $emit('validate');
           "
         >
@@ -57,8 +57,8 @@
           spellcheck="true"
           :value="deciders"
           @input="
-            $emit('update:deciders', $event.target.value);
-            $emit('update:decisionMakers', $event.target.value);
+            $emit('update:deciders', ($event.target as HTMLInputElement).value);
+            $emit('update:decisionMakers', ($event.target as HTMLInputElement).value);
             $emit('validate');
           "
         />
@@ -80,8 +80,8 @@
             spellcheck="true"
             :value="decisionMakers"
             @input="
-              $emit('update:decisionMakers', $event.target.value);
-              $emit('update:deciders', $event.target.value);
+              $emit('update:decisionMakers', ($event.target as HTMLInputElement).value);
+              $emit('update:deciders', ($event.target as HTMLInputElement).value);
               $emit('validate');
             "
           />
@@ -102,7 +102,7 @@
             spellcheck="true"
             :value="consulted"
             @input="
-              $emit('update:consulted', $event.target.value);
+              $emit('update:consulted', ($event.target as HTMLInputElement).value);
               $emit('validate');
             "
           />
@@ -123,7 +123,7 @@
             spellcheck="true"
             :value="informed"
             @input="
-              $emit('update:informed', $event.target.value);
+              $emit('update:informed', ($event.target as HTMLInputElement).value);
               $emit('validate');
             "
           />

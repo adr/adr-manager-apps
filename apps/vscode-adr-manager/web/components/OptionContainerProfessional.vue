@@ -6,12 +6,12 @@
         <i class="codicon" :class="chosen ? 'codicon-pass-filled' : 'codicon-circle-large-outline'"></i>
       </button>
       <input
-        v-model="v$.title.$model"
+        v-model="v$['title'].$model"
         class="opt-title-input"
-        :class="{ invalid: v$.title.$error }"
+        :class="{ invalid: v$['title'].$error }"
         placeholder="Option title…"
         spellcheck="true"
-        @input="$emit('update:title', $event.target.value)"
+        @input="$emit('update:title', ($event.target as HTMLInputElement).value)"
       />
       <span v-if="chosen" class="chosen-tag">chosen</span>
       <div class="opt-actions">
@@ -28,7 +28,7 @@
         </button>
       </div>
     </div>
-    <p v-for="error of v$.title.$errors" :key="error.$uid" class="error-message title-error">{{ error.$message }}</p>
+    <p v-for="error of v$['title'].$errors" :key="error.$uid" class="error-message title-error">{{ error.$message }}</p>
     <div v-if="isExpanded" class="opt-body">
       <div class="subhead">
         <h4>Description</h4>
@@ -43,7 +43,7 @@
         :value="description"
         @input="
           updateHeight('description');
-          $emit('update:description', $event.target.value);
+          $emit('update:description', ($event.target as HTMLTextAreaElement).value);
         "
       />
       <div class="opt-proscons">
@@ -62,7 +62,7 @@
               checkMove('pros', $event);
             "
           >
-            <div v-for="(pro, index) in prosWithBlank" :key="index" class="list-row">
+            <div v-for="(_, index) in prosWithBlank" :key="index" class="list-row">
               <span class="gutter" :class="pros[index] === '' ? 'dimmed' : 'pros-grabber'">
                 <i class="codicon" :class="pros[index] === '' ? 'codicon-add' : 'codicon-gripper'"></i>
               </span>
@@ -72,7 +72,7 @@
                 class="field auto-grow-pro"
                 placeholder="a supporting argument…"
                 spellcheck="true"
-                @input="updateArray('pros', $event.target.value, index, 'pros')"
+                @input="updateArray('pros', ($event.target as HTMLTextAreaElement).value, index, 'pros')"
               />
               <button
                 v-if="pros[index] !== ''"
@@ -102,7 +102,7 @@
               checkMove('neutrals', $event);
             "
           >
-            <div v-for="(neutral, index) in neutralsWithBlank" :key="index" class="list-row">
+            <div v-for="(_, index) in neutralsWithBlank" :key="index" class="list-row">
               <span class="gutter" :class="neutrals[index] === '' ? 'dimmed' : 'neutrals-grabber'">
                 <i class="codicon" :class="neutrals[index] === '' ? 'codicon-add' : 'codicon-gripper'"></i>
               </span>
@@ -112,7 +112,7 @@
                 class="field auto-grow-neutral"
                 placeholder="a neutral argument…"
                 spellcheck="true"
-                @input="updateArray('neutrals', $event.target.value, index, 'neutrals')"
+                @input="updateArray('neutrals', ($event.target as HTMLTextAreaElement).value, index, 'neutrals')"
               />
               <button
                 v-if="neutrals[index] !== ''"
@@ -141,7 +141,7 @@
               checkMove('cons', $event);
             "
           >
-            <div v-for="(con, index) in consWithBlank" :key="index" class="list-row">
+            <div v-for="(_, index) in consWithBlank" :key="index" class="list-row">
               <span class="gutter" :class="cons[index] === '' ? 'dimmed' : 'cons-grabber'">
                 <i class="codicon" :class="cons[index] === '' ? 'codicon-add' : 'codicon-gripper'"></i>
               </span>
@@ -151,7 +151,7 @@
                 class="field auto-grow-con"
                 placeholder="an argument against…"
                 spellcheck="true"
-                @input="updateArray('cons', $event.target.value, index, 'cons')"
+                @input="updateArray('cons', ($event.target as HTMLTextAreaElement).value, index, 'cons')"
               />
               <button
                 v-if="cons[index] !== ''"
@@ -176,6 +176,9 @@ import useValidate from "@vuelidate/core";
 import { helpers, required } from "@vuelidate/validators";
 import { VueDraggableNext } from "vue-draggable-next";
 import HelpTooltip from "./HelpTooltip.vue";
+
+type ArgumentListKey = "pros" | "neutrals" | "cons";
+type AutoGrowKey = ArgumentListKey | "description";
 
 export default defineComponent({
   name: "OptionContainerProfessional",
@@ -256,7 +259,7 @@ export default defineComponent({
      * Prevents the user to drag an item below an empty input field that is reserved for new inputs.
      * @param evt The event fired upon causing an update with a drag
      */
-    checkMove(array: string, evt: any) {
+    checkMove(array: ArgumentListKey, evt: { newIndex: number }) {
       const list = this[array];
       if (list[evt.newIndex - 1] === "") {
         list[evt.newIndex - 1] = list[evt.newIndex];
@@ -267,7 +270,7 @@ export default defineComponent({
     /**
      * Updates the list of pros/neutrals/cons.
      */
-    updateArray(array: string, text: string, index: number, heightKey: string) {
+    updateArray(array: ArgumentListKey, text: string, index: number, heightKey: AutoGrowKey) {
       this[array].splice(index, 1, text);
       this[array] = this[array].filter((item) => item !== "");
       this.$emit(`update:${array}`, this[array]);
@@ -276,8 +279,8 @@ export default defineComponent({
     /**
      * Updated the height of the textareas of the specified list based on their input.
      */
-    updateHeight(key: string) {
-      const selectors = {
+    updateHeight(key: AutoGrowKey) {
+      const selectors: Record<AutoGrowKey, string> = {
         description: ".auto-grow-description",
         pros: ".auto-grow-pro",
         neutrals: ".auto-grow-neutral",

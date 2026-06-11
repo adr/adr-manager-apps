@@ -7,18 +7,18 @@
     </TemplateHeader>
     <textarea
       id="auto-grow-context-problem-statement"
-      v-model="v$.contextAndProblemStatement.$model"
+      v-model="v$['contextAndProblemStatement'].$model"
       class="field"
-      :class="{ invalid: v$.contextAndProblemStatement.$error }"
+      :class="{ invalid: v$['contextAndProblemStatement'].$error }"
       placeholder="Describe the context and the problem this decision addresses…"
       spellcheck="true"
       @input="
         updateHeight();
-        $emit('update:contextAndProblemStatement', $event.target.value);
+        $emit('update:contextAndProblemStatement', ($event.target as HTMLTextAreaElement).value);
         $emit('validate');
       "
     />
-    <p v-for="error of v$.contextAndProblemStatement.$errors" :key="error.$uid" class="error-message">
+    <p v-for="error of v$['contextAndProblemStatement'].$errors" :key="error.$uid" class="error-message">
       {{ error.$message }}
     </p>
   </div>

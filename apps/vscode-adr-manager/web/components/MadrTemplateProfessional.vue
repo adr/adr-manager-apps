@@ -2,14 +2,14 @@
   <div class="template">
     <TemplateTitleSection
       ref="title"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:title="title"
       :title-prop="title"
       :file-name="fileName"
       @validate="validate('title')"
     ></TemplateTitleSection>
     <TemplateDateStatusDecidersSection
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:date="date"
       v-model:status="status"
       v-model:deciders="deciders"
@@ -22,20 +22,20 @@
     <hr class="divider" />
     <TemplateContextAndProblemStatementSection
       ref="contextAndProblemStatement"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:context-and-problem-statement="contextAndProblemStatement"
       :context-and-problem-statement-prop="contextAndProblemStatement"
       @validate="validate('contextAndProblemStatement')"
     ></TemplateContextAndProblemStatementSection>
     <TemplateTechnicalStorySection
       v-if="templateVersion === '2.1.2'"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:technical-story="technicalStory"
       @validate="validateAll"
     ></TemplateTechnicalStorySection>
     <hr class="divider" />
     <TemplateDecisionDriversSection
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:decision-drivers="decisionDrivers"
       :decision-drivers-prop="decisionDrivers"
       @update:decision-drivers="validateAll"
@@ -43,7 +43,7 @@
     <hr class="divider" />
     <TemplateConsideredOptionsProfessionalSection
       ref="consideredOptions"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:considered-options="consideredOptions"
       v-model:chosen-option="decisionOutcome.chosenOption"
       v-model:selected-index="selectedIndex"
@@ -61,7 +61,7 @@
     <hr class="divider" />
     <TemplateDecisionOutcomeProfessionalSection
       ref="decisionOutcome"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:explanation="decisionOutcome.explanation"
       v-model:positive-consequences="decisionOutcome.positiveConsequences"
       v-model:negative-consequences="decisionOutcome.negativeConsequences"
@@ -75,14 +75,14 @@
     <hr class="divider" />
     <TemplateLinksSection
       v-if="templateVersion === '2.1.2'"
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:links="links"
       :links-prop="links"
       @update:links="validateAll"
     ></TemplateLinksSection>
     <TemplateMoreInformationSection
       v-else
-      :key="dataFetched"
+      :key="Number(dataFetched)"
       v-model:more-information="moreInformation"
       @validate="validateAll"
     ></TemplateMoreInformationSection>
@@ -90,7 +90,6 @@
 </template>
 
 <script lang="ts">
-// Mixin defining all methods, variables etc. to hold the data of an ADR
 import adrData from "../mixins/adr-data";
 
 import { defineComponent } from "vue";

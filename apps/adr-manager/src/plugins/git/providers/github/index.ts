@@ -13,6 +13,7 @@ import {
     updateBranchRef
 } from "./api";
 import { applyAuthHeader, clearSession, signInWithGitHubPopup } from "./auth";
+import { encodeFilePath } from "../../paths";
 import type { GitProvider } from "../../provider";
 import type { GitHubTreeInput } from "./types";
 
@@ -50,6 +51,10 @@ export const githubProvider: GitProvider = {
     listBranches,
     listFiles,
     readFile,
+
+    fileWebUrl(repoFullName, branch, filePath) {
+        return `https://github.com/${repoFullName}/blob/${encodeFilePath(branch)}/${encodeFilePath(filePath)}`;
+    },
 
     async commitFiles({ repoFullName, branch, message, author, changes }) {
         const lastCommit = await getLastCommit(repoFullName, branch);

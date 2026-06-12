@@ -14,7 +14,7 @@ import type { AdrFile } from "@/types/adr";
 import type { Mode } from "@/types/store";
 import type { CommitFile, FileStatus, PushedFile } from "@/types/commit";
 
-import {FIELD_KEYS, DEFAULT_FIELD_VISIBILITY, applyFieldVisibilityFilter} from "@adr-manager/core";
+import { FIELD_KEYS, DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 
 export const store = reactive({
@@ -47,21 +47,21 @@ export const store = reactive({
         // Load mode from local storage (default to "basic" for anything unexpected).
         this.mode = lsGet("mode") === "professional" ? "professional" : "basic";
         const savedVisibility = lsGet("fieldVisibility");
-            if (savedVisibility !== null) {
-                try {
-                    const parsed: unknown = JSON.parse(savedVisibility);
-                    if (parsed && typeof parsed === "object") {
-                        for (const key of FIELD_KEYS) {
-                            const val = (parsed as Record<string, unknown>)[key];
-                            if (typeof val === "boolean") {
-                    this.fieldVisibility[key] = val;
+        if (savedVisibility !== null) {
+            try {
+                const parsed: unknown = JSON.parse(savedVisibility);
+                if (parsed && typeof parsed === "object") {
+                    for (const key of FIELD_KEYS) {
+                        const val = (parsed as Record<string, unknown>)[key];
+                        if (typeof val === "boolean") {
+                            this.fieldVisibility[key] = val;
+                        }
+                    }
                 }
+            } catch {
+                // invalid JSON – keep defaults
             }
         }
-    } catch {
-        // invalid JSON – keep defaults
-    }
-}
     },
 
     updateLocalStorageRepositories(): void {
@@ -230,9 +230,9 @@ export const store = reactive({
     },
 
     setFieldVisibility(key: FieldKey, value: boolean): void {
-    this.fieldVisibility[key] = value;
-    lsSet("fieldVisibility", JSON.stringify(this.fieldVisibility));
-},
+        this.fieldVisibility[key] = value;
+        lsSet("fieldVisibility", JSON.stringify(this.fieldVisibility));
+    },
 
     setCurrentRepositoryForCommit(repoName: string): void {
         for (const repo of this.addedRepositories) {

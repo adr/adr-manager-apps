@@ -38,6 +38,7 @@ export default defineComponent({
         negativeConsequences: [] as string[]
       },
       links: [] as string[],
+      relevantFiles: [] as string[],
       decisionMakers: "",
       consulted: "",
       informed: "",
@@ -72,6 +73,7 @@ export default defineComponent({
         this.consequences.length ||
         this.confirmation ||
         this.links.length ||
+        this.relevantFiles.length ||
         this.moreInformation
       );
     },
@@ -129,6 +131,9 @@ export default defineComponent({
       if (this.links.some((link) => link !== "")) {
         fields.push("'Links'");
       }
+      if (this.relevantFiles.some((file) => file !== "")) {
+        fields.push("'Relevant Files'");
+      }
       if (this.moreInformation) {
         fields.push("'More Information'");
       }
@@ -167,6 +172,7 @@ export default defineComponent({
         negativeConsequences: string[];
       };
       links: string[];
+      relevantFiles?: string[];
       decisionMakers?: string;
       consulted?: string;
       informed?: string;
@@ -188,6 +194,7 @@ export default defineComponent({
       this.consideredOptions = fields.consideredOptions.map((option) => ({ neutrals: [], ...option }));
       this.decisionOutcome = fields.decisionOutcome;
       this.links = fields.links;
+      this.relevantFiles = fields.relevantFiles ?? [];
       this.decisionMakers = fields.decisionMakers ?? "";
       this.consulted = fields.consulted ?? "";
       this.informed = fields.informed ?? "";
@@ -251,6 +258,7 @@ export default defineComponent({
           negativeConsequences: fv.negativeConsequences ? this.decisionOutcome.negativeConsequences : []
         },
         links: fv.links ? this.links.filter((link) => link) : [],
+        relevantFiles: fv.relevantFiles ? this.relevantFiles.filter((file) => file) : [],
         decisionMakers: fv.deciders ? this.decisionMakers : "",
         consulted: fv.consulted ? this.consulted : "",
         informed: fv.informed ? this.informed : "",

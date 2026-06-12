@@ -310,6 +310,31 @@ Docs can be found at https://vuex.vuejs.org/.
 ## Links
 
 * [This is a link](example.org)
+`,
+
+  // An ADR ending with a Relevant Files section
+  `# Track Relevant Files
+
+## Context and Problem Statement
+
+Which files implement this decision?
+
+## Considered Options
+
+* Track them in the ADR
+
+## Decision Outcome
+
+Chosen option: "Track them in the ADR", because future readers see the affected code directly.
+
+## Links
+
+* [MADR](https://adr.github.io/madr/)
+
+## Relevant Files
+
+* src/plugins/store.ts
+* web/components/TemplateLinksSection.vue
 `
 ];
 
@@ -873,6 +898,50 @@ D description
         positiveConsequences: ["positive consequence"],
         negativeConsequences: []
       }
+    })
+  },
+
+  // Relevant Files section with a plain path and a path containing spaces
+  {
+    md: `# Heading
+
+## Context and Problem Statement
+
+Context
+
+## Considered Options
+
+* A
+
+## Decision Outcome
+
+Chosen option: "A", because best.
+
+## Relevant Files
+
+* src/main.ts
+* src/utils/my file (v2).ts
+`,
+    adr: new ArchitecturalDecisionRecord({
+      title: "Heading",
+      conforming: true,
+      parseErrors: [],
+      contextAndProblemStatement: `Context`,
+      consideredOptions: [
+        {
+          title: "A",
+          description: "",
+          pros: [],
+          cons: []
+        }
+      ],
+      decisionOutcome: {
+        chosenOption: "A",
+        explanation: `best.`,
+        positiveConsequences: [],
+        negativeConsequences: []
+      },
+      relevantFiles: ["src/main.ts", "src/utils/my file (v2).ts"]
     })
   }
 ];

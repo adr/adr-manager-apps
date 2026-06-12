@@ -57,6 +57,7 @@ export interface AdrInit {
   consideredOptions?: ReadonlyArray<Partial<Option>>;
   decisionOutcome?: Partial<DecisionOutcome>;
   links?: string[];
+  relevantFiles?: string[];
   decisionMakers?: string;
   consulted?: string;
   informed?: string;

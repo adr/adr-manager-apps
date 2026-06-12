@@ -97,8 +97,142 @@ function isProfessionalAdr(adr: ArchitecturalDecisionRecord) {
     adr.consequences.length ||
     adr.confirmation ||
     adr.links.length ||
+    adr.relevantFiles.length ||
     adr.moreInformation
   );
+}
+
+/**
+ * Returns the root folder path an ADR belongs to by stripping the `<adrDirectory>/<fileName>`
+ * suffix off its full path, or undefined if the path does not end in the ADR Directory.
+ * Pure string logic so it can be tested without the vscode module.
+ * @param adrFullPath The full (posix) path of the ADR file
+ * @param adrDirectory The configured ADR Directory, e.g. "docs/decisions"
+ */
+export function getRootPathFromAdrPath(adrFullPath: string, adrDirectory: string): string | undefined {
+  const directory = cleanPathString(adrDirectory).replace(/^\/+|\/+$/g, "");
+  const marker = `/${directory}/`;
+  const markerIndex = adrFullPath.lastIndexOf(marker);
+  if (markerIndex === -1) {
+    return undefined;
+  }
+  const fileName = adrFullPath.slice(markerIndex + marker.length);
+  if (fileName === "" || fileName.includes("/")) {
+    return undefined;
+  }
+  return adrFullPath.slice(0, markerIndex);
+}
+
+/**
+ * Returns the URI of the root folder the specified ADR belongs to (the folder containing its
+ * ADR Directory), which is what its relevant-file paths are relative to. Falls back to the
+ * workspace folder containing the file, and returns undefined for an unsaved ADR (empty path).
+ * @param adrFullPath The full path of the ADR file, or "" while adding a new ADR
+ */
+export function getAdrRootUri(adrFullPath: string): vscode.Uri | undefined {
+  if (!adrFullPath) {
+    return undefined;
+  }
+  const rootPath = getRootPathFromAdrPath(adrFullPath, getAdrDirectoryString());
+  if (rootPath) {
+    return vscode.Uri.file(rootPath);
+  }
+  return vscode.workspace.getWorkspaceFolder(vscode.Uri.file(adrFullPath))?.uri;
+}
+
+/**
+ * Returns the root folders a relevant-file path may be relative to. For a saved ADR this is
+ * its own root folder. For an unsaved ADR (add mode) the destination root is not known yet,
+ * so every workspace folder (and every child root folder when a single-root workspace is
+ * treated as multi-root) is considered.
+ */
+async function getRelevantFileRoots(adrFullPath: string): Promise<vscode.Uri[]> {
+  const rootUri = getAdrRootUri(adrFullPath);
+  if (rootUri) {
+    return [rootUri];
+  }
+  const roots: vscode.Uri[] = [];
+  for (const folder of getWorkspaceFolders()) {
+    roots.push(folder.uri);
+  }
+  if (isSingleRootWorkspace() && treatAsMultiRoot() && (await containsOnlyRootFolders(getWorkspaceFolders()[0].uri))) {
+    roots.push(...(await getAllChildRootFolders(getWorkspaceFolders()[0].uri)));
+  }
+  return roots;
+}
+
+/**
+ * Lists workspace files a user may link to an ADR, as paths relative to the ADR's root folder.
+ * node_modules is excluded (findFiles ignores no .gitignore) and the result is capped, so very
+ * large workspaces stay responsive.
+ * @param adrFullPath The full path of the ADR file, or "" while adding a new ADR
+ * @returns Sorted root-relative (posix) file paths, without the ADR file itself
+ */
+export async function listRelevantFileCandidates(adrFullPath: string): Promise<string[]> {
+  const exclude = "**/node_modules/**";
+  const maxResults = 20000;
+  const rootUri = getAdrRootUri(adrFullPath);
+  if (rootUri) {
+    const uris = await vscode.workspace.findFiles(new vscode.RelativePattern(rootUri, "**/*"), exclude, maxResults);
+    const rootPrefix = rootUri.path.endsWith("/") ? rootUri.path : `${rootUri.path}/`;
+    return uris
+      .map((uri) => uri.path)
+      .filter((path) => path.startsWith(rootPrefix) && path !== adrFullPath)
+      .map((path) => path.slice(rootPrefix.length))
+      .sort();
+  }
+  const uris = await vscode.workspace.findFiles("**/*", exclude, maxResults);
+  return uris
+    .filter((uri) => uri.path !== adrFullPath)
+    .map((uri) => vscode.workspace.asRelativePath(uri, false))
+    .sort();
+}
+
+/**
+ * Checks which of the given relevant-file paths still exist, resolved against the ADR's root.
+ * @param paths Root-relative file paths linked in the ADR
+ * @param adrFullPath The full path of the ADR file, or "" while adding a new ADR
+ */
+export async function checkRelevantFilesExistence(
+  paths: string[],
+  adrFullPath: string
+): Promise<Record<string, boolean>> {
+  const roots = await getRelevantFileRoots(adrFullPath);
+  const status: Record<string, boolean> = {};
+  await Promise.all(
+    paths.map(async (path) => {
+      status[path] = (await findRelevantFileUri(roots, path)) !== undefined;
+    })
+  );
+  return status;
+}
+
+/**
+ * Opens the given relevant file in a text editor, or shows an error message if it no longer exists.
+ * @param path The root-relative path of the linked file
+ * @param adrFullPath The full path of the ADR file the link belongs to
+ */
+export async function openRelevantFile(path: string, adrFullPath: string): Promise<void> {
+  const roots = await getRelevantFileRoots(adrFullPath);
+  const fileUri = await findRelevantFileUri(roots, path);
+  if (fileUri) {
+    vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fileUri));
+  } else {
+    vscode.window.showErrorMessage(`Linked file not found: ${path}`);
+  }
+}
+
+async function findRelevantFileUri(roots: vscode.Uri[], relativePath: string): Promise<vscode.Uri | undefined> {
+  for (const root of roots) {
+    const fileUri = vscode.Uri.joinPath(root, relativePath);
+    try {
+      await vscode.workspace.fs.stat(fileUri);
+      return fileUri;
+    } catch {
+      // not under this root, keep trying the remaining ones
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -410,6 +544,7 @@ export async function saveAdr(
     consideredOptions: fields.consideredOptions,
     decisionOutcome: fields.decisionOutcome ? { ...adr.decisionOutcome, ...fields.decisionOutcome } : undefined,
     links: fields.links,
+    relevantFiles: fields.relevantFiles,
     decisionMakers: fields.decisionMakers,
     consulted: fields.consulted,
     informed: fields.informed,

@@ -92,6 +92,7 @@ export default defineComponent({
           consideredOptions: this.consideredOptions,
           decisionOutcome: this.decisionOutcome,
           links: this.links,
+          relevantFiles: this.relevantFiles,
           decisionMakers: this.decisionMakers,
           consulted: this.consulted,
           informed: this.informed,

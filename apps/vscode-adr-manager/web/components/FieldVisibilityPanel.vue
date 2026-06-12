@@ -40,7 +40,8 @@ const FIELDS_212: FieldEntry[] = [
   { key: "optionProsAndCons", label: "Option Pros & Cons" },
   { key: "positiveConsequences", label: "Positive Consequences" },
   { key: "negativeConsequences", label: "Negative Consequences" },
-  { key: "links", label: "Links" }
+  { key: "links", label: "Links" },
+  { key: "relevantFiles", label: "Relevant Files" }
 ];
 
 const FIELDS_400: FieldEntry[] = [
@@ -54,7 +55,8 @@ const FIELDS_400: FieldEntry[] = [
   { key: "optionProsAndCons", label: "Option Pros & Cons" },
   { key: "consequences", label: "Consequences" },
   { key: "confirmation", label: "Confirmation" },
-  { key: "moreInformation", label: "More Information" }
+  { key: "moreInformation", label: "More Information" },
+  { key: "relevantFiles", label: "Relevant Files" }
 ];
 
 export default defineComponent({
@@ -88,7 +90,7 @@ export default defineComponent({
   },
   methods: {
     handleOutsideClick(event: MouseEvent) {
-      const wrap = this.$refs['wrap'] as HTMLElement | undefined;
+      const wrap = this.$refs["wrap"] as HTMLElement | undefined;
       if (wrap && !wrap.contains(event.target as Node)) {
         this.open = false;
       }

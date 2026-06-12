@@ -178,6 +178,13 @@ class MADRGenerator extends MADRListener {
     }
   }
 
+  enterRelevantFiles(ctx: MadrParseNode): void {
+    const list = ctx.children[0];
+    if (list) {
+      this.addListItemsFromListToList(list, this.adr.relevantFiles);
+    }
+  }
+
   getMostSimilarOptionTo(optTitle: string): Option | null {
     let opt = this.adr.consideredOptions.find((o) => this.matchOptionTitleAlmostExactly(o.title, optTitle));
     if (opt) {
@@ -361,6 +368,10 @@ export function adr2md(adrToParse: ArchitecturalDecisionRecord, opts: Adr2MdOpti
   if (adr.links.length > 0) {
     md = md.concat("\n## Links\n\n");
     md = adr.links.reduce((total, link) => total + "* " + link + "\n", md);
+  }
+  if (adr.relevantFiles.length > 0) {
+    md = md.concat("\n## Relevant Files\n\n");
+    md = adr.relevantFiles.reduce((total, file) => total + "* " + file + "\n", md);
   }
   return md;
 }

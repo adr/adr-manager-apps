@@ -2,6 +2,7 @@ import { mount } from "@vue/test-utils";
 import MadrEditor from "@/components/MadrEditor.vue";
 import { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import { store } from "@/plugins/store";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
 
@@ -108,4 +109,50 @@ test("basic mode warns when professional-only fields hold data and can switch th
 test("basic mode shows no warning for a plain record", () => {
     const wrapper = mountEditor(new ArchitecturalDecisionRecord(), "basic");
     expect(wrapper.find(".alert").exists()).toBe(false);
+});
+
+test("the relevant files section renders in professional mode for both template versions", () => {
+    for (const version of ["2.1.2", "4.0.0"] as const) {
+        const wrapper = mountEditor(new ArchitecturalDecisionRecord(), "professional", version);
+        expect(wrapper.find("[data-cy=relevantFilesSection]").exists()).toBe(true);
+        expect(wrapper.find("[data-cy=relevantFilesPick]").exists()).toBe(true);
+    }
+});
+
+test("the relevant files section is hidden in basic mode", () => {
+    const wrapper = mountEditor(new ArchitecturalDecisionRecord(), "basic");
+    expect(wrapper.find("[data-cy=relevantFilesSection]").exists()).toBe(false);
+});
+
+test("the relevant files section is hidden when the field is toggled off", () => {
+    const wrapper = mount(MadrEditor, {
+        props: {
+            adr: new ArchitecturalDecisionRecord(),
+            mode: "professional" as Mode,
+            templateVersion: "2.1.2" as MadrTemplateVersion,
+            fieldVisibility: { ...DEFAULT_FIELD_VISIBILITY, relevantFiles: false }
+        }
+    });
+    expect(wrapper.find("[data-cy=relevantFilesSection]").exists()).toBe(false);
+});
+
+test("linked files render with a missing warning only when the listing knows them to be gone", () => {
+    const adr = new ArchitecturalDecisionRecord({ relevantFiles: ["src/main.ts"] });
+    const wrapper = mountEditor(adr, "professional");
+    // No repository context in this test, so existence is unknown and no warning may render.
+    expect(wrapper.find("[data-cy=relevantFileLink]").text()).toBe("src/main.ts");
+    expect(wrapper.find("[data-cy=relevantFileMissing]").exists()).toBe(false);
+});
+
+test("removing a linked file mutates the record in place", async () => {
+    const adr = new ArchitecturalDecisionRecord({ relevantFiles: ["src/a.ts", "src/b.ts"] });
+    const wrapper = mountEditor(adr, "professional");
+    await wrapper.find("[data-cy=relevantFileRemove]").trigger("click");
+    expect(adr.relevantFiles).toStrictEqual(["src/b.ts"]);
+});
+
+test("basic mode warns when relevant files hold data", () => {
+    const adr = new ArchitecturalDecisionRecord({ relevantFiles: ["src/main.ts"] });
+    const wrapper = mountEditor(adr, "basic");
+    expect(wrapper.text()).toContain("Some fields of this ADR are not displayed in the current mode.");
 });

@@ -44,6 +44,9 @@ export default defineComponent({
         negativeConsequences: [] as string[]
       },
       links: [] as string[],
+      relevantFiles: [] as string[],
+      // Existence per linked file, keyed by path. A missing key means "not checked yet".
+      relevantFilesStatus: {} as Record<string, boolean>,
       decisionMakers: "",
       consulted: "",
       informed: "",
@@ -52,6 +55,8 @@ export default defineComponent({
       moreInformation: "",
       fullPath: "",
       selectedIndex: -1,
+      // Kept so the window listener can be removed again when the component unmounts.
+      extensionMessageHandler: null as ((event: MessageEvent) => void) | null,
       valid: {
         title: false,
         contextAndProblemStatement: false,
@@ -87,7 +92,7 @@ export default defineComponent({
     }
   },
   mounted() {
-    window.addEventListener("message", (event) => {
+    this.extensionMessageHandler = (event: MessageEvent) => {
       const message = event.data;
       switch (message.command) {
         case "addOption": {
@@ -103,12 +108,28 @@ export default defineComponent({
           this.fillFields(JSON.parse(message.adr));
           break;
         }
+        case "relevantFilesPicked": {
+          this.relevantFiles = message.relevantFiles;
+          this.sendInput();
+          this.checkRelevantFiles();
+          break;
+        }
+        case "relevantFilesStatus": {
+          this.relevantFilesStatus = message.status;
+          break;
+        }
         case "saveSuccessful": {
           this.fullPath = message.newPath;
           break;
         }
       }
-    });
+    };
+    window.addEventListener("message", this.extensionMessageHandler);
+  },
+  unmounted() {
+    if (this.extensionMessageHandler) {
+      window.removeEventListener("message", this.extensionMessageHandler);
+    }
   },
   methods: {
     /**
@@ -137,6 +158,7 @@ export default defineComponent({
         negativeConsequences: string[];
       };
       links: string[];
+      relevantFiles?: string[];
       decisionMakers?: string;
       consulted?: string;
       informed?: string;
@@ -169,6 +191,7 @@ export default defineComponent({
         negativeConsequences: adr.decisionOutcome.negativeConsequences.filter((negative) => negative !== "")
       };
       this.links = adr.links.filter((link) => link !== "");
+      this.relevantFiles = (adr.relevantFiles ?? []).filter((file) => file !== "");
       this.decisionMakers = adr.decisionMakers ?? "";
       this.consulted = adr.consulted ?? "";
       this.informed = adr.informed ?? "";
@@ -183,6 +206,37 @@ export default defineComponent({
       );
       this.dataFetched = true;
       this.validateAll();
+      this.checkRelevantFiles();
+    },
+    /**
+     * Sends a message to the extension to open the multi-select file picker, preselecting
+     * the currently linked files.
+     */
+    pickRelevantFiles() {
+      this.sendMessage("pickRelevantFiles", { currentFiles: [...this.relevantFiles], fullPath: this.fullPath });
+    },
+    /**
+     * Sends a message to the extension to open the linked file in a text editor.
+     */
+    openRelevantFile(path: string) {
+      this.sendMessage("openRelevantFile", { path: path, fullPath: this.fullPath });
+    },
+    /**
+     * Removes the linked file with the specified index.
+     */
+    removeRelevantFile(index: number) {
+      this.relevantFiles.splice(index, 1);
+      this.sendInput();
+    },
+    /**
+     * Asks the extension which of the linked files still exist in the workspace.
+     */
+    checkRelevantFiles() {
+      if (this.relevantFiles.length === 0) {
+        this.relevantFilesStatus = {};
+        return;
+      }
+      this.sendMessage("checkRelevantFiles", { paths: [...this.relevantFiles], fullPath: this.fullPath });
     },
     /**
      * Handles the selection of options using clicks and validates that an option has been chosen.
@@ -308,6 +362,7 @@ export default defineComponent({
         consideredOptions: this.consideredOptions,
         decisionOutcome: this.decisionOutcome,
         links: this.links,
+        relevantFiles: this.relevantFiles,
         decisionMakers: this.decisionMakers,
         consulted: this.consulted,
         informed: this.informed,

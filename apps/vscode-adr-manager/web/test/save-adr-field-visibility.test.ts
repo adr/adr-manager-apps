@@ -83,9 +83,7 @@ describe("save-adr mixin – field visibility persistence", () => {
   // ── mount behaviour ─────────────────────────────────────────────────────────
   describe("on mount", () => {
     it("requests the persisted field visibility from the extension host", () => {
-      expect(postMessage).toHaveBeenCalledWith(
-        expect.objectContaining({ command: "getFieldVisibility" })
-      );
+      expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({ command: "getFieldVisibility" }));
     });
 
     it("initialises fieldVisibility to all-true defaults before the response arrives", () => {
@@ -194,9 +192,7 @@ describe("save-adr mixin – field visibility persistence", () => {
     it("sends updateFieldVisibility with the new value for the toggled key", () => {
       postMessage.mockClear();
       (wrapper.vm as any).setFieldVisibility("status", false);
-      const call = postMessage.mock.calls.find(
-        (c: any[]) => c[0]?.command === "updateFieldVisibility"
-      );
+      const call = postMessage.mock.calls.find((c: any[]) => c[0]?.command === "updateFieldVisibility");
       expect(call).toBeDefined();
       expect(call![0].data.status).toBe(false);
     });
@@ -204,9 +200,7 @@ describe("save-adr mixin – field visibility persistence", () => {
     it("sends the full fieldVisibility map, not just the changed key", () => {
       postMessage.mockClear();
       (wrapper.vm as any).setFieldVisibility("deciders", false);
-      const call = postMessage.mock.calls.find(
-        (c: any[]) => c[0]?.command === "updateFieldVisibility"
-      );
+      const call = postMessage.mock.calls.find((c: any[]) => c[0]?.command === "updateFieldVisibility");
       const data: FieldVisibility = call![0].data;
       // All other keys remain true
       expect(data.date).toBe(true);
@@ -225,6 +219,24 @@ describe("save-adr mixin – field visibility persistence", () => {
       expect((wrapper.vm as any).fieldVisibility.date).toBe(false);
       (wrapper.vm as any).setFieldVisibility("date", true);
       expect((wrapper.vm as any).fieldVisibility.date).toBe(true);
+    });
+  });
+
+  describe("relevantFiles in _filteredProfessionalPayload", () => {
+    it("passes linked files through (without empties) when the field is visible", () => {
+      const vm = wrapper.vm as any;
+      vm.relevantFiles = ["src/a.ts", "", "src/b.ts"];
+      const payload = vm._filteredProfessionalPayload();
+      expect(payload.relevantFiles).toEqual(["src/a.ts", "src/b.ts"]);
+    });
+
+    it("clears linked files in the payload when the field is hidden, keeping local state", () => {
+      const vm = wrapper.vm as any;
+      vm.relevantFiles = ["src/a.ts"];
+      vm.fieldVisibility = fv({ relevantFiles: false });
+      const payload = vm._filteredProfessionalPayload();
+      expect(payload.relevantFiles).toEqual([]);
+      expect(vm.relevantFiles).toEqual(["src/a.ts"]);
     });
   });
 

@@ -1,5 +1,7 @@
 import { commitFiles, getUser, listBranches, listFiles, listRepositories, readFile, searchRepositories } from "./api";
 import { beginAuthorizeRedirect, completeOAuthCallback, loadTokens, signOutGitLab } from "./auth";
+import { gitlabBaseUrl } from "./config";
+import { encodeFilePath } from "../../paths";
 import type { GitProvider } from "../../provider";
 
 export const gitlabProvider: GitProvider = {
@@ -32,5 +34,10 @@ export const gitlabProvider: GitProvider = {
     listBranches,
     listFiles,
     readFile,
+
+    fileWebUrl(repoFullName, branch, filePath) {
+        return `${gitlabBaseUrl()}/${repoFullName}/-/blob/${encodeFilePath(branch)}/${encodeFilePath(filePath)}`;
+    },
+
     commitFiles
 };

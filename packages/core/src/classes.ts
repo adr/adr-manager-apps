@@ -23,6 +23,7 @@ export class ArchitecturalDecisionRecord {
   consideredOptions: Option[];
   decisionOutcome: DecisionOutcome;
   links: string[];
+  relevantFiles: string[];
   decisionMakers: string;
   consulted: string;
   informed: string;
@@ -56,6 +57,7 @@ export class ArchitecturalDecisionRecord {
       negativeConsequences: outcome?.negativeConsequences ?? []
     };
     this.links = init.links ?? [];
+    this.relevantFiles = init.relevantFiles ?? [];
     this.decisionMakers = init.decisionMakers ?? "";
     this.consulted = init.consulted ?? "";
     this.informed = init.informed ?? "";
@@ -134,10 +136,12 @@ export class ArchitecturalDecisionRecord {
         .map(cleanUpString)
         .filter((el) => el !== "");
       this.links = this.links.map(cleanUpString).filter((el) => el !== "");
+      this.relevantFiles = this.relevantFiles.map(cleanUpString).filter((el) => el !== "");
     } else {
       this.decisionOutcome.positiveConsequences = this.decisionOutcome.positiveConsequences.map(cleanUpString);
       // negativeConsequences intentionally left untouched (web round-trip fixtures depend on it).
       this.links = this.links.map(cleanUpString);
+      this.relevantFiles = this.relevantFiles.map(cleanUpString);
     }
   }
 
@@ -157,6 +161,7 @@ export class ArchitecturalDecisionRecord {
     consideredOptions?: ReadonlyArray<Partial<Option>>;
     decisionOutcome?: DecisionOutcome;
     links?: string[];
+    relevantFiles?: string[];
     decisionMakers?: string;
     consulted?: string;
     informed?: string;
@@ -174,6 +179,7 @@ export class ArchitecturalDecisionRecord {
     this.decisionDrivers = fields.decisionDrivers ?? this.decisionDrivers;
     this.decisionOutcome = fields.decisionOutcome ?? this.decisionOutcome;
     this.links = fields.links ?? this.links;
+    this.relevantFiles = fields.relevantFiles ?? this.relevantFiles;
     this.decisionMakers = fields.decisionMakers ?? this.decisionMakers;
     this.consulted = fields.consulted ?? this.consulted;
     this.informed = fields.informed ?? this.informed;

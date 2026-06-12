@@ -1,5 +1,6 @@
 import { Repository } from "@/plugins/classes";
 import { getActiveProvider } from "./factory";
+import { primeFileList } from "./fileListCache";
 import type { AdrFile } from "@/types/adr";
 
 const ADR_PATH_CANDIDATES = [
@@ -37,6 +38,7 @@ export async function loadRepositoryContent(repoFullName: string, branchName: st
     });
 
     const filePaths = await provider.listFiles(repoFullName, branchName);
+    primeFileList(repoFullName, branchName, filePaths);
     let adrPath: string | undefined;
     const adrList = filePaths.filter((filePath) => {
         const matchedPaths = ADR_PATH_CANDIDATES.filter(

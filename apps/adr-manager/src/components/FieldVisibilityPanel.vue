@@ -43,6 +43,7 @@ const FIELDS_212: FieldEntry[] = [
     { key: "positiveConsequences", label: "Positive Consequences" },
     { key: "negativeConsequences", label: "Negative Consequences" },
     { key: "links", label: "Links" },
+    { key: "relevantFiles", label: "Relevant Files" }
 ];
 
 const FIELDS_400: FieldEntry[] = [
@@ -57,6 +58,7 @@ const FIELDS_400: FieldEntry[] = [
     { key: "consequences", label: "Consequences" },
     { key: "confirmation", label: "Confirmation" },
     { key: "moreInformation", label: "More Information" },
+    { key: "relevantFiles", label: "Relevant Files" }
 ];
 
 const props = defineProps<{ templateVersion: MadrTemplateVersion }>();

@@ -12,8 +12,12 @@
             Changing the title changes the file name: <code>{{ fileName }}</code>
         </div>
 
-        <MadrMetaBar v-if="mode === 'professional'" :adr="adr" :template-version="templateVersion" :field-visibility="fieldVisibility"
- />
+        <MadrMetaBar
+            v-if="mode === 'professional'"
+            :adr="adr"
+            :template-version="templateVersion"
+            :field-visibility="fieldVisibility"
+        />
 
         <ModeSwitchAlert v-if="isModeTooLow">
             Some fields of this ADR are not displayed in the current mode.
@@ -35,7 +39,10 @@
             placeholder="Describe the context and the problem this decision addresses…"
         />
 
-        <div v-if="mode === 'professional' && templateVersion === '2.1.2' && fieldVisibility.technicalStory" class="tech-story">
+        <div
+            v-if="mode === 'professional' && templateVersion === '2.1.2' && fieldVisibility.technicalStory"
+            class="tech-story"
+        >
             <div class="subhead">
                 <h4>Technical Story</h4>
                 <HelpTooltip>
@@ -69,11 +76,21 @@
 
         <hr class="divider" />
 
-        <MadrConsideredOptions :adr="adr" :mode="mode" :template-version="templateVersion" :field-visibility="fieldVisibility" />
+        <MadrConsideredOptions
+            :adr="adr"
+            :mode="mode"
+            :template-version="templateVersion"
+            :field-visibility="fieldVisibility"
+        />
 
         <hr class="divider" />
 
-        <MadrDecisionOutcome :adr="adr" :mode="mode" :template-version="templateVersion" :field-visibility="fieldVisibility" />
+        <MadrDecisionOutcome
+            :adr="adr"
+            :mode="mode"
+            :template-version="templateVersion"
+            :field-visibility="fieldVisibility"
+        />
 
         <template v-if="mode === 'professional' && templateVersion === '2.1.2' && fieldVisibility.links">
             <hr class="divider" />
@@ -107,6 +124,19 @@
                 placeholder="Related decisions, team agreement, when/how to revisit…"
             />
         </template>
+
+        <template v-if="mode === 'professional' && fieldVisibility.relevantFiles">
+            <hr class="divider" />
+            <div class="section-head" data-cy="relevantFilesSection">
+                <h3>Relevant Files</h3>
+                <span class="opt">optional</span>
+                <HelpTooltip>
+                    Link the repository files this decision affects, so future readers can jump from the ADR straight to
+                    the implementation.
+                </HelpTooltip>
+            </div>
+            <MadrRelevantFiles :adr="adr" />
+        </template>
     </div>
 </template>
 
@@ -118,6 +148,7 @@ import MadrConsideredOptions from "./MadrConsideredOptions.vue";
 import MadrDecisionOutcome from "./MadrDecisionOutcome.vue";
 import MadrListEditor from "./MadrListEditor.vue";
 import MadrMetaBar from "./MadrMetaBar.vue";
+import MadrRelevantFiles from "./MadrRelevantFiles.vue";
 import ModeSwitchAlert from "./ModeSwitchAlert.vue";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion } from "@adr-manager/core";
@@ -131,12 +162,12 @@ const props = withDefaults(
         mode: Mode;
         templateVersion?: MadrTemplateVersion;
         fileName?: string;
-        fieldVisibility?: FieldVisibility;   // ← type only, nothing else
+        fieldVisibility?: FieldVisibility;
     }>(),
     {
         templateVersion: "2.1.2",
         fileName: "",
-        fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY })  // ← default goes HERE
+        fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY })
     }
 );
 
@@ -144,6 +175,7 @@ function minimumRequiredMode(adr: ArchitecturalDecisionRecord): Mode {
     const hasProfessionalData =
         adr.decisionDrivers.length > 0 ||
         adr.links.length > 0 ||
+        adr.relevantFiles.length > 0 ||
         adr.moreInformation !== "" ||
         adr.confirmation !== "" ||
         adr.consequences.some((consequence) => consequence.text.trim() !== "") ||

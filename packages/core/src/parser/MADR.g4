@@ -15,7 +15,9 @@ start:
 		DECISION_OUTCOME_HEADING wslbs decisionOutcome wslbs
 	)? (
 		PROS_AND_CONS_OF_THE_OPTIONS_HEADING (WS OPTIONAL_MAKER)? wslbs prosAndConsOfOptions wslbs
-	)? (LINKS_HEADING (WS OPTIONAL_MAKER)? wslbs links wslbs)? EOF;
+	)? (LINKS_HEADING (WS OPTIONAL_MAKER)? wslbs links wslbs)? (
+		RELEVANT_FILES_HEADING (WS OPTIONAL_MAKER)? wslbs relevantFiles wslbs
+	)? EOF;
 
 yaml: YAML_MARKER multilineText YAML_MARKER;
 
@@ -59,6 +61,8 @@ prolist: (wslbs LIST_MARKER 'Good, because ' textLine)+;
 conlist: (wslbs LIST_MARKER 'Bad, because ' textLine)+;
 
 links: list wslbs;
+
+relevantFiles: list wslbs;
 
 list: (wslbs LIST_MARKER textLine?)+;
 
@@ -145,3 +149,9 @@ PROS_AND_CONS_OF_THE_OPTIONS_HEADING:
 		| '## pros and cons of the options'
 	);
 LINKS_HEADING: NEWLINE ('## Links' | '## links');
+RELEVANT_FILES_HEADING:
+	NEWLINE (
+		'## Relevant Files'
+		| '## Relevant files'
+		| '## relevant files'
+	);

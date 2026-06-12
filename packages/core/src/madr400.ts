@@ -125,6 +125,11 @@ export function adr2md400(adrToParse: ArchitecturalDecisionRecord): string {
     md += "\n## More Information\n\n" + adr.moreInformation + "\n";
   }
 
+  if (adr.relevantFiles.length > 0) {
+    md += "\n## Relevant Files\n\n";
+    md = adr.relevantFiles.reduce((total, file) => total + "* " + file + "\n", md);
+  }
+
   return md;
 }
 
@@ -298,6 +303,9 @@ export function md2adr400(md: string): ArchitecturalDecisionRecord {
         break;
       case "More Information":
         record.moreInformation = joinedText(section.lines);
+        break;
+      case "Relevant Files":
+        record.relevantFiles = bulletItems(section.lines);
         break;
     }
   }

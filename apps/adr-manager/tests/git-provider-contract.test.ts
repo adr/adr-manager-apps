@@ -44,6 +44,30 @@ beforeEach(() => {
     vi.mocked(axios.post).mockResolvedValue({ data: {} });
 });
 
+describe("fileWebUrl", () => {
+    test("github builds a blob URL with encoded path segments", () => {
+        expect(githubProvider.fileWebUrl("owner/repo", "main", "src/my file (v2).ts")).toBe(
+            "https://github.com/owner/repo/blob/main/src/my%20file%20(v2).ts"
+        );
+    });
+
+    test("github keeps slashes in branch names", () => {
+        expect(githubProvider.fileWebUrl("owner/repo", "feature/x", "src/a.ts")).toBe(
+            "https://github.com/owner/repo/blob/feature/x/src/a.ts"
+        );
+    });
+
+    test("gitlab builds a blob URL under the configured base url", () => {
+        expect(gitlabProvider.fileWebUrl("group/project", "main", "src/päth.ts")).toBe(
+            "https://gitlab.com/group/project/-/blob/main/src/p%C3%A4th.ts"
+        );
+        localStorage.setItem("gitlabBaseUrl", "https://gitlab.example.org");
+        expect(gitlabProvider.fileWebUrl("group/project", "main", "src/a.ts")).toBe(
+            "https://gitlab.example.org/group/project/-/blob/main/src/a.ts"
+        );
+    });
+});
+
 cases.forEach(({ provider, authenticate }) => {
     describe(`${provider.id} provider contract`, () => {
         test("starts unauthenticated", () => {

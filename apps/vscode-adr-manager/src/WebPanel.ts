@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { getNonce } from "./plugins/utils";
 import {
+  checkRelevantFilesExistence,
   containsOnlyRootFolders,
   createBasicAdr,
   createProfessionalAdr,
@@ -11,6 +12,8 @@ import {
   getWorkspaceFolderNames,
   getWorkspaceFolders,
   isSingleRootWorkspace,
+  listRelevantFileCandidates,
+  openRelevantFile,
   saveAdr,
   treatAsMultiRoot
 } from "./extension-functions";
@@ -229,6 +232,43 @@ export class WebPanel {
             }
             return;
           }
+          case "pickRelevantFiles": {
+            const currentFiles: string[] = e.data.currentFiles ?? [];
+            const candidates = await listRelevantFileCandidates(e.data.fullPath ?? "");
+            const candidateSet = new Set(candidates);
+            const items: vscode.QuickPickItem[] = candidates.map((path) => ({
+              label: path,
+              picked: currentFiles.includes(path)
+            }));
+            // Dead links are offered preselected so unchecking them removes the link.
+            for (const path of [...currentFiles].reverse()) {
+              if (!candidateSet.has(path)) {
+                items.unshift({ label: path, description: "not found in workspace", picked: true });
+              }
+            }
+            const selection = await vscode.window.showQuickPick(items, {
+              canPickMany: true,
+              matchOnDescription: true,
+              title: "Select relevant files",
+              placeHolder: "Files this decision affects"
+            });
+            if (selection) {
+              this._panel.webview.postMessage({
+                command: "relevantFilesPicked",
+                relevantFiles: selection.map((item) => item.label)
+              });
+            }
+            return;
+          }
+          case "openRelevantFile": {
+            await openRelevantFile(e.data.path, e.data.fullPath ?? "");
+            return;
+          }
+          case "checkRelevantFiles": {
+            const status = await checkRelevantFilesExistence(e.data.paths ?? [], e.data.fullPath ?? "");
+            this._panel.webview.postMessage({ command: "relevantFilesStatus", status: status });
+            return;
+          }
           case "getFieldVisibility": {
             const saved = this._context.globalState.get<FieldVisibility>("fieldVisibility", {
               ...DEFAULT_FIELD_VISIBILITY
@@ -275,6 +315,7 @@ export class WebPanel {
         consideredOptions: adr.consideredOptions,
         decisionOutcome: adr.decisionOutcome,
         links: adr.links,
+        relevantFiles: adr.relevantFiles,
         decisionMakers: adr.decisionMakers,
         consulted: adr.consulted,
         informed: adr.informed,

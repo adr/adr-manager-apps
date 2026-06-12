@@ -90,6 +90,16 @@
       v-model:more-information="moreInformation"
       @validate="validateAll"
     ></TemplateMoreInformationSection>
+    <hr v-if="fieldVisibility.relevantFiles" class="divider" />
+    <TemplateRelevantFilesSection
+      v-if="fieldVisibility.relevantFiles"
+      :key="Number(dataFetched)"
+      :relevant-files-prop="relevantFiles"
+      :status-prop="relevantFilesStatus"
+      @pick="pickRelevantFiles"
+      @open="openRelevantFile"
+      @remove="removeRelevantFile"
+    ></TemplateRelevantFilesSection>
   </div>
 </template>
 
@@ -107,6 +117,7 @@ import TemplateConsideredOptionsProfessionalSection from "./TemplateConsideredOp
 import TemplateDecisionOutcomeProfessionalSection from "./TemplateDecisionOutcomeProfessionalSection.vue";
 import TemplateLinksSection from "./TemplateLinksSection.vue";
 import TemplateMoreInformationSection from "./TemplateMoreInformationSection.vue";
+import TemplateRelevantFilesSection from "./TemplateRelevantFilesSection.vue";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { FieldVisibility } from "@adr-manager/core";
 
@@ -121,7 +132,8 @@ export default defineComponent({
     TemplateConsideredOptionsProfessionalSection,
     TemplateDecisionOutcomeProfessionalSection,
     TemplateLinksSection,
-    TemplateMoreInformationSection
+    TemplateMoreInformationSection,
+    TemplateRelevantFilesSection
   },
   mixins: [vscode, adrData],
   props: {

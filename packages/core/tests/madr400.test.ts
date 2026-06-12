@@ -31,7 +31,8 @@ function fullRecord(): ArchitecturalDecisionRecord {
       { kind: "bad", text: "We must plan a sharding strategy" }
     ],
     confirmation: "An ArchUnit test asserts the module only depends on the Postgres adapter.",
-    moreInformation: "Revisit if write volume exceeds 5k TPS sustained."
+    moreInformation: "Revisit if write volume exceeds 5k TPS sustained.",
+    relevantFiles: ["src/billing/store.ts", "src/billing/migrations/0001 initial.sql"]
   });
 }
 
@@ -86,6 +87,11 @@ Self-managed Postgres on Kubernetes.
 ## More Information
 
 Revisit if write volume exceeds 5k TPS sustained.
+
+## Relevant Files
+
+* src/billing/store.ts
+* src/billing/migrations/0001 initial.sql
 `;
 
 describe("adr2md400", () => {
@@ -182,6 +188,16 @@ describe("detectMadrVersion", () => {
       deciders: "Jane",
       consideredOptions: [{ title: "A", pros: ["fast"], cons: ["new"] }],
       decisionOutcome: { chosenOption: "A", explanation: "it fits" }
+    });
+    expect(detectMadrVersion(adr2md(adr))).toBe("2.1.2");
+  });
+
+  test("a Relevant Files section does not mark a document as 4.0.0", () => {
+    const adr = new ArchitecturalDecisionRecord({
+      title: "T",
+      consideredOptions: [{ title: "A" }],
+      decisionOutcome: { chosenOption: "A", explanation: "it fits" },
+      relevantFiles: ["src/main.ts"]
     });
     expect(detectMadrVersion(adr2md(adr))).toBe("2.1.2");
   });

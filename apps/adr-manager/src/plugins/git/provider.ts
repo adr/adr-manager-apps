@@ -47,6 +47,9 @@ export interface GitProvider {
     /** Decoded UTF-8 file content, or undefined on failure. */
     readFile(repoFullName: string, branch: string, filePath: string): Promise<string | undefined>;
 
+    /** Browser URL of a file blob on the host. Pure string building, no API call. */
+    fileWebUrl(repoFullName: string, branch: string, filePath: string): string;
+
     /** Commits all changes as one commit on the branch. Throws an Error with a user-facing message. */
     commitFiles(input: CommitInput): Promise<void>;
 }

@@ -34,6 +34,7 @@
                         :mode="store.mode"
                         :template-version="templateVersion"
                         :file-name="currentFileName"
+                        :field-visibility="store.fieldVisibility"
                     />
                     <EditorConvert
                         v-else

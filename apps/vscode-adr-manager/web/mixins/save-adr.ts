@@ -2,6 +2,14 @@
 import { defineComponent } from "vue";
 import { naturalCase2titleCase } from "../../src/plugins/utils";
 import vscodeApiMixin from "./vscode-api-mixin";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import type { FieldVisibility } from "@adr-manager/core";
+
+declare global {
+  interface Window {
+    __INITIAL_FIELD_VISIBILITY__?: FieldVisibility;
+  }
+}
 
 export default defineComponent({
   mixins: [vscodeApiMixin],
@@ -37,7 +45,9 @@ export default defineComponent({
       confirmation: "",
       moreInformation: "",
       templateVersion: "2.1.2",
-      fullPath: ""
+      fullPath: "",
+      oldTitle: "",
+      fieldVisibility: { ...DEFAULT_FIELD_VISIBILITY }
     };
   },
   computed: {
@@ -129,25 +139,6 @@ export default defineComponent({
       return `The fields ${fields.join(", ")} of this ADR have values, but are not shown in the basic editor mode.`;
     }
   },
-  mounted() {
-    window.addEventListener("message", (event) => {
-      const message = event.data;
-      switch (message.command) {
-        case "fetchAdrValues": {
-          this.getInput(JSON.parse(message.adr));
-          break;
-        }
-        case "saveSuccessful": {
-          this.fullPath = message.newPath;
-          break;
-        }
-        case "updateFileStatus": {
-          this.sendMessage("updateFileStatus", { fullPath: this.fullPath });
-          break;
-        }
-      }
-    });
-  },
   methods: {
     /**
      * Saves the values of the MADR template in the view component's data variables.
@@ -187,6 +178,7 @@ export default defineComponent({
     }) {
       this.yaml = fields.yaml;
       this.title = fields.title;
+      this.oldTitle = fields.title;
       this.date = fields.date;
       this.status = fields.status;
       this.deciders = fields.deciders;
@@ -222,6 +214,53 @@ export default defineComponent({
       this.validated = false;
     },
     /**
+     * Toggles a single field's visibility, then persists the full map to globalState via the extension host.
+     */
+    setFieldVisibility(key: string, value: boolean) {
+      (this.fieldVisibility as Record<string, boolean>)[key] = value;
+      // Spread into a plain object — Vue 3's reactive proxy fails to serialize
+      // when passed directly to vscode.postMessage (structured-clone can't handle it).
+      this.sendMessage("updateFieldVisibility", { ...this.fieldVisibility });
+    },
+    /**
+     * Builds a field payload with hidden fields cleared, mirroring applyFieldVisibilityFilter from core.
+     * Operating inline here avoids importing ArchitecturalDecisionRecord into the webview bundle.
+     */
+    _filteredProfessionalPayload() {
+      const fv = this.fieldVisibility;
+      return {
+        yaml: this.yaml,
+        title: this.title,
+        date: fv.date ? this.date : "",
+        status: fv.status ? this.status : "",
+        deciders: fv.deciders ? this.deciders : "",
+        technicalStory: fv.technicalStory ? this.technicalStory : "",
+        contextAndProblemStatement: this.contextAndProblemStatement,
+        decisionDrivers: fv.decisionDrivers ? this.decisionDrivers : [],
+        consideredOptions: this.consideredOptions.map((opt) => ({
+          ...opt,
+          description: fv.optionDescription ? opt.description : "",
+          pros: fv.optionProsAndCons ? opt.pros : [],
+          neutrals: fv.optionProsAndCons ? opt.neutrals : [],
+          cons: fv.optionProsAndCons ? opt.cons : []
+        })),
+        decisionOutcome: {
+          chosenOption: this.decisionOutcome.chosenOption,
+          explanation: this.decisionOutcome.explanation,
+          positiveConsequences: fv.positiveConsequences ? this.decisionOutcome.positiveConsequences : [],
+          negativeConsequences: fv.negativeConsequences ? this.decisionOutcome.negativeConsequences : []
+        },
+        links: fv.links ? this.links.filter((link) => link) : [],
+        decisionMakers: fv.deciders ? this.decisionMakers : "",
+        consulted: fv.consulted ? this.consulted : "",
+        informed: fv.informed ? this.informed : "",
+        consequences: fv.consequences ? this.consequences : [],
+        confirmation: fv.confirmation ? this.confirmation : "",
+        moreInformation: fv.moreInformation ? this.moreInformation : "",
+        templateVersion: this.templateVersion
+      };
+    },
+    /**
      * Sends a message to the extension to create and save the ADR as a Markdown file
      * in the ADR directory.
      */
@@ -240,58 +279,21 @@ export default defineComponent({
           })
         );
       } else {
-        this.sendMessage(
-          type,
-          JSON.stringify({
-            yaml: this.yaml,
-            title: this.title,
-            date: this.date,
-            status: this.status,
-            deciders: this.deciders,
-            technicalStory: this.technicalStory,
-            contextAndProblemStatement: this.contextAndProblemStatement,
-            decisionDrivers: this.decisionDrivers,
-            consideredOptions: this.consideredOptions,
-            decisionOutcome: this.decisionOutcome,
-            links: this.links.filter((link) => link),
-            decisionMakers: this.decisionMakers,
-            consulted: this.consulted,
-            informed: this.informed,
-            consequences: this.consequences,
-            confirmation: this.confirmation,
-            moreInformation: this.moreInformation,
-            templateVersion: this.templateVersion
-          })
-        );
+        this.sendMessage(type, JSON.stringify(this._filteredProfessionalPayload()));
       }
     },
     /**
-     * Sends a message to the extension to save the changes made to an existing ADR
-     * in its Markdown file.
+     * Sends a message to the extension to save an existing ADR as a Markdown file.
      */
     saveAdr() {
+      const payload = this._filteredProfessionalPayload();
       this.sendMessage(
         "saveAdr",
         JSON.stringify({
           adr: {
-            yaml: this.yaml,
-            title: this.title,
-            date: this.date,
-            status: this.templateVersion === "4.0.0" ? this.status : naturalCase2titleCase(this.status),
-            deciders: this.deciders,
-            technicalStory: this.technicalStory,
-            contextAndProblemStatement: this.contextAndProblemStatement,
-            decisionDrivers: this.decisionDrivers,
-            consideredOptions: this.consideredOptions,
-            decisionOutcome: this.decisionOutcome,
-            links: this.links,
-            decisionMakers: this.decisionMakers,
-            consulted: this.consulted,
-            informed: this.informed,
-            consequences: this.consequences,
-            confirmation: this.confirmation,
-            moreInformation: this.moreInformation,
-            templateVersion: this.templateVersion,
+            ...payload,
+            status: this.templateVersion === "4.0.0" ? payload.status : naturalCase2titleCase(payload.status),
+            oldTitle: this.oldTitle,
             fullPath: this.fullPath
           }
         })
@@ -303,5 +305,40 @@ export default defineComponent({
     openEditor() {
       this.sendMessage("requestEdit", { fullPath: this.fullPath });
     }
+  },
+  mounted() {
+    // Apply the field visibility baked into the webview HTML by the extension host.
+    // Reading it synchronously here avoids a race where async message delivery could
+    // arrive before window.addEventListener is registered below.
+    if (window.__INITIAL_FIELD_VISIBILITY__) {
+      this.fieldVisibility = window.__INITIAL_FIELD_VISIBILITY__;
+    }
+
+    // Request persisted field visibility from the extension host (updates fieldVisibility
+    // when the round-trip completes, confirming the embedded value).
+    this.sendMessage("getFieldVisibility");
+
+    // add listeners to receive data from extension
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+      switch (message.command) {
+        case "fetchAdrValues": {
+          this.getInput(JSON.parse(message.adr));
+          break;
+        }
+        case "saveSuccessful": {
+          this.fullPath = message.newPath;
+          break;
+        }
+        case "updateFileStatus": {
+          this.sendMessage("updateFileStatus", { fullPath: this.fullPath });
+          break;
+        }
+        case "fieldVisibility": {
+          this.fieldVisibility = message.fieldVisibility;
+          break;
+        }
+      }
+    });
   }
 });

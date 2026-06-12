@@ -1,6 +1,6 @@
 <template>
     <div class="metabar">
-        <div class="meta-field">
+        <div v-if="fieldVisibility.date" class="meta-field">
             <label>
                 Last update
                 <HelpTooltip>The date the decision was last updated (YYYY-MM-DD).</HelpTooltip>
@@ -10,7 +10,7 @@
                 <input v-model="adr.date" data-cy="dateAdr" type="date" class="chip-input date-input" />
             </span>
         </div>
-        <div class="meta-field">
+        <div v-if="fieldVisibility.status" class="meta-field">
             <label>
                 Status
                 <HelpTooltip>The current status of the ADR.</HelpTooltip>
@@ -18,7 +18,7 @@
             <MadrStatusChip v-model="adr.status" />
         </div>
 
-        <div v-if="templateVersion === '2.1.2'" class="meta-field">
+        <div v-if="templateVersion === '2.1.2' && fieldVisibility.deciders" class="meta-field">
             <label>
                 Deciders
                 <HelpTooltip>Everyone involved in the decision, e.g. separated with commas.</HelpTooltip>
@@ -35,8 +35,8 @@
             </span>
         </div>
 
-        <template v-else>
-            <div class="meta-field">
+        <template v-else-if="templateVersion !== '2.1.2'">
+            <div v-if="fieldVisibility.deciders" class="meta-field">
                 <label>
                     Decision-makers
                     <span class="ver-tag">4.0</span>
@@ -53,7 +53,7 @@
                     />
                 </span>
             </div>
-            <div class="meta-field">
+            <div v-if="fieldVisibility.consulted" class="meta-field">
                 <label>
                     Consulted
                     <span class="ver-tag">4.0</span>
@@ -69,7 +69,7 @@
                     />
                 </span>
             </div>
-            <div class="meta-field">
+            <div v-if="fieldVisibility.informed" class="meta-field">
                 <label>
                     Informed
                     <span class="ver-tag">4.0</span>
@@ -92,10 +92,14 @@
 <script setup lang="ts">
 import HelpTooltip from "./HelpTooltip.vue";
 import MadrStatusChip from "./MadrStatusChip.vue";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import type { MadrTemplateVersion } from "@adr-manager/core";
+import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 
-const props = defineProps<{ adr: ArchitecturalDecisionRecord; templateVersion: MadrTemplateVersion }>();
+const props = withDefaults(
+    defineProps<{ adr: ArchitecturalDecisionRecord; templateVersion: MadrTemplateVersion; fieldVisibility?: FieldVisibility }>(),
+    { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
+);
 
 // Deciders and decision-makers name the same people, so editing either keeps both in sync.
 function setDeciders(value: string): void {

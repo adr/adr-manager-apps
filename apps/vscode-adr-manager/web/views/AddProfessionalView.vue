@@ -18,6 +18,11 @@
         <button type="button" @click="switchToBasicTemplate">Basic</button>
         <button type="button" class="on">Professional</button>
       </div>
+      <FieldVisibilityPanel
+        :template-version="templateVersion"
+        :field-visibility="fieldVisibility"
+        @set-field-visibility="setFieldVisibility"
+      ></FieldVisibilityPanel>
       <button
         type="button"
         class="btn btn-primary"
@@ -33,6 +38,7 @@
     <div class="editor-inner">
       <MadrTemplateProfessional
         :template-version="templateVersion"
+        :field-visibility="fieldVisibility"
         @send-input="getInput"
         @validated="enableButton"
         @invalidated="disableButton"
@@ -48,6 +54,7 @@ import { defineComponent } from "vue";
 import MadrTemplateProfessional from "../components/MadrTemplateProfessional.vue";
 import TourOverlay from "../components/TourOverlay.vue";
 import VersionSelect from "../components/VersionSelect.vue";
+import FieldVisibilityPanel from "../components/FieldVisibilityPanel.vue";
 import vscode from "../mixins/vscode-api-mixin";
 import saveAdr from "../mixins/save-adr";
 import createTourMixin from "../mixins/tour";
@@ -57,7 +64,8 @@ export default defineComponent({
   components: {
     MadrTemplateProfessional,
     TourOverlay,
-    VersionSelect
+    VersionSelect,
+    FieldVisibilityPanel
   },
   mixins: [vscode, saveAdr, createTourMixin("editor")],
   data() {

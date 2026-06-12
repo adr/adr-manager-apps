@@ -109,7 +109,7 @@ function getRequiredFieldsDiagnostics(
     if (value !== -1) {
       // also check if a section is the last section of the ADR (i.e., there is no (sub)header line after it)
       const headerIndex = getIndexOfFirstHeaderLine(lines.slice(value + 1));
-      const indexOfNextHeaderLine = value + (headerIndex !== -1 ? headerIndex : lines.length - 1) + 1;
+      const indexOfNextHeaderLine = headerIndex !== -1 ? value + headerIndex + 1 : lines.length;
 
       // if section is empty
       if (

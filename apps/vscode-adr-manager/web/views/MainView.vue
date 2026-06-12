@@ -19,6 +19,98 @@
       </button>
     </header>
 
+    <div class="search-bar" data-cy="adr-search-bar">
+      <div class="search-input-wrap">
+        <i class="codicon codicon-search search-icon" aria-hidden="true"></i>
+        <input
+          v-model="searchText"
+          class="search-input"
+          data-cy="adr-search-input"
+          placeholder="Search ADRs…"
+          aria-label="Search ADRs by title"
+          @keydown.escape="clearSearch"
+        />
+        <button
+          v-if="hasFilters"
+          type="button"
+          class="filter-toggle"
+          :class="{ open: filtersOpen, 'has-active': hasActiveFilters }"
+          data-cy="adr-filter-toggle"
+          title="Toggle filters"
+          @click="filtersOpen = !filtersOpen"
+        >
+          <i class="codicon codicon-filter" aria-hidden="true"></i>
+          <span v-if="hasActiveFilters" class="filter-badge"></span>
+        </button>
+        <button
+          v-if="searchActive"
+          type="button"
+          class="clear-btn"
+          data-cy="adr-search-clear"
+          title="Clear search"
+          @click="clearSearch"
+        >
+          <i class="codicon codicon-close" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div v-if="filtersOpen && hasFilters" class="filter-panel" data-cy="adr-filter-panel">
+        <template v-if="availableStatuses.length > 0">
+          <span class="filter-label">Status</span>
+          <div class="filter-row">
+            <button
+              v-for="status in availableStatuses"
+              :key="status"
+              type="button"
+              class="filter-chip status-chip"
+              :class="{ active: filterStatuses.includes(status) }"
+              :data-tone="status"
+              :data-cy="`status-filter-${status}`"
+              @click="toggleStatus(status)"
+            >
+              {{ status }}
+            </button>
+          </div>
+        </template>
+        <template v-if="availableTags.length > 0">
+          <span class="filter-label">Tags</span>
+          <div class="filter-row">
+            <button
+              v-for="tag in visibleTags"
+              :key="tag.id"
+              type="button"
+              class="filter-chip tag-chip"
+              :class="{ active: filterTagIds.includes(tag.id) }"
+              :style="{ '--tag-color': tag.color }"
+              :data-cy="`tag-filter-${tag.label}`"
+              @click="toggleTagId(tag.id)"
+            >
+              <span class="tag-dot" aria-hidden="true"></span>
+              {{ tag.label }}
+            </button>
+            <button
+              v-if="!tagsExpanded && hiddenTagCount > 0"
+              type="button"
+              class="filter-chip tags-more-btn"
+              data-cy="tags-show-more"
+              @click="tagsExpanded = true"
+            >
+              +{{ hiddenTagCount }} more
+            </button>
+            <button
+              v-else-if="tagsExpanded && hiddenTagCount > 0"
+              type="button"
+              class="filter-chip tags-more-btn"
+              data-cy="tags-show-less"
+              @click="tagsExpanded = false"
+            >
+              Show less
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <main class="content" data-tour="adr-list">
       <section v-for="folder in nonEmptySortedWorkspaceFolders" :key="folder" class="adr-folder">
         <h2 class="folder-name">
@@ -41,6 +133,11 @@
         <p>
           ADRs are loaded from <code>{{ adrDirectory || "docs/decisions" }}</code> in each workspace folder.
         </p>
+      </div>
+      <div v-else-if="searchActive && filteredDisplayedAdrs.length === 0" class="empty">
+        <i class="codicon codicon-search-stop"></i>
+        <h2>No ADRs match your search</h2>
+        <p>Try adjusting your filters or <button type="button" class="link-btn" @click="clearSearch">clear the search</button>.</p>
       </div>
     </main>
 
@@ -66,6 +163,8 @@ import { buildMainTourSteps } from "../tour/main-steps";
 import type { TourStep } from "../tour/types";
 import { ArchitecturalDecisionRecord } from "../../src/plugins/classes";
 import { cleanPathString } from "../../src/plugins/utils";
+import { matchesAdrSearch, isEmptyQuery } from "@adr-manager/core";
+import type { Tag } from "@adr-manager/core";
 
 export default defineComponent({
   components: {
@@ -77,12 +176,18 @@ export default defineComponent({
     return {
       allAdrs: [] as {
         adr: ArchitecturalDecisionRecord;
+        tags: Tag[];
         fullPath: string;
         relativePath: string;
         fileName: string;
       }[],
       workspaceFolders: [] as string[],
       adrDirectory: "",
+      searchText: "",
+      filterStatuses: [] as string[],
+      filterTagIds: [] as string[],
+      filtersOpen: false,
+      tagsExpanded: false,
       // Display-only example entries while the tour runs over an empty workspace.
       // Kept out of allAdrs so file-watcher refreshes can never persist or duplicate them.
       demoMode: false,
@@ -145,6 +250,63 @@ export default defineComponent({
      */
     adrsAvailable() {
       return this.displayedAdrs.length > 0;
+    },
+    searchQuery() {
+      return {
+        text: this.searchText,
+        statuses: this.filterStatuses,
+        tagIds: this.filterTagIds
+      };
+    },
+    searchActive() {
+      return !isEmptyQuery(this.searchQuery);
+    },
+    availableStatuses() {
+      const seen = new Set<string>();
+      for (const entry of this.allAdrs) {
+        const s = (entry.adr.status ?? "").toLowerCase().trim();
+        if (s) seen.add(s);
+      }
+      return [...seen];
+    },
+    availableTags(): Tag[] {
+      const seen = new Map<string, Tag>();
+      for (const entry of this.allAdrs) {
+        for (const tag of entry.tags ?? []) {
+          if (!seen.has(tag.id)) seen.set(tag.id, tag);
+        }
+      }
+      return [...seen.values()];
+    },
+    hasFilters() {
+      return this.availableStatuses.length > 0 || this.availableTags.length > 0;
+    },
+    hasActiveFilters() {
+      return this.filterStatuses.length > 0 || this.filterTagIds.length > 0;
+    },
+    visibleTags(): Tag[] {
+      return this.tagsExpanded ? this.availableTags : this.availableTags.slice(0, 10);
+    },
+    hiddenTagCount(): number {
+      return Math.max(0, this.availableTags.length - 10);
+    },
+    filteredDisplayedAdrs() {
+      if (!this.searchActive) return this.displayedAdrs;
+      if (this.showingDemoEntries) {
+        return this.demoAdrs.filter((entry) =>
+          (entry.adr.title ?? "").toLowerCase().includes(this.searchText.toLowerCase())
+        );
+      }
+      return this.sortedAdrs.filter((entry) =>
+        matchesAdrSearch(
+          {
+            title: entry.adr.title ?? "",
+            status: (entry.adr.status ?? "").toLowerCase(),
+            tags: entry.tags ?? []
+          },
+          this.searchQuery
+        )
+      );
     }
   },
   /**
@@ -181,9 +343,28 @@ export default defineComponent({
      * @param folder The folder the ADRs should be located in
      */
     adrsInFolder(folder: string) {
-      return this.displayedAdrs.filter((adr) => {
+      return this.filteredDisplayedAdrs.filter((adr) => {
         return adr.relativePath.includes(cleanPathString(folder + "/" + this.adrDirectory));
       });
+    },
+    toggleStatus(status: string) {
+      if (this.filterStatuses.includes(status)) {
+        this.filterStatuses = this.filterStatuses.filter((s) => s !== status);
+      } else {
+        this.filterStatuses = [...this.filterStatuses, status];
+      }
+    },
+    toggleTagId(id: string) {
+      if (this.filterTagIds.includes(id)) {
+        this.filterTagIds = this.filterTagIds.filter((t) => t !== id);
+      } else {
+        this.filterTagIds = [...this.filterTagIds, id];
+      }
+    },
+    clearSearch() {
+      this.searchText = "";
+      this.filterStatuses = [];
+      this.filterTagIds = [];
     },
     /**
      * Tour hook (called by the tour mixin): decide on demo entries before the
@@ -255,6 +436,218 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* ── Search bar ── */
+.search-bar {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 10px 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 6px;
+  border-radius: 5px;
+  border: 1px solid var(--vscode-input-border, rgba(128, 128, 128, 0.35));
+  background: var(--vscode-input-background);
+  transition: border-color 0.14s;
+}
+
+.search-input-wrap:focus-within {
+  border-color: var(--vscode-focusBorder);
+}
+
+.search-icon {
+  font-size: 14px;
+  color: var(--vscode-foreground);
+  opacity: 0.6;
+  flex: 0 0 auto;
+}
+
+.search-input {
+  flex: 1 1 auto;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  color: var(--vscode-input-foreground);
+  min-width: 0;
+}
+
+.search-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.filter-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+  transition: background 0.12s, opacity 0.12s;
+}
+
+.filter-toggle:hover,
+.filter-toggle.open {
+  background: var(--vscode-toolbar-hoverBackground);
+  opacity: 1;
+}
+
+.filter-toggle.has-active {
+  color: var(--vscode-textLink-foreground);
+  opacity: 1;
+}
+
+.filter-toggle .codicon {
+  font-size: 14px;
+}
+
+.filter-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--vscode-textLink-foreground);
+}
+
+.clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+}
+
+.clear-btn:hover {
+  opacity: 1;
+}
+
+.clear-btn .codicon {
+  font-size: 10px;
+}
+
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 2px 4px;
+  border-top: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.2));
+}
+
+.filter-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--vscode-foreground);
+  opacity: 0.6;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
+  background: transparent;
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: capitalize;
+  opacity: 0.8;
+  transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+}
+
+.filter-chip:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  opacity: 1;
+}
+
+.status-chip.active[data-tone="accepted"]   { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #22c55e; opacity: 1; }
+.status-chip.active[data-tone="proposed"]   { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #3b82f6; opacity: 1; }
+.status-chip.active[data-tone="rejected"]   { background: rgba(239,68,68,0.15);  border-color: #ef4444; color: #ef4444;  opacity: 1; }
+.status-chip.active[data-tone="deprecated"] { background: rgba(234,179,8,0.15);  border-color: #eab308; color: #eab308;  opacity: 1; }
+.status-chip.active[data-tone="superseded"] { background: rgba(168,85,247,0.15); border-color: #a855f7; color: #a855f7; opacity: 1; }
+
+.tag-chip {
+  border-color: color-mix(in srgb, var(--tag-color) 40%, transparent);
+}
+
+.tag-chip.active {
+  background: color-mix(in srgb, var(--tag-color) 15%, transparent);
+  border-color: var(--tag-color);
+  color: var(--tag-color);
+  opacity: 1;
+}
+
+.tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tag-color);
+  flex: 0 0 auto;
+}
+
+.tags-more-btn {
+  border-style: dashed;
+  color: var(--vscode-foreground);
+  opacity: 0.5;
+  font-weight: 500;
+}
+
+.tags-more-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  opacity: 0.8;
+  border-style: solid;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  text-decoration: underline;
+}
+
+/* ── Content ── */
 .content {
   max-width: 860px;
   margin: 0 auto;

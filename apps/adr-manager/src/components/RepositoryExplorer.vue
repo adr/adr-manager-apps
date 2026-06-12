@@ -54,20 +54,24 @@
             <span class="spacer"></span>
         </div>
 
+        <AdrSearchBar :statuses="allStatuses" :tags="allTags" />
+
         <div class="exp-list" data-cy="repoNameList">
-            <RepositoryTreeItem
-                v-for="repo in repositories"
-                :key="repo.fullName"
-                :repo="repo"
-                :open="isOpen(repo)"
-                :active-adr="activeAdrIn(repo)"
-                @select="selectRepo(repo)"
-                @open-file="openFile(repo, $event)"
-                @commit="emit('commit', repo.fullName)"
-                @remove="repositoryToRemove = repo"
-                @delete-adr="adrToDelete = { adr: $event, repository: repo }"
-                @new-adr="createNewAdr(repo)"
-            />
+            <template v-for="repo in repositories" :key="repo.fullName">
+                <RepositoryTreeItem
+                    v-if="!searchActive || filteredAdrs(repo).length > 0"
+                    :repo="repo"
+                    :open="isOpen(repo)"
+                    :active-adr="activeAdrIn(repo)"
+                    v-bind="searchActive ? { filteredAdrs: filteredAdrs(repo) } : {}"
+                    @select="selectRepo(repo)"
+                    @open-file="openFile(repo, $event)"
+                    @commit="emit('commit', repo.fullName)"
+                    @remove="repositoryToRemove = repo"
+                    @delete-adr="adrToDelete = { adr: $event, repository: repo }"
+                    @new-adr="createNewAdr(repo)"
+                />
+            </template>
         </div>
 
         <div class="exp-foot">
@@ -103,7 +107,9 @@ import DialogAddRepositories from "./DialogAddRepositories.vue";
 import DialogDeleteAdr from "./DialogDeleteAdr.vue";
 import DialogRemoveRepository from "./DialogRemoveRepository.vue";
 import RepositoryTreeItem from "./RepositoryTreeItem.vue";
+import AdrSearchBar from "./AdrSearchBar.vue";
 import { useResizablePanel } from "@/composables/useResizablePanel";
+import { useAdrSearch } from "@/composables/useAdrSearch";
 import { sortedAdrs, fileLabel } from "@/utils/adrFiles";
 import { store } from "@/plugins/store";
 import type { Repository } from "@/plugins/classes";
@@ -129,6 +135,16 @@ const repositoryToRemove = ref<Repository | null>(null);
 const adrToDelete = ref<{ adr: AdrFile; repository: Repository } | null>(null);
 
 const repositories = computed(() => [...store.addedRepositories].sort((a, b) => a.fullName.localeCompare(b.fullName)));
+
+const {
+    active: searchActive,
+    filteredAdrs,
+    availableTags,
+    availableStatuses
+} = useAdrSearch();
+
+const allTags = computed(() => availableTags(store.addedRepositories));
+const allStatuses = computed(() => availableStatuses(store.addedRepositories));
 
 const currentRepoFullName = computed(() => store.currentRepository?.fullName);
 

@@ -494,6 +494,7 @@ export class WebPanel {
     }
     const allAdrs: {
       adr: ArchitecturalDecisionRecord;
+      tags: Tag[];
       fullPath: string;
       relativePath: string;
       fileName: string;
@@ -501,6 +502,7 @@ export class WebPanel {
     (await getAllMDs()).forEach((md) => {
       allAdrs.push({
         adr: parseAdr(md.adr),
+        tags: parseTagsFromMd(md.adr),
         fullPath: md.fullPath,
         relativePath: md.relativePath,
         fileName: md.fileName

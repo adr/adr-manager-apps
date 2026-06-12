@@ -27,3 +27,12 @@ export type { FieldKey, FieldVisibility } from "./fields";
 
 export { parseTagsFromMd, stripTagComment, setTagsInMd, TAG_PALETTE } from "./tags";
 export type { TagPaletteColor } from "./tags";
+
+export {
+  matchesAdrSearch,
+  extractAdrTitle,
+  extractAdrStatus,
+  isEmptyQuery,
+  EMPTY_QUERY
+} from "./search";
+export type { AdrSearchQuery, SearchableAdr } from "./search";

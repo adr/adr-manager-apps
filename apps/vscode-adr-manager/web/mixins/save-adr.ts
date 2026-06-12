@@ -3,7 +3,7 @@ import { defineComponent } from "vue";
 import { naturalCase2titleCase } from "../../src/plugins/utils";
 import vscodeApiMixin from "./vscode-api-mixin";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
-import type { FieldVisibility } from "@adr-manager/core";
+import type { FieldVisibility, Tag } from "@adr-manager/core";
 
 declare global {
   interface Window {
@@ -47,7 +47,9 @@ export default defineComponent({
       templateVersion: "2.1.2",
       fullPath: "",
       oldTitle: "",
-      fieldVisibility: { ...DEFAULT_FIELD_VISIBILITY }
+      fieldVisibility: { ...DEFAULT_FIELD_VISIBILITY },
+      tags: [] as Tag[],
+      recentTags: [] as Tag[]
     };
   },
   computed: {
@@ -174,6 +176,7 @@ export default defineComponent({
       confirmation?: string;
       moreInformation?: string;
       templateVersion?: string;
+      tags?: Tag[];
       fullPath: string;
     }) {
       this.yaml = fields.yaml;
@@ -196,6 +199,9 @@ export default defineComponent({
       this.moreInformation = fields.moreInformation ?? "";
       if (fields.templateVersion) {
         this.templateVersion = fields.templateVersion;
+      }
+      if (fields.tags) {
+        this.tags = fields.tags;
       }
       this.fullPath = fields.fullPath;
     },
@@ -261,6 +267,14 @@ export default defineComponent({
       };
     },
     /**
+     * Updates the MRU recent-tags list and persists it to the extension host's globalState.
+     * Spread each tag to a plain object so Vue 3's Proxy does not break structured clone.
+     */
+    updateRecentTags(tags: Tag[]) {
+      this.recentTags = tags;
+      this.sendMessage("updateRecentTags", tags.map((t) => ({ ...t })));
+    },
+    /**
      * Sends a message to the extension to create and save the ADR as a Markdown file
      * in the ADR directory.
      */
@@ -275,11 +289,18 @@ export default defineComponent({
             consideredOptions: this.consideredOptions,
             chosenOption: this.decisionOutcome.chosenOption,
             explanation: this.decisionOutcome.explanation,
-            templateVersion: this.templateVersion
+            templateVersion: this.templateVersion,
+            tags: this.tags.map((t: Tag) => ({ ...t }))
           })
         );
       } else {
-        this.sendMessage(type, JSON.stringify(this._filteredProfessionalPayload()));
+        this.sendMessage(
+          type,
+          JSON.stringify({
+            ...this._filteredProfessionalPayload(),
+            tags: this.tags.map((t: Tag) => ({ ...t }))
+          })
+        );
       }
     },
     /**
@@ -294,7 +315,8 @@ export default defineComponent({
             ...payload,
             status: this.templateVersion === "4.0.0" ? payload.status : naturalCase2titleCase(payload.status),
             oldTitle: this.oldTitle,
-            fullPath: this.fullPath
+            fullPath: this.fullPath,
+            tags: this.tags.map((t: Tag) => ({ ...t }))
           }
         })
       );
@@ -318,6 +340,9 @@ export default defineComponent({
     // when the round-trip completes, confirming the embedded value).
     this.sendMessage("getFieldVisibility");
 
+    // Request persisted recent tags from the extension host globalState.
+    this.sendMessage("getRecentTags");
+
     // add listeners to receive data from extension
     window.addEventListener("message", (event) => {
       const message = event.data;
@@ -336,6 +361,10 @@ export default defineComponent({
         }
         case "fieldVisibility": {
           this.fieldVisibility = message.fieldVisibility;
+          break;
+        }
+        case "recentTags": {
+          this.recentTags = message.recentTags ?? [];
           break;
         }
       }

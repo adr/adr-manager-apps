@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import type { AdrInit, Option } from "@adr-manager/core";
+import type { AdrInit, Option, Tag } from "@adr-manager/core";
+import { setTagsInMd } from "@adr-manager/core";
 
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { adrTemplatemarkdownContent, initialMarkdownContent, readmeMarkdownContent } from "./plugins/constants";
@@ -359,6 +360,7 @@ export function createBasicAdr(fields: {
   chosenOption: string;
   explanation: string;
   templateVersion?: MadrTemplateVersion;
+  tags?: Tag[];
 }) {
   const newAdr = getAdrObjectFromFields({
     yaml: fields.yaml,
@@ -371,7 +373,10 @@ export function createBasicAdr(fields: {
     }
   });
 
-  const newMD = serializeAdr(newAdr, fields.templateVersion ?? "2.1.2");
+  let newMD = serializeAdr(newAdr, fields.templateVersion ?? "2.1.2");
+  if (fields.tags && fields.tags.length > 0) {
+    newMD = setTagsInMd(newMD, fields.tags);
+  }
   saveMarkdownToAdrDirectory(newMD, newAdr.title);
 }
 
@@ -380,10 +385,13 @@ export function createBasicAdr(fields: {
  * saves the ADR as a Markdown file in the ADR Directory.
  * @param fields The fields of the new ADR
  */
-export function createProfessionalAdr(fields: AdrInit & { templateVersion?: MadrTemplateVersion }) {
+export function createProfessionalAdr(fields: AdrInit & { templateVersion?: MadrTemplateVersion; tags?: Tag[] }) {
   const newAdr = getAdrObjectFromFields(fields);
 
-  const newMD = serializeAdr(newAdr, fields.templateVersion ?? "2.1.2");
+  let newMD = serializeAdr(newAdr, fields.templateVersion ?? "2.1.2");
+  if (fields.tags && fields.tags.length > 0) {
+    newMD = setTagsInMd(newMD, fields.tags);
+  }
   saveMarkdownToAdrDirectory(newMD, newAdr.title);
 }
 
@@ -394,7 +402,7 @@ export function createProfessionalAdr(fields: AdrInit & { templateVersion?: Madr
  * @param fields The fields of the edited ADR
  */
 export async function saveAdr(
-  fields: AdrInit & { fullPath: string; templateVersion?: MadrTemplateVersion }
+  fields: AdrInit & { fullPath: string; templateVersion?: MadrTemplateVersion; tags?: Tag[] }
 ): Promise<vscode.Uri> {
   const fileUri = vscode.Uri.file(fields.fullPath);
   const adr = parseAdr(new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri)));
@@ -419,7 +427,10 @@ export async function saveAdr(
   });
   const newUri = getRenamedUri(fileUri, adr.title);
   await vscode.workspace.fs.rename(fileUri, newUri);
-  const newMD = serializeAdr(adr, fields.templateVersion ?? "2.1.2");
+  let newMD = serializeAdr(adr, fields.templateVersion ?? "2.1.2");
+  if (fields.tags && fields.tags.length > 0) {
+    newMD = setTagsInMd(newMD, fields.tags);
+  }
   await vscode.workspace.fs.writeFile(newUri, new TextEncoder().encode(newMD));
   return newUri;
 }

@@ -35,6 +35,8 @@
                         :template-version="templateVersion"
                         :file-name="currentFileName"
                         :field-visibility="store.fieldVisibility"
+                        :tags="adrTags"
+                        @update:tags="setTags"
                     />
                     <EditorConvert
                         v-else
@@ -161,9 +163,11 @@ watch(welcomeOpen, (open) => {
 
 const {
     adr: adrRecord,
+    tags: adrTags,
     markdown,
     requiresConversion,
     templateVersion,
+    setTags,
     setTemplateVersion,
     updateFromRaw,
     acceptConversion

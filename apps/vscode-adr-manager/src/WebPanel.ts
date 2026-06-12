@@ -16,8 +16,8 @@ import {
 } from "./extension-functions";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { detectMadrVersion, parseAdr } from "./plugins/parser";
-import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
-import type { FieldVisibility } from "@adr-manager/core";
+import { DEFAULT_FIELD_VISIBILITY, parseTagsFromMd } from "@adr-manager/core";
+import type { FieldVisibility, Tag } from "@adr-manager/core";
 
 export class WebPanel {
   /**
@@ -240,6 +240,15 @@ export class WebPanel {
             await this._context.globalState.update("fieldVisibility", e.data);
             return;
           }
+          case "getRecentTags": {
+            const recentTags = this._context.globalState.get<Tag[]>("adrManager.recentTags", []);
+            this._panel.webview.postMessage({ command: "recentTags", recentTags });
+            return;
+          }
+          case "updateRecentTags": {
+            await this._context.globalState.update("adrManager.recentTags", e.data);
+            return;
+          }
         }
       },
       null,
@@ -282,6 +291,7 @@ export class WebPanel {
         confirmation: adr.confirmation,
         moreInformation: adr.moreInformation,
         templateVersion: templateVersion,
+        tags: parseTagsFromMd(mdString),
         fullPath: fileUri.path
       })
     });

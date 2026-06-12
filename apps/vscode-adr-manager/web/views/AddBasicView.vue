@@ -38,6 +38,12 @@
           Switch to professional
         </button>
       </div>
+      <AdrTagSection
+        :tags="tags"
+        :recent-tags="recentTags"
+        @update:tags="tags = $event"
+        @update:recent-tags="updateRecentTags($event)"
+      ></AdrTagSection>
       <MadrTemplateBasic
         :template-version="templateVersion"
         @send-input="getInput"
@@ -53,6 +59,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import MadrTemplateBasic from "../components/MadrTemplateBasic.vue";
+import AdrTagSection from "../components/AdrTagSection.vue";
 import TourOverlay from "../components/TourOverlay.vue";
 import VersionSelect from "../components/VersionSelect.vue";
 import vscode from "../mixins/vscode-api-mixin";
@@ -63,6 +70,7 @@ import { buildEditorTourSteps } from "../tour/editor-steps";
 export default defineComponent({
   components: {
     MadrTemplateBasic,
+    AdrTagSection,
     TourOverlay,
     VersionSelect
   },

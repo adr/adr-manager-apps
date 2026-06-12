@@ -3,7 +3,7 @@
  * the shared @adr-manager/core package; `AdrFile` (the persisted file object) is web-specific.
  */
 
-export type { Option, DecisionOutcome, AdrInit } from "@adr-manager/core";
+export type { Option, DecisionOutcome, AdrInit, Tag } from "@adr-manager/core";
 
 /**
  * The persisted "ADR file" object stored per-repository and round-tripped through
@@ -18,3 +18,4 @@ export interface AdrFile {
     /** Present only on freshly-created, not-yet-committed files. */
     newAdr?: boolean;
 }
+

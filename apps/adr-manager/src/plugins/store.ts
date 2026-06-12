@@ -14,7 +14,7 @@ import type { AdrFile } from "@/types/adr";
 import type { Mode } from "@/types/store";
 import type { CommitFile, FileStatus, PushedFile } from "@/types/commit";
 
-import {FIELD_KEYS, DEFAULT_FIELD_VISIBILITY, applyFieldVisibilityFilter} from "@adr-manager/core";
+import {FIELD_KEYS, DEFAULT_FIELD_VISIBILITY} from "@adr-manager/core";
 import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 
 export const store = reactive({

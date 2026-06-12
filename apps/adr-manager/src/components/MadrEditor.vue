@@ -1,5 +1,10 @@
 <template>
     <div class="editor-inner">
+        <!-- Tags are app-level metadata, always visible regardless of mode -->
+        <div class="tags-bar">
+            <AdrTagPicker :tags="tags" @update:tags="emit('update:tags', $event)" />
+        </div>
+
         <div class="title-wrap">
             <input v-model="adr.title" data-cy="titleAdr" class="title-input" placeholder="Decision title" autofocus />
             <HelpTooltip class="align-end">
@@ -12,8 +17,12 @@
             Changing the title changes the file name: <code>{{ fileName }}</code>
         </div>
 
-        <MadrMetaBar v-if="mode === 'professional'" :adr="adr" :template-version="templateVersion" :field-visibility="fieldVisibility"
- />
+        <MadrMetaBar
+            v-if="mode === 'professional'"
+            :adr="adr"
+            :template-version="templateVersion"
+            :field-visibility="fieldVisibility"
+        />
 
         <ModeSwitchAlert v-if="isModeTooLow">
             Some fields of this ADR are not displayed in the current mode.
@@ -113,6 +122,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import AutoGrowTextarea from "./AutoGrowTextarea.vue";
+import AdrTagPicker from "./AdrTagPicker.vue";
 import HelpTooltip from "./HelpTooltip.vue";
 import MadrConsideredOptions from "./MadrConsideredOptions.vue";
 import MadrDecisionOutcome from "./MadrDecisionOutcome.vue";
@@ -124,6 +134,7 @@ import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { FieldVisibility } from "@adr-manager/core";
+import type { Tag } from "@/types/adr";
 
 const props = withDefaults(
     defineProps<{
@@ -131,14 +142,18 @@ const props = withDefaults(
         mode: Mode;
         templateVersion?: MadrTemplateVersion;
         fileName?: string;
-        fieldVisibility?: FieldVisibility;   // ← type only, nothing else
+        fieldVisibility?: FieldVisibility;
+        tags?: readonly Tag[];
     }>(),
     {
         templateVersion: "2.1.2",
         fileName: "",
-        fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY })  // ← default goes HERE
+        fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }),
+        tags: () => []
     }
 );
+
+const emit = defineEmits<{ "update:tags": [Tag[]] }>();
 
 function minimumRequiredMode(adr: ArchitecturalDecisionRecord): Mode {
     const hasProfessionalData =
@@ -212,5 +227,9 @@ const isModeTooLow = computed(() => props.mode === "basic" && minimumRequiredMod
 
 .tech-story {
     margin-top: 16px;
+}
+
+.tags-bar {
+    margin-bottom: 14px;
 }
 </style>

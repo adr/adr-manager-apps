@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type { AdrInit, Option } from "@adr-manager/core";
+
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { adrTemplatemarkdownContent, initialMarkdownContent, readmeMarkdownContent } from "./plugins/constants";
 import { parseAdr, serializeAdr, type MadrTemplateVersion } from "./plugins/parser";

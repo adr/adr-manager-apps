@@ -17,6 +17,7 @@
       v-model:consulted="consulted"
       v-model:informed="informed"
       :template-version="templateVersion"
+      :field-visibility="fieldVisibility"
       @validate="validateAll"
     ></TemplateDateStatusDecidersSection>
     <hr class="divider" />
@@ -28,19 +29,20 @@
       @validate="validate('contextAndProblemStatement')"
     ></TemplateContextAndProblemStatementSection>
     <TemplateTechnicalStorySection
-      v-if="templateVersion === '2.1.2'"
+      v-if="templateVersion === '2.1.2' && fieldVisibility.technicalStory"
       :key="Number(dataFetched)"
       v-model:technical-story="technicalStory"
       @validate="validateAll"
     ></TemplateTechnicalStorySection>
     <hr class="divider" />
     <TemplateDecisionDriversSection
+      v-if="fieldVisibility.decisionDrivers"
       :key="Number(dataFetched)"
       v-model:decision-drivers="decisionDrivers"
       :decision-drivers-prop="decisionDrivers"
       @update:decision-drivers="validateAll"
     ></TemplateDecisionDriversSection>
-    <hr class="divider" />
+    <hr v-if="fieldVisibility.decisionDrivers" class="divider" />
     <TemplateConsideredOptionsProfessionalSection
       ref="consideredOptions"
       :key="Number(dataFetched)"
@@ -49,6 +51,7 @@
       v-model:selected-index="selectedIndex"
       :considered-options-prop="consideredOptions"
       :template-version="templateVersion"
+      :field-visibility="fieldVisibility"
       @add-option="addOption"
       @select-option="selectOption"
       @delete-option="deleteOption"
@@ -69,19 +72,20 @@
       :decision-outcome-prop="decisionOutcome"
       :consequences-prop="consequences"
       :template-version="templateVersion"
+      :field-visibility="fieldVisibility"
       @validate="validate('explanation')"
       @update-array="validateAll"
     ></TemplateDecisionOutcomeProfessionalSection>
     <hr class="divider" />
     <TemplateLinksSection
-      v-if="templateVersion === '2.1.2'"
+      v-if="templateVersion === '2.1.2' && fieldVisibility.links"
       :key="Number(dataFetched)"
       v-model:links="links"
       :links-prop="links"
       @update:links="validateAll"
     ></TemplateLinksSection>
     <TemplateMoreInformationSection
-      v-else
+      v-else-if="templateVersion !== '2.1.2' && fieldVisibility.moreInformation"
       :key="Number(dataFetched)"
       v-model:more-information="moreInformation"
       @validate="validateAll"
@@ -92,7 +96,7 @@
 <script lang="ts">
 import adrData from "../mixins/adr-data";
 
-import { defineComponent } from "vue";
+import { defineComponent, PropType } from "vue";
 import vscode from "../mixins/vscode-api-mixin";
 import TemplateDateStatusDecidersSection from "./TemplateDateStatusDecidersSection.vue";
 import TemplateTitleSection from "./TemplateTitleSection.vue";
@@ -103,6 +107,8 @@ import TemplateConsideredOptionsProfessionalSection from "./TemplateConsideredOp
 import TemplateDecisionOutcomeProfessionalSection from "./TemplateDecisionOutcomeProfessionalSection.vue";
 import TemplateLinksSection from "./TemplateLinksSection.vue";
 import TemplateMoreInformationSection from "./TemplateMoreInformationSection.vue";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import type { FieldVisibility } from "@adr-manager/core";
 
 export default defineComponent({
   name: "MadrTemplateProfessional",
@@ -117,6 +123,12 @@ export default defineComponent({
     TemplateLinksSection,
     TemplateMoreInformationSection
   },
-  mixins: [vscode, adrData]
+  mixins: [vscode, adrData],
+  props: {
+    fieldVisibility: {
+      type: Object as PropType<FieldVisibility>,
+      default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
+    }
+  }
 });
 </script>

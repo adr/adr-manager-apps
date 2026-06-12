@@ -16,6 +16,8 @@ import {
 } from "./extension-functions";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { detectMadrVersion, parseAdr } from "./plugins/parser";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import type { FieldVisibility } from "@adr-manager/core";
 
 export class WebPanel {
   /**
@@ -84,6 +86,7 @@ export class WebPanel {
           }
           case "add": {
             vscode.commands.executeCommand("vscode-adr-manager.openAddAdrWebView");
+            this._pushFieldVisibility();
             return;
           }
           case "view": {
@@ -193,6 +196,7 @@ export class WebPanel {
             vscode.commands.executeCommand("vscode-adr-manager.openAddAdrWebView", "add-professional");
             // restore data from before the switch
             this._panel.webview.postMessage({ command: "fetchAdrValues", adr: e.data });
+            this._pushFieldVisibility();
             return;
           }
           case "switchAddViewProfessionalToBasic": {
@@ -206,6 +210,7 @@ export class WebPanel {
             vscode.commands.executeCommand("vscode-adr-manager.openViewAdrWebView", "", "view-professional");
             // restore data from before the switch
             this._panel.webview.postMessage({ command: "fetchAdrValues", adr: e.data });
+            this._pushFieldVisibility();
             return;
           }
           case "switchViewingViewProfessionalToBasic": {
@@ -222,6 +227,18 @@ export class WebPanel {
               vscode.window.showErrorMessage("The ADR file has changed unexpectedly.");
               vscode.commands.executeCommand("vscode-adr-manager.openMainWebView");
             }
+            return;
+          }
+          case "getFieldVisibility": {
+            const saved = this._context.globalState.get<FieldVisibility>("fieldVisibility", {
+              ...DEFAULT_FIELD_VISIBILITY
+            });
+            this._panel.webview.postMessage({ command: "fieldVisibility", fieldVisibility: saved });
+            return;
+          }
+          case "updateFieldVisibility": {
+            await this._context.globalState.update("fieldVisibility", e.data);
+            return;
           }
         }
       },
@@ -268,6 +285,7 @@ export class WebPanel {
         fullPath: fileUri.path
       })
     });
+    this._pushFieldVisibility();
   }
 
   /**
@@ -287,13 +305,28 @@ export class WebPanel {
   }
 
   /**
+   * Reads the saved field-visibility map from globalState and pushes it to the
+   * webview as a "fieldVisibility" message.  Called proactively whenever a
+   * professional view loads so the webview never has to wait for a round-trip.
+   */
+  private _pushFieldVisibility(): void {
+    const saved = this._context.globalState.get<FieldVisibility>("fieldVisibility", {
+      ...DEFAULT_FIELD_VISIBILITY
+    });
+    this._panel.webview.postMessage({ command: "fieldVisibility", fieldVisibility: saved });
+  }
+
+  /**
    * Renders the specified view in the webview using a string key.
    * @param page A string key for a specific web view page
    */
   private _update(page: string) {
     const webview = this._panel.webview;
     this._updatePanelTitle(page);
-    this._panel.webview.html = this._getHtmlForWebview(webview, page);
+    const fieldVisibility = this._context.globalState.get<FieldVisibility>("fieldVisibility", {
+      ...DEFAULT_FIELD_VISIBILITY
+    });
+    this._panel.webview.html = this._getHtmlForWebview(webview, page, fieldVisibility);
   }
 
   /**
@@ -333,7 +366,7 @@ export class WebPanel {
    * @returns The HTML content to be rendered by the webview as a string. Note that Vue mounts the div with the
    * 			ID "app" depending on the specified web view page.
    */
-  private _getHtmlForWebview(webview: vscode.Webview, page: string) {
+  private _getHtmlForWebview(webview: vscode.Webview, page: string, fieldVisibility: FieldVisibility) {
     const SCRIPT_URI = vscode.Uri.joinPath(this._extensionUri, "dist/web", `${page}.js`);
     const SCRIPT_WEB_URI = webview.asWebviewUri(SCRIPT_URI);
 
@@ -362,6 +395,7 @@ export class WebPanel {
 				<div id="app"></div>
 				<script NONCE="${NONCE}">
 					const vscode = acquireVsCodeApi();
+					window.__INITIAL_FIELD_VISIBILITY__ = ${JSON.stringify(fieldVisibility)};
 				</script>
 				<script NONCE="${NONCE}" src="${SCRIPT_WEB_URI}"></script>
 			</body>

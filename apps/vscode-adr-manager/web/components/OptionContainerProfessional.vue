@@ -30,23 +30,25 @@
     </div>
     <p v-for="error of v$['title'].$errors" :key="error.$uid" class="error-message title-error">{{ error.$message }}</p>
     <div v-if="isExpanded" class="opt-body">
-      <div class="subhead">
-        <h4>Description</h4>
-        <HelpTooltip>
-          Describe the option in free form, e.g. by giving examples or a pointer to more information.
-        </HelpTooltip>
-      </div>
-      <textarea
-        class="field auto-grow-description"
-        placeholder="Describe this option…"
-        spellcheck="true"
-        :value="description"
-        @input="
-          updateHeight('description');
-          $emit('update:description', ($event.target as HTMLTextAreaElement).value);
-        "
-      />
-      <div class="opt-proscons">
+      <template v-if="fieldVisibility.optionDescription">
+        <div class="subhead">
+          <h4>Description</h4>
+          <HelpTooltip>
+            Describe the option in free form, e.g. by giving examples or a pointer to more information.
+          </HelpTooltip>
+        </div>
+        <textarea
+          class="field auto-grow-description"
+          placeholder="Describe this option…"
+          spellcheck="true"
+          :value="description"
+          @input="
+            updateHeight('description');
+            $emit('update:description', ($event.target as HTMLTextAreaElement).value);
+          "
+        />
+      </template>
+      <div v-if="fieldVisibility.optionProsAndCons" class="opt-proscons">
         <div>
           <div class="subhead">
             <h4>Good, because…</h4>
@@ -176,6 +178,8 @@ import useValidate from "@vuelidate/core";
 import { helpers, required } from "@vuelidate/validators";
 import { VueDraggableNext } from "vue-draggable-next";
 import HelpTooltip from "./HelpTooltip.vue";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import type { FieldVisibility } from "@adr-manager/core";
 
 type ArgumentListKey = "pros" | "neutrals" | "cons";
 type AutoGrowKey = ArgumentListKey | "description";
@@ -208,6 +212,10 @@ export default defineComponent({
     templateVersion: {
       type: String,
       default: "2.1.2"
+    },
+    fieldVisibility: {
+      type: Object as PropType<FieldVisibility>,
+      default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
     }
   },
   setup() {

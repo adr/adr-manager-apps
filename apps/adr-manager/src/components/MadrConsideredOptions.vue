@@ -80,18 +80,20 @@
                 </div>
 
                 <div v-if="professional && isExpanded(option)" class="opt-body">
-                    <div class="subhead">
-                        <h4>Description</h4>
-                        <HelpTooltip>
-                            Describe the option in free form, e.g. by giving examples or a pointer to more information.
-                        </HelpTooltip>
-                    </div>
-                    <AutoGrowTextarea
-                        v-model="option.description"
-                        data-cy="descriptionConsOpt"
-                        placeholder="Describe this option…"
-                    />
-                    <div class="opt-proscons">
+                    <template v-if="fieldVisibility.optionDescription">
+                        <div class="subhead">
+                            <h4>Description</h4>
+                            <HelpTooltip>
+                                Describe the option in free form, e.g. by giving examples or a pointer to more information.
+                            </HelpTooltip>
+                        </div>
+                        <AutoGrowTextarea
+                            v-model="option.description"
+                            data-cy="descriptionConsOpt"
+                            placeholder="Describe this option…"
+                        />
+                    </template>
+                    <div v-if="fieldVisibility.optionProsAndCons" class="opt-proscons">
                         <div>
                             <div class="subhead">
                                 <h4>Good, because…</h4>
@@ -163,12 +165,16 @@ import MadrListEditor from "./MadrListEditor.vue";
 import ModeSwitchAlert from "./ModeSwitchAlert.vue";
 import { createShortTitle } from "@/plugins/classes";
 import { matchOptionTitleMoreRelaxed } from "@/plugins/parser";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import type { MadrTemplateVersion } from "@adr-manager/core";
+import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 import type { Option } from "@/types/adr";
 import type { Mode } from "@/types/store";
 
-const props = defineProps<{ adr: ArchitecturalDecisionRecord; mode: Mode; templateVersion: MadrTemplateVersion }>();
+const props = withDefaults(
+    defineProps<{ adr: ArchitecturalDecisionRecord; mode: Mode; templateVersion: MadrTemplateVersion; fieldVisibility?: FieldVisibility }>(),
+    { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
+);
 
 const draft = ref("");
 const expandedIds = ref<number[]>([]);

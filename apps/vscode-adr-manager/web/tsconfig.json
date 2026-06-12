@@ -4,8 +4,7 @@
     "jsx": "preserve",
     "allowJs": true,
     "checkJs": false,
-    "experimentalDecorators": true,
-    "baseUrl": "."
+    "experimentalDecorators": true
   },
   "include": ["pages/**/*.ts", "pages/**/*.tsx", "**/*.vue"]
 }

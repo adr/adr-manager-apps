@@ -12,7 +12,8 @@
             Changing the title changes the file name: <code>{{ fileName }}</code>
         </div>
 
-        <MadrMetaBar v-if="mode === 'professional'" :adr="adr" :template-version="templateVersion" />
+        <MadrMetaBar v-if="mode === 'professional'" :adr="adr" :template-version="templateVersion" :field-visibility="fieldVisibility"
+ />
 
         <ModeSwitchAlert v-if="isModeTooLow">
             Some fields of this ADR are not displayed in the current mode.
@@ -34,7 +35,7 @@
             placeholder="Describe the context and the problem this decision addresses…"
         />
 
-        <div v-if="mode === 'professional' && templateVersion === '2.1.2'" class="tech-story">
+        <div v-if="mode === 'professional' && templateVersion === '2.1.2' && fieldVisibility.technicalStory" class="tech-story">
             <div class="subhead">
                 <h4>Technical Story</h4>
                 <HelpTooltip>
@@ -50,7 +51,7 @@
             />
         </div>
 
-        <template v-if="mode === 'professional'">
+        <template v-if="mode === 'professional' && fieldVisibility.decisionDrivers">
             <hr class="divider" />
             <div class="section-head">
                 <h3>Decision Drivers</h3>
@@ -68,13 +69,13 @@
 
         <hr class="divider" />
 
-        <MadrConsideredOptions :adr="adr" :mode="mode" :template-version="templateVersion" />
+        <MadrConsideredOptions :adr="adr" :mode="mode" :template-version="templateVersion" :field-visibility="fieldVisibility" />
 
         <hr class="divider" />
 
-        <MadrDecisionOutcome :adr="adr" :mode="mode" :template-version="templateVersion" />
+        <MadrDecisionOutcome :adr="adr" :mode="mode" :template-version="templateVersion" :field-visibility="fieldVisibility" />
 
-        <template v-if="mode === 'professional' && templateVersion === '2.1.2'">
+        <template v-if="mode === 'professional' && templateVersion === '2.1.2' && fieldVisibility.links">
             <hr class="divider" />
             <div class="section-head">
                 <h3>Links</h3>
@@ -88,7 +89,7 @@
             />
         </template>
 
-        <template v-if="mode === 'professional' && templateVersion === '4.0.0'">
+        <template v-if="mode === 'professional' && templateVersion === '4.0.0' && fieldVisibility.moreInformation">
             <hr class="divider" />
             <div class="section-head">
                 <h3>More Information</h3>
@@ -121,6 +122,8 @@ import ModeSwitchAlert from "./ModeSwitchAlert.vue";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
+import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import type { FieldVisibility } from "@adr-manager/core";
 
 const props = withDefaults(
     defineProps<{
@@ -128,8 +131,13 @@ const props = withDefaults(
         mode: Mode;
         templateVersion?: MadrTemplateVersion;
         fileName?: string;
+        fieldVisibility?: FieldVisibility;   // ← type only, nothing else
     }>(),
-    { templateVersion: "2.1.2", fileName: "" }
+    {
+        templateVersion: "2.1.2",
+        fileName: "",
+        fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY })  // ← default goes HERE
+    }
 );
 
 function minimumRequiredMode(adr: ArchitecturalDecisionRecord): Mode {

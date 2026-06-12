@@ -1,8 +1,9 @@
 import { defineConfig } from "vitest/config";
+import vue from "@vitejs/plugin-vue";
 
 export default defineConfig({
+  plugins: [vue()],
   test: {
-    // Pure string utilities, no DOM and no VS Code API: the default node environment suffices.
-    include: ["src/test/**/*.test.ts"]
+    include: ["src/test/**/*.test.ts", "web/test/**/*.test.ts"]
   }
 });

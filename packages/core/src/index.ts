@@ -20,3 +20,6 @@ export {
   matchesIgnoringFormatting,
   matchOptionTitleMoreRelaxed
 } from "./utils";
+
+export{FIELD_KEYS, DEFAULT_FIELD_VISIBILITY, applyFieldVisibilityFilter} from "./fields";
+export type { FieldKey, FieldVisibility } from "./fields";

@@ -80,6 +80,8 @@ export const store = reactive({
             const replacement = updatedRepository.adrs.find((adr) => adr.path === current.path);
             if (replacement) {
                 this.openAdr(replacement);
+            } else {
+                this.ensureSomeAdrIsOpened();
             }
         }
         this.updateLocalStorageRepositories();
@@ -216,16 +218,19 @@ export const store = reactive({
         }
     },
 
-    async loadUserInfo(): Promise<void> {
+    /** Returns whether user info was applied; the caller decides if a failure is worth surfacing. */
+    async loadUserInfo(): Promise<boolean> {
         try {
             const user = await getActiveProvider().getUser();
             if (!user) {
-                return;
+                return false;
             }
             this.name = user.displayName;
             this.userMail = user.email;
+            return true;
         } catch (error) {
             console.error(error);
+            return false;
         }
     },
 

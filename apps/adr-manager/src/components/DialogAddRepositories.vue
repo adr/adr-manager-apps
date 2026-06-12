@@ -15,21 +15,29 @@
 
         <div class="progress" :class="{ active: countLoadingPromises > 0 }"></div>
 
-        <div v-if="showPagination" class="pagination">
-            <button type="button" class="btn btn-outline" :disabled="!hasPreviousPage" @click="goToPreviousPage">
-                <span class="mdi mdi-chevron-left" aria-hidden="true"></span>
-                Back
-            </button>
-            <button type="button" class="btn btn-outline" :disabled="!hasNextPage" @click="goToNextPage">
-                Next
-                <span class="mdi mdi-chevron-right" aria-hidden="true"></span>
+        <div v-if="countLoadingPromises > 0" class="status" role="status" aria-live="polite">
+            <span class="mdi mdi-loading mdi-spin" aria-hidden="true"></span>
+            {{ lastAction === "search" ? "Searching repositories…" : "Loading your repositories…" }}
+        </div>
+
+        <div v-else-if="errorMessage" data-cy="repoListError" class="error-block">
+            <span class="mdi mdi-alert-circle" aria-hidden="true"></span>
+            <span class="error-text">{{ errorMessage }}</span>
+            <button type="button" data-cy="repoListRetry" class="btn btn-outline" @click="retry">
+                <span class="mdi mdi-refresh" aria-hidden="true"></span>
+                Retry
             </button>
         </div>
 
-        <div v-if="unstagedRepositories.length === 0 && countLoadingPromises === 0" data-cy="noRepo" class="empty">
-            Sorry, no repositories were found!
+        <div
+            v-if="unstagedRepositories.length === 0 && countLoadingPromises === 0 && !errorMessage"
+            data-cy="noRepo"
+            class="empty"
+        >
+            <span class="mdi mdi-source-repository" aria-hidden="true"></span>
+            No repositories found
         </div>
-        <ul class="repo-list">
+        <ul v-if="unstagedRepositories.length > 0" class="repo-list">
             <li v-for="repo in unstagedRepositories" :key="repo.name" data-cy="listRepo" @click="stageRepository(repo)">
                 <div class="repo-row">
                     <div class="repo-info">
@@ -37,22 +45,52 @@
                             {{ repo.name }}
                             <span class="repo-updated">updated on {{ repo.updated }}</span>
                         </span>
-                        <span class="repo-desc">{{ repo.description }}</span>
+                        <span v-if="repo.description" class="repo-desc">{{ repo.description }}</span>
                     </div>
-                    <span class="mdi mdi-plus" aria-hidden="true"></span>
+                    <span class="row-action mdi mdi-plus" aria-hidden="true"></span>
                 </div>
             </li>
         </ul>
 
-        <h3 class="staged-title">Repositories to be added</h3>
-        <ul class="repo-list staged">
+        <div v-if="showPagination" class="pagination" data-cy="pagination">
+            <button
+                type="button"
+                data-cy="prevPage"
+                class="btn btn-outline"
+                :disabled="!hasPreviousPage || countLoadingPromises > 0"
+                @click="goToPreviousPage"
+            >
+                <span class="mdi mdi-chevron-left" aria-hidden="true"></span>
+                Back
+            </button>
+            <span class="page-indicator" data-cy="pageIndicator">
+                Page {{ page }}<template v-if="totalPages"> of {{ totalPages }}</template>
+            </span>
+            <button
+                type="button"
+                data-cy="nextPage"
+                class="btn btn-outline"
+                :disabled="!hasNextPage || countLoadingPromises > 0"
+                @click="goToNextPage"
+            >
+                Next
+                <span class="mdi mdi-chevron-right" aria-hidden="true"></span>
+            </button>
+        </div>
+
+        <div class="staged-head">
+            <h3 class="staged-title">Repositories to be added</h3>
+            <span v-if="repositoriesSelected.length > 0" class="staged-count">{{ repositoriesSelected.length }}</span>
+        </div>
+        <p v-if="repositoriesSelected.length === 0" class="staged-hint">Click a repository above to select it.</p>
+        <ul v-else class="repo-list staged">
             <li v-for="repo in repositoriesSelected" :key="repo.name" @click="unstageRepository(repo)">
                 <div class="repo-row">
                     <div class="repo-info">
                         <span class="repo-title">{{ repo.name }}</span>
-                        <span class="repo-desc">{{ repo.description }}</span>
+                        <span v-if="repo.description" class="repo-desc">{{ repo.description }}</span>
                     </div>
-                    <span class="mdi mdi-close" aria-hidden="true"></span>
+                    <span class="row-action mdi mdi-close" aria-hidden="true"></span>
                 </div>
             </li>
         </ul>
@@ -78,9 +116,9 @@
 import { computed, ref, watch } from "vue";
 import BaseDialog from "./BaseDialog.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
-import { getActiveProvider, loadAllRepositoryContent } from "@/plugins/git";
+import { describeGitError, getActiveProvider, loadAllRepositoryContent } from "@/plugins/git";
 import { store } from "@/plugins/store";
-import { useAlert } from "@/composables/useAlert";
+import { useToast } from "@/composables/useToast";
 import { debounce } from "@/utils/debounce";
 import type { RepoSummary } from "@/types/git";
 
@@ -93,19 +131,24 @@ interface StagedRepo {
 
 const show = defineModel<boolean>({ default: false });
 
-const { alert } = useAlert();
+const { showErrorToast } = useToast();
 
 const repositoriesSelected = ref<StagedRepo[]>([]);
 const repositoriesCurrentPage = ref<RepoSummary[]>([]);
 const showLoadingOverlay = ref(false);
 const countLoadingPromises = ref(0);
+const errorMessage = ref<string | null>(null);
+const lastAction = ref<"list" | "search">("list");
 const searchText = ref("");
 const page = ref(1);
-const perPage = 40;
+const totalPages = ref<number | undefined>(undefined);
+const perPage = 20;
 
 const hasPreviousPage = computed(() => page.value > 1);
-const hasNextPage = computed(() => repositoriesCurrentPage.value.length >= perPage);
-const showPagination = computed(() => hasNextPage.value || hasPreviousPage.value);
+const hasNextPage = computed(() =>
+    totalPages.value !== undefined ? page.value < totalPages.value : repositoriesCurrentPage.value.length >= perPage
+);
+const showPagination = computed(() => lastAction.value === "list" && (hasPreviousPage.value || hasNextPage.value));
 
 const unstagedRepositories = computed<StagedRepo[]>(() =>
     filterUnstagedRepositories(repositoriesCurrentPage.value)
@@ -129,11 +172,17 @@ watch(show, (open) => {
 loadRepositories();
 
 async function loadRepositories(): Promise<void> {
+    lastAction.value = "list";
+    errorMessage.value = null;
     countLoadingPromises.value++;
     try {
-        repositoriesCurrentPage.value = await getActiveProvider().listRepositories(page.value, perPage);
+        const result = await getActiveProvider().listRepositories(page.value, perPage);
+        repositoriesCurrentPage.value = result.repositories;
+        totalPages.value = result.totalPages;
     } catch (error) {
         console.error(error);
+        repositoriesCurrentPage.value = [];
+        errorMessage.value = describeGitError(error);
     } finally {
         countLoadingPromises.value--;
     }
@@ -144,6 +193,8 @@ const searchRepositories = debounce(() => {
         loadRepositories();
         return;
     }
+    lastAction.value = "search";
+    errorMessage.value = null;
     countLoadingPromises.value++;
     repositoriesCurrentPage.value = [];
     getActiveProvider()
@@ -151,9 +202,20 @@ const searchRepositories = debounce(() => {
         .then((results) => {
             repositoriesCurrentPage.value = results;
         })
-        .catch((error: unknown) => console.error(error))
+        .catch((error: unknown) => {
+            console.error(error);
+            errorMessage.value = describeGitError(error);
+        })
         .finally(() => countLoadingPromises.value--);
 }, 500);
+
+function retry(): void {
+    if (lastAction.value === "search") {
+        searchRepositories();
+    } else {
+        loadRepositories();
+    }
+}
 
 function filterUnstagedRepositories(repoList: RepoSummary[]): RepoSummary[] {
     const addedNames = store.addedRepositories.map((repo) => repo.fullName);
@@ -191,21 +253,33 @@ function onAddRepositories(): void {
 async function addRepositories(): Promise<void> {
     showLoadingOverlay.value = true;
     try {
-        const repoObjectList = await loadAllRepositoryContent(
+        const results = await loadAllRepositoryContent(
             repositoriesSelected.value.map((repo) => ({
                 fullName: repo.repoData.fullName,
                 branch: repo.repoData.defaultBranch
             }))
         );
-        store.addRepositories(repoObjectList);
+        store.addRepositories(results.map((result) => result.repository));
+        const failedFiles = results.flatMap((result) => result.failedFiles);
+        if (failedFiles.length > 0) {
+            showErrorToast(summarizeFailedFiles(failedFiles));
+        }
         repositoriesSelected.value = [];
         searchText.value = "";
     } catch (error) {
-        alert("Sorry, we couldn't load the repositories you requested!", "Error", "error");
+        // The selection is kept on purpose: reopening the dialog allows a retry.
+        const repoNames = repositoriesSelected.value.map((repo) => repo.name).join(", ");
+        showErrorToast(`Couldn't load ${repoNames}: ${describeGitError(error)}`);
         console.error(error);
     } finally {
         showLoadingOverlay.value = false;
     }
+}
+
+function summarizeFailedFiles(failedFiles: string[]): string {
+    const shown = failedFiles.slice(0, 3).map((path) => path.split("/").pop() ?? path);
+    const more = failedFiles.length > shown.length ? ` and ${failedFiles.length - shown.length} more` : "";
+    return `Couldn't read ${failedFiles.length} ADR file(s), shown empty for now: ${shown.join(", ")}${more}`;
 }
 </script>
 
@@ -255,17 +329,67 @@ async function addRepositories(): Promise<void> {
     }
 }
 
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--adr-ink-2);
+    font-size: 13px;
+    padding: 4px 0 8px;
+}
+
+.error-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--adr-ink);
+    font-size: 13px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border: 1px solid var(--adr-error);
+    border-radius: 6px;
+}
+
+.error-block > .mdi-alert-circle {
+    color: var(--adr-error);
+    font-size: 18px;
+    flex: 0 0 auto;
+}
+
+.error-block .error-text {
+    flex: 1 1 auto;
+}
+
 .pagination {
     display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.pagination .btn {
+    height: 32px;
+    padding: 0 12px;
+}
+
+.page-indicator {
+    font-size: var(--adr-text-sm);
+    color: var(--adr-ink-2);
+    font-variant-numeric: tabular-nums;
 }
 
 .empty {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
     color: var(--adr-ink-2);
-    padding: 16px 0;
+    padding: 28px 0;
+}
+
+.empty .mdi {
+    font-size: 28px;
+    color: var(--adr-ink-3);
 }
 
 .repo-list {
@@ -274,6 +398,8 @@ async function addRepositories(): Promise<void> {
     padding: 0;
     max-height: 320px;
     overflow-y: auto;
+    border: 1px solid var(--adr-line);
+    border-radius: var(--adr-radius-md);
 }
 
 .repo-list.staged {
@@ -281,9 +407,12 @@ async function addRepositories(): Promise<void> {
 }
 
 .repo-list li {
-    border-radius: 6px;
     cursor: pointer;
-    padding: 8px 10px;
+    padding: 10px 12px;
+}
+
+.repo-list li + li {
+    border-top: 1px solid var(--adr-line);
 }
 
 .repo-list li:hover {
@@ -296,10 +425,26 @@ async function addRepositories(): Promise<void> {
     gap: 10px;
 }
 
-.repo-row > .mdi {
-    color: var(--adr-ink-2);
+.row-action {
+    color: var(--adr-ink-3);
     font-size: 18px;
     flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.repo-list li:hover .row-action {
+    background: var(--accent-050);
+    color: var(--accent);
+}
+
+.repo-list.staged li:hover .row-action {
+    background: var(--adr-surface);
+    color: var(--adr-error);
 }
 
 .repo-info {
@@ -330,14 +475,36 @@ async function addRepositories(): Promise<void> {
     text-overflow: ellipsis;
 }
 
+.staged-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--adr-line);
+}
+
 .staged-title {
-    margin: 14px 0 6px;
+    margin: 0;
     font-size: 13px;
     font-weight: 700;
     color: var(--adr-ink-2);
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    border-top: 1px solid var(--adr-line);
-    padding-top: 12px;
+}
+
+.staged-count {
+    background: var(--accent-050);
+    color: var(--accent-600);
+    font-size: var(--adr-text-xs);
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 1px 8px;
+}
+
+.staged-hint {
+    margin: 0;
+    color: var(--adr-ink-3);
+    font-size: var(--adr-text-sm);
 }
 </style>

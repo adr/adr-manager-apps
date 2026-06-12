@@ -27,13 +27,12 @@ export function useResizablePanel(options: ResizablePanelOptions) {
 
     function restoreWidth(): number {
         const stored = parseInt(lsGet(storageKey) ?? "", 10);
-        if (!Number.isFinite(stored)) {
-            return defaultWidth;
-        }
-        if (collapseTo !== undefined && stored <= collapseTo) {
+        if (collapseTo !== undefined && Number.isFinite(stored) && stored <= collapseTo) {
             return collapseTo;
         }
-        return clamp(stored);
+        const wanted = Number.isFinite(stored) ? clamp(stored) : defaultWidth;
+        // Widths persisted on a larger screen must not dominate a smaller one.
+        return Math.max(min, Math.min(wanted, Math.floor(window.innerWidth * 0.4)));
     }
 
     function clamp(value: number): number {

@@ -1,4 +1,4 @@
-import type { Branch, CommitInput, GitProviderId, RepoSummary, UserInfo } from "@/types/git";
+import type { Branch, CommitInput, GitProviderId, RepoPage, RepoSummary, UserInfo } from "@/types/git";
 
 /**
  * A git hosting provider behind which all host-specific API calls live.
@@ -30,15 +30,19 @@ export interface GitProvider {
     getUser(): Promise<UserInfo | undefined>;
 
     /** One page of the user's repositories, newest activity first. Throws on HTTP error. */
-    listRepositories(page: number, perPage: number): Promise<RepoSummary[]>;
+    listRepositories(page: number, perPage: number): Promise<RepoPage>;
 
     /** Repositories matching `query`, capped at maxResults. Never throws. */
     searchRepositories(query: string, maxResults: number): Promise<RepoSummary[]>;
 
-    listBranches(repoFullName: string): Promise<Branch[] | undefined>;
+    /** All branches of the repository. Throws on HTTP error. */
+    listBranches(repoFullName: string): Promise<Branch[]>;
 
-    /** All file (blob) paths in the repository at the given branch, recursive. */
-    listFiles(repoFullName: string, branch: string): Promise<string[] | undefined>;
+    /**
+     * All file (blob) paths in the repository at the given branch, recursive.
+     * Returns [] for an empty repository, throws on any other HTTP error.
+     */
+    listFiles(repoFullName: string, branch: string): Promise<string[]>;
 
     /** Decoded UTF-8 file content, or undefined on failure. */
     readFile(repoFullName: string, branch: string, filePath: string): Promise<string | undefined>;

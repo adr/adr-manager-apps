@@ -69,8 +69,9 @@ const { width, startResize } = useResizablePanel({
 
 <style scoped>
 .pane-preview {
-    flex: 0 0 auto;
-    min-width: 0;
+    /* Shrinkable: when the window can't fit the editor's minimum, the preview gives way. */
+    flex: 0 1 auto;
+    min-width: 250px;
     overflow-y: auto;
     background: var(--adr-surface-1);
     border-left: 1px solid var(--adr-line);

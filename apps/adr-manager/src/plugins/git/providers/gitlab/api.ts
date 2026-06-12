@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AxiosInstance } from "axios";
 import { attachAuthInterceptors } from "./auth";
 import { gitlabBaseUrl } from "./config";
-import type { Branch, CommitInput, RepoSummary, UserInfo } from "@/types/git";
+import type { Branch, CommitInput, RepoPage, RepoSummary, UserInfo } from "@/types/git";
 import type { GitLabBranch, GitLabCommitAction, GitLabProject, GitLabTreeItem, GitLabUser } from "./types";
 
 // Backstop against pathological repositories: 200 pages of 100 entries each.
@@ -57,7 +57,7 @@ function toRepoSummary(project: GitLabProject): RepoSummary {
     };
 }
 
-export async function listRepositories(page: number, perPage: number): Promise<RepoSummary[]> {
+export async function listRepositories(page: number, perPage: number): Promise<RepoPage> {
     const response = await gitlabHttp().get<GitLabProject[]>("/projects", {
         params: {
             membership: true,
@@ -68,7 +68,12 @@ export async function listRepositories(page: number, perPage: number): Promise<R
             per_page: perPage
         }
     });
-    return response.data.map(toRepoSummary);
+    // gitlab.com omits x-total-pages for collections beyond 10k items.
+    const totalPages = Number(response.headers["x-total-pages"]);
+    return {
+        repositories: response.data.map(toRepoSummary),
+        ...(Number.isInteger(totalPages) && totalPages > 0 && { totalPages })
+    };
 }
 
 export async function searchRepositories(query: string, maxResults: number): Promise<RepoSummary[]> {
@@ -93,17 +98,12 @@ export async function searchRepositories(query: string, maxResults: number): Pro
     }
 }
 
-export async function listBranches(repoFullName: string): Promise<Branch[] | undefined> {
-    try {
-        const branches = await fetchAllPages<GitLabBranch>(`/projects/${projectId(repoFullName)}/repository/branches`);
-        return branches.map((branch) => ({ name: branch.name, commit: { sha: branch.commit.id } }));
-    } catch (error) {
-        console.error(error);
-        return undefined;
-    }
+export async function listBranches(repoFullName: string): Promise<Branch[]> {
+    const branches = await fetchAllPages<GitLabBranch>(`/projects/${projectId(repoFullName)}/repository/branches`);
+    return branches.map((branch) => ({ name: branch.name, commit: { sha: branch.commit.id } }));
 }
 
-export async function listFiles(repoFullName: string, branch: string): Promise<string[] | undefined> {
+export async function listFiles(repoFullName: string, branch: string): Promise<string[]> {
     try {
         const tree = await fetchAllPages<GitLabTreeItem>(`/projects/${projectId(repoFullName)}/repository/tree`, {
             recursive: true,
@@ -111,12 +111,12 @@ export async function listFiles(repoFullName: string, branch: string): Promise<s
         });
         return tree.filter((item) => item.type === "blob").map((item) => item.path);
     } catch (error) {
-        // An empty repository or unknown ref answers 404 ("Tree Not Found").
+        // An empty repository answers 404 ("Tree Not Found"). GitLab uses the same 404
+        // for an unknown ref, so a deleted branch reads as empty here rather than an error.
         if (axios.isAxiosError(error) && error.response?.status === 404) {
             return [];
         }
-        console.error(error);
-        return undefined;
+        throw error;
     }
 }
 

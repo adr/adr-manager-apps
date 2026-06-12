@@ -1,6 +1,6 @@
 import axios from "axios";
 import { request } from "../../request";
-import type { Branch, CommitAuthor, RepoSummary, UserInfo } from "@/types/git";
+import type { Branch, CommitAuthor, RepoPage, RepoSummary, UserInfo } from "@/types/git";
 import type {
     GitHubBranch,
     GitHubContent,
@@ -25,11 +25,23 @@ function toRepoSummary(repo: GitHubRepoSummary): RepoSummary {
     };
 }
 
-export async function listRepositories(page: number, perPage: number): Promise<RepoSummary[]> {
+export async function listRepositories(page: number, perPage: number): Promise<RepoPage> {
     const response = await axios.get<GitHubRepoSummary[]>(
         `${BASE_URL_USER}/repos?sort=updated&direction=desc&page=${page}&per_page=${perPage}`
     );
-    return (response.data ?? []).map(toRepoSummary);
+    return {
+        repositories: (response.data ?? []).map(toRepoSummary),
+        totalPages: lastPageFromLinkHeader(response.headers["link"]) ?? page
+    };
+}
+
+/** GitHub reports the page count only via the Link header, which omits rel="last" on the last page. */
+function lastPageFromLinkHeader(link: unknown): number | undefined {
+    if (typeof link !== "string") {
+        return undefined;
+    }
+    const match = /[?&]page=(\d+)[^>]*>;\s*rel="last"/.exec(link);
+    return match?.[1] ? Number(match[1]) : undefined;
 }
 
 export async function searchRepositories(query: string, maxResults: number): Promise<RepoSummary[]> {
@@ -41,13 +53,13 @@ export async function searchRepositories(query: string, maxResults: number): Pro
     let hasNextPage = true;
     while (results.length < maxResults && hasNextPage) {
         try {
-            const repositoryPage = await listRepositories(page, perPage);
-            for (const repo of repositoryPage) {
+            const { repositories, totalPages } = await listRepositories(page, perPage);
+            for (const repo of repositories) {
                 if (results.length < maxResults && repo.fullName.includes(query)) {
                     results.push(repo);
                 }
             }
-            hasNextPage = repositoryPage.length >= perPage;
+            hasNextPage = totalPages !== undefined && page < totalPages;
         } catch {
             hasNextPage = false;
         }
@@ -56,15 +68,24 @@ export async function searchRepositories(query: string, maxResults: number): Pro
     return results;
 }
 
-export async function listBranches(repoFullName: string): Promise<Branch[] | undefined> {
-    return request(axios.get<GitHubBranch[]>(`${BASE_URL_REPO}/${repoFullName}/branches?per_page=999`));
+export async function listBranches(repoFullName: string): Promise<Branch[]> {
+    const response = await axios.get<GitHubBranch[]>(`${BASE_URL_REPO}/${repoFullName}/branches?per_page=999`);
+    return response.data;
 }
 
-export async function listFiles(repoFullName: string, branch: string): Promise<string[] | undefined> {
-    const data = await request(
-        axios.get<GitHubFileTree>(`${BASE_URL_REPO}/${repoFullName}/git/trees/${branch}?recursive=1`)
-    );
-    return data?.tree.filter((entry) => entry.type === "blob").map((entry) => entry.path);
+export async function listFiles(repoFullName: string, branch: string): Promise<string[]> {
+    try {
+        const response = await axios.get<GitHubFileTree>(
+            `${BASE_URL_REPO}/${repoFullName}/git/trees/${branch}?recursive=1`
+        );
+        return response.data.tree.filter((entry) => entry.type === "blob").map((entry) => entry.path);
+    } catch (error) {
+        // An empty repository answers 409 "Git Repository is empty".
+        if (axios.isAxiosError(error) && error.response?.status === 409) {
+            return [];
+        }
+        throw error;
+    }
 }
 
 export async function readFile(repoFullName: string, branch: string, filePath: string): Promise<string | undefined> {

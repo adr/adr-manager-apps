@@ -13,6 +13,12 @@ export interface RepoSummary {
     updatedAt: string;
 }
 
+export interface RepoPage {
+    repositories: RepoSummary[];
+    /** Absent when the provider doesn't report a total (e.g. GitLab beyond 10k projects). */
+    totalPages?: number;
+}
+
 export interface UserInfo {
     username: string;
     /** Falls back to the username when the provider has no display name. */

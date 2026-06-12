@@ -54,6 +54,11 @@
             <span class="spacer"></span>
         </div>
 
+        <div v-if="refreshing" class="exp-refresh" role="status" aria-live="polite" data-cy="refreshStatus">
+            <span class="mdi mdi-loading mdi-spin" aria-hidden="true"></span>
+            Refreshing repositories… ({{ done }}/{{ total }})
+        </div>
+
         <div class="exp-list" data-cy="repoNameList">
             <RepositoryTreeItem
                 v-for="repo in repositories"
@@ -103,6 +108,7 @@ import DialogAddRepositories from "./DialogAddRepositories.vue";
 import DialogDeleteAdr from "./DialogDeleteAdr.vue";
 import DialogRemoveRepository from "./DialogRemoveRepository.vue";
 import RepositoryTreeItem from "./RepositoryTreeItem.vue";
+import { useRepositoryRefresh } from "@/composables/useRepositoryRefresh";
 import { useResizablePanel } from "@/composables/useResizablePanel";
 import { sortedAdrs, fileLabel } from "@/utils/adrFiles";
 import { store } from "@/plugins/store";
@@ -127,6 +133,8 @@ const emit = defineEmits<{
 const addRepositoriesOpen = ref(false);
 const repositoryToRemove = ref<Repository | null>(null);
 const adrToDelete = ref<{ adr: AdrFile; repository: Repository } | null>(null);
+
+const { refreshing, done, total } = useRepositoryRefresh();
 
 const repositories = computed(() => [...store.addedRepositories].sort((a, b) => a.fullName.localeCompare(b.fullName)));
 
@@ -388,6 +396,17 @@ const expandedWidth = computed(() => (props.forceExpanded ? Math.max(width.value
     letter-spacing: 0.6px;
     text-transform: uppercase;
     color: var(--adr-ink-2);
+}
+
+.exp-refresh {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--adr-ink-2);
+    border-bottom: 1px solid var(--adr-line);
 }
 
 .exp-list {

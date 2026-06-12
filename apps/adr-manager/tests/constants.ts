@@ -243,7 +243,8 @@ export const searchTermRepoPairs: { searchTerm: string; results: RepoFixture[] }
     }
 ];
 
-export const mockedValues: { data: RepoFixture[] } = {
+export const mockedValues: { data: RepoFixture[]; headers: Record<string, string> } = {
+    headers: {},
     data: [
         {
             id: 304013826,

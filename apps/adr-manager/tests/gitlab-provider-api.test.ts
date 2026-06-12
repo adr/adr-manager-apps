@@ -56,10 +56,11 @@ test("listRepositories maps projects to neutral summaries", async () => {
                 description: null,
                 last_activity_at: "2026-05-01T00:00:00Z"
             }
-        ]
+        ],
+        headers: { "x-total-pages": "5" }
     });
 
-    const repos = await gitlabProvider.listRepositories(2, 40);
+    const result = await gitlabProvider.listRepositories(2, 40);
 
     expect(http.get).toHaveBeenCalledWith("/projects", {
         params: {
@@ -71,7 +72,7 @@ test("listRepositories maps projects to neutral summaries", async () => {
             per_page: 40
         }
     });
-    expect(repos).toEqual([
+    expect(result.repositories).toEqual([
         {
             fullName: "group/subgroup/project",
             defaultBranch: "main",
@@ -80,6 +81,15 @@ test("listRepositories maps projects to neutral summaries", async () => {
         },
         { fullName: "group/empty", defaultBranch: "main", description: null, updatedAt: "2026-05-01T00:00:00Z" }
     ]);
+    expect(result.totalPages).toBe(5);
+});
+
+test("listRepositories omits the total page count when GitLab doesn't report one", async () => {
+    http.get.mockResolvedValueOnce({ data: [], headers: {} });
+
+    const result = await gitlabProvider.listRepositories(1, 40);
+
+    expect(result.totalPages).toBeUndefined();
 });
 
 test("searchRepositories searches server-side and never throws", async () => {

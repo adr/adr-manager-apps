@@ -162,6 +162,7 @@ const isModeTooLow = computed(() => props.mode === "basic" && minimumRequiredMod
 
 .title-input {
     flex: 1 1 auto;
+    min-width: 0;
     border: 0;
     outline: 0;
     background: transparent;

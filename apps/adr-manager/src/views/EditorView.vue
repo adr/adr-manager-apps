@@ -66,6 +66,25 @@
             <span class="mdi mdi-folder-outline" aria-hidden="true"></span>
             <span class="file text-truncate" data-tour="adr-path">{{ adrPath }}</span>
             <span class="spacer"></span>
+            <span
+                v-if="branchesLoading"
+                class="mdi mdi-loading mdi-spin"
+                role="status"
+                aria-label="Loading branches"
+            ></span>
+            <span v-else-if="branchError" class="branch-error" data-cy="branchError" :title="branchError">
+                <span class="mdi mdi-alert-circle" aria-hidden="true"></span>
+                <span class="branch-error-text text-truncate">{{ branchError }}</span>
+                <button
+                    type="button"
+                    class="branch-retry"
+                    data-cy="branchRetry"
+                    aria-label="Retry loading branches"
+                    @click="retryLoadBranches"
+                >
+                    <span class="mdi mdi-refresh" aria-hidden="true"></span>
+                </button>
+            </span>
             <label class="branch">
                 <span class="mdi mdi-source-branch" aria-hidden="true"></span>
                 <select
@@ -84,6 +103,8 @@
             </label>
         </footer>
 
+        <LoadingOverlay :show="switchingBranch" />
+
         <DialogAddRepositories v-model="addRepositoriesOpen" />
         <DialogCommit v-model="commitDialogOpen" :repo-full-name="commitRepoFullName" />
         <DialogTourWelcome v-model="welcomeOpen" @start="tour.start()" />
@@ -101,6 +122,7 @@ import { lsGet, lsSet } from "@/plugins/storage";
 import { useAdrEditor } from "@/composables/useAdrEditor";
 import { useBranchSelection } from "@/composables/useBranchSelection";
 import { useEditorRouteSync } from "@/composables/useEditorRouteSync";
+import { useRepositoryRefresh } from "@/composables/useRepositoryRefresh";
 import { useToast } from "@/composables/useToast";
 import { useTour } from "@/composables/useTour";
 
@@ -110,6 +132,7 @@ import DialogAddRepositories from "@/components/DialogAddRepositories.vue";
 import DialogCommit from "@/components/DialogCommit.vue";
 import DialogTourWelcome from "@/components/DialogTourWelcome.vue";
 import EditorConvert from "@/components/EditorConvert.vue";
+import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import MadrEditor from "@/components/MadrEditor.vue";
 import MarkdownPreviewPane from "@/components/MarkdownPreviewPane.vue";
 import RepositoryExplorer from "@/components/RepositoryExplorer.vue";
@@ -118,7 +141,8 @@ import TourOverlay from "@/components/TourOverlay.vue";
 const props = defineProps<{ repoFullName?: string; branch?: string; adr?: string }>();
 
 const router = useRouter();
-const { showToast } = useToast();
+const { showToast, showErrorToast } = useToast();
+const { refreshAllRepositories, resetSessionGuard } = useRepositoryRefresh();
 
 const showExplorer = ref(true);
 const showPreview = ref(true);
@@ -168,8 +192,18 @@ const {
     acceptConversion
 } = useAdrEditor();
 const { routeDataFromStore } = useEditorRouteSync(props);
-const { selected, branchNames, setActiveBranch, onSelectedBranch, updateBranches, onBranchSelectClick } =
-    useBranchSelection(routeDataFromStore);
+const {
+    selected,
+    branchNames,
+    branchesLoading,
+    branchError,
+    switchingBranch,
+    setActiveBranch,
+    onSelectedBranch,
+    retryLoadBranches,
+    updateBranches,
+    onBranchSelectClick
+} = useBranchSelection(routeDataFromStore);
 
 const showFileExplorer = computed(() => store.addedRepositories.length > 0);
 const showEditor = computed(() => store.currentlyEditedAdr !== undefined);
@@ -186,6 +220,7 @@ const adrPath = computed(() => {
 onMounted(() => {
     store.reload();
     store.openAdrBy(props.repoFullName ?? "", props.adr);
+    void refreshAllRepositories();
     if (lsGet("tourSeen") === null) {
         welcomeOpen.value = true;
     }
@@ -203,13 +238,14 @@ function copyMarkdown(): void {
     navigator.clipboard
         .writeText(markdown.value)
         .then(() => showToast("Markdown copied to clipboard"))
-        .catch(() => showToast("Could not copy the markdown"));
+        .catch(() => showErrorToast("Could not copy the markdown"));
 }
 
 function logOut(): void {
     getActiveProvider().signOut();
     localStorage.clear();
     store.setMode("basic");
+    resetSessionGuard();
     router.push("/");
 }
 </script>
@@ -229,8 +265,10 @@ function logOut(): void {
 }
 
 .pane-editor {
-    flex: 1 1 58%;
-    min-width: 0;
+    /* Zero basis: the editor takes whatever the fixed side panels leave over,
+       but never less than its minimum. The shortfall then squeezes the preview. */
+    flex: 1 1 0;
+    min-width: 320px;
     overflow-y: auto;
     background: var(--adr-surface);
 }
@@ -272,6 +310,37 @@ function logOut(): void {
     display: inline-flex;
     align-items: center;
     gap: 5px;
+}
+
+.branch-error {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.branch-error > .mdi-alert-circle {
+    color: var(--adr-error);
+}
+
+.branch-error-text {
+    max-width: 260px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.branch-retry {
+    border: none;
+    background: transparent;
+    color: var(--adr-ink-2);
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+}
+
+.branch-retry:hover {
+    color: var(--adr-ink);
 }
 
 .branch-select {

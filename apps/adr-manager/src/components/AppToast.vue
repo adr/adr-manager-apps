@@ -1,14 +1,23 @@
 <template>
-    <div class="toast" :class="{ show: toastMessage }">
-        <span class="mdi mdi-check-circle" aria-hidden="true"></span>
-        {{ toastMessage }}
+    <div
+        class="toast"
+        :class="{ show: toast, 'toast-error': toast?.variant === 'error' }"
+        role="status"
+        aria-live="polite"
+    >
+        <span
+            class="mdi"
+            :class="toast?.variant === 'error' ? 'mdi-alert-circle' : 'mdi-check-circle'"
+            aria-hidden="true"
+        ></span>
+        {{ toast?.text }}
     </div>
 </template>
 
 <script setup lang="ts">
 import { useToast } from "@/composables/useToast";
 
-const { toastMessage } = useToast();
+const { toast } = useToast();
 </script>
 
 <style scoped>
@@ -40,5 +49,14 @@ const { toastMessage } = useToast();
 .toast .mdi {
     font-size: 18px;
     color: #9ccc65;
+}
+
+.toast-error {
+    border-left: 3px solid var(--adr-error);
+    max-width: min(520px, calc(100vw - 32px));
+}
+
+.toast-error .mdi {
+    color: var(--adr-error);
 }
 </style>

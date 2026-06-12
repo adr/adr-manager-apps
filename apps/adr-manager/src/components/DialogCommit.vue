@@ -91,6 +91,7 @@ import { pushSelectedFiles } from "@/composables/useCommitPush";
 import { getActiveProvider } from "@/plugins/git";
 import { store } from "@/plugins/store";
 import { useAlert } from "@/composables/useAlert";
+import { useToast } from "@/composables/useToast";
 import type { CommitFile } from "@/types/commit";
 
 interface FileGroup {
@@ -108,6 +109,7 @@ const props = defineProps<{ repoFullName: string }>();
 const emit = defineEmits<{ commit: [] }>();
 
 const { alert } = useAlert();
+const { showErrorToast } = useToast();
 
 const changedFiles = ref<CommitFile[]>([]);
 const newFiles = ref<CommitFile[]>([]);
@@ -158,7 +160,11 @@ watch(show, (visible) => {
     commitMessage.value = "";
     openGroups.value = [];
     store.setCurrentRepositoryForCommit(props.repoFullName);
-    store.loadUserInfo();
+    void store.loadUserInfo().then((loaded) => {
+        if (!loaded) {
+            showErrorToast("Couldn't load your user info, so the commit author may be incomplete.");
+        }
+    });
     branch.value = store.getBranchCommit();
     changedFiles.value = store.changedFilesInRepo();
     newFiles.value = store.newFilesInRepo();

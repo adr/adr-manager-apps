@@ -34,6 +34,12 @@
     </header>
 
     <div class="editor-inner">
+      <AdrTagSection
+        :tags="tags"
+        :recent-tags="recentTags"
+        @update:tags="tags = $event"
+        @update:recent-tags="updateRecentTags($event)"
+      ></AdrTagSection>
       <MadrTemplateProfessional
         :template-version="templateVersion"
         :field-visibility="fieldVisibility"
@@ -50,6 +56,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import MadrTemplateProfessional from "../components/MadrTemplateProfessional.vue";
+import AdrTagSection from "../components/AdrTagSection.vue";
 import TourOverlay from "../components/TourOverlay.vue";
 import VersionSelect from "../components/VersionSelect.vue";
 import FieldVisibilityPanel from "../components/FieldVisibilityPanel.vue";
@@ -61,6 +68,7 @@ import { buildEditorTourSteps } from "../tour/editor-steps";
 export default defineComponent({
   components: {
     MadrTemplateProfessional,
+    AdrTagSection,
     TourOverlay,
     VersionSelect,
     FieldVisibilityPanel
@@ -99,7 +107,8 @@ export default defineComponent({
           confirmation: this.confirmation,
           moreInformation: this.moreInformation,
           templateVersion: this.templateVersion,
-          fullPath: this.fullPath
+          fullPath: this.fullPath,
+          tags: this.tags.map((t) => ({ ...t }))
         })
       );
     }

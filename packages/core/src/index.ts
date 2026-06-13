@@ -5,7 +5,8 @@ export type {
   ParseError,
   Consequence,
   ConsequenceKind,
-  MadrTemplateVersion
+  MadrTemplateVersion,
+  Tag
 } from "./types";
 export { ArchitecturalDecisionRecord } from "./classes";
 export { md2adr, adr2md } from "./parser";
@@ -23,3 +24,15 @@ export {
 
 export{FIELD_KEYS, DEFAULT_FIELD_VISIBILITY, applyFieldVisibilityFilter} from "./fields";
 export type { FieldKey, FieldVisibility } from "./fields";
+
+export { parseTagsFromMd, stripTagComment, setTagsInMd, TAG_PALETTE } from "./tags";
+export type { TagPaletteColor } from "./tags";
+
+export {
+  matchesAdrSearch,
+  extractAdrTitle,
+  extractAdrStatus,
+  isEmptyQuery,
+  EMPTY_QUERY
+} from "./search";
+export type { AdrSearchQuery, SearchableAdr } from "./search";

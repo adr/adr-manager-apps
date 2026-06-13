@@ -5,6 +5,7 @@ import {
   adr2md400,
   detectMadrVersion,
   matchesIgnoringFormatting,
+  stripTagComment,
   type ArchitecturalDecisionRecord,
   type MadrTemplateVersion
 } from "@adr-manager/core";
@@ -36,12 +37,16 @@ export function parseAdr(
   md: string,
   version: MadrTemplateVersion = detectMadrVersion(md)
 ): ArchitecturalDecisionRecord {
+  // Strip the tag HTML comment before the ANTLR parser sees the markdown.
+  // Without this, the comment text is captured as part of the last open-ended
+  // field (typically the "because" explanation) when no section heading follows it.
+  const cleanMd = stripTagComment(md);
   if (version === "4.0.0") {
-    const adr = md2adr400(md);
-    adr.conforming = matchesIgnoringFormatting(md, adr2md400(adr));
+    const adr = md2adr400(cleanMd);
+    adr.conforming = matchesIgnoringFormatting(cleanMd, adr2md400(adr));
     return adr;
   }
-  return md2adr(md);
+  return md2adr(cleanMd);
 }
 
 export function serializeAdr(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {

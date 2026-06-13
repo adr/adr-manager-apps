@@ -40,6 +40,18 @@ export interface ParseError {
 }
 
 /**
+ * A user-defined label that can be attached to any ADR.
+ * Tags are stored as an HTML comment inside the ADR's markdown so they are
+ * committed to git and visible to every collaborator.
+ */
+export interface Tag {
+  id: string;
+  label: string;
+  /** Hex colour string, e.g. "#6366f1". */
+  color: string;
+}
+
+/**
  * Constructor input for {@link ArchitecturalDecisionRecord}. All fields are optional;
  * the class fills in defaults, so the fields are never read back as `undefined`.
  */

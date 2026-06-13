@@ -2,23 +2,27 @@ import { readonly, ref, watch } from "vue";
 import { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import { adr2md, adr2md400, detectMadrVersion, md2adr, md2adr400 } from "@/plugins/parser";
 import { store } from "@/plugins/store";
-import { matchesIgnoringFormatting } from "@adr-manager/core";
+import { matchesIgnoringFormatting, applyFieldVisibilityFilter, parseTagsFromMd, stripTagComment, setTagsInMd } from "@adr-manager/core";
 import type { MadrTemplateVersion } from "@adr-manager/core";
-import type { AdrFile } from "@/types/adr";
+import type { AdrFile, Tag } from "@/types/adr";
 
-import { applyFieldVisibilityFilter } from "@adr-manager/core";
-
-function serialize(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {
+function serializeAdr(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {
     const filtered = applyFieldVisibilityFilter(adr, store.fieldVisibility);
     return version === "4.0.0" ? adr2md400(filtered) : adr2md(filtered);
+}
+
+function serialize(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion, tags: Tag[]): string {
+    return setTagsInMd(serializeAdr(adr, version), tags);
 }
 
 function parse(markdown: string, version: MadrTemplateVersion): ArchitecturalDecisionRecord {
     return version === "4.0.0" ? md2adr400(markdown) : md2adr(markdown);
 }
 
+// Strip the tag comment before comparing so tags never break the round-trip check.
 function roundTripsExactly(markdown: string, version: MadrTemplateVersion): boolean {
-    return serialize(parse(markdown, version), version) === markdown;
+    const stripped = stripTagComment(markdown);
+    return serializeAdr(parse(stripped, version), version) === stripped;
 }
 
 /**
@@ -30,6 +34,7 @@ function roundTripsExactly(markdown: string, version: MadrTemplateVersion): bool
 export function useAdrEditor() {
     const adr = ref(new ArchitecturalDecisionRecord());
     const markdown = ref("");
+    const tags = ref<Tag[]>([]);
     const requiresConversion = ref(false);
     const templateVersion = ref<MadrTemplateVersion>("2.1.2");
 
@@ -44,7 +49,8 @@ export function useAdrEditor() {
             return detected;
         }
         const current = templateVersion.value;
-        if (matchesIgnoringFormatting(md, serialize(parse(md, current), current))) {
+        const stripped = stripTagComment(md);
+        if (matchesIgnoringFormatting(stripped, serializeAdr(parse(stripped, current), current))) {
             return current;
         }
         return detected;
@@ -53,14 +59,17 @@ export function useAdrEditor() {
     function openAdrFile(adrFile: AdrFile | undefined): void {
         if (!adrFile) {
             adr.value = new ArchitecturalDecisionRecord();
-            markdown.value = serialize(adr.value, templateVersion.value);
+            tags.value = [];
+            markdown.value = serialize(adr.value, templateVersion.value, []);
             requiresConversion.value = false;
             return;
         }
+        tags.value = parseTagsFromMd(adrFile.editedMd);
+        const stripped = stripTagComment(adrFile.editedMd);
         markdown.value = adrFile.editedMd;
-        templateVersion.value = resolveVersion(adrFile.editedMd);
-        const parsed = parse(adrFile.editedMd, templateVersion.value);
-        if (matchesIgnoringFormatting(adrFile.editedMd, serialize(parsed, templateVersion.value))) {
+        templateVersion.value = resolveVersion(stripped);
+        const parsed = parse(stripped, templateVersion.value);
+        if (matchesIgnoringFormatting(stripped, serializeAdr(parsed, templateVersion.value))) {
             adr.value = parsed;
             requiresConversion.value = false;
         } else {
@@ -72,10 +81,11 @@ export function useAdrEditor() {
         if (newMarkdown === markdown.value) {
             return;
         }
+        tags.value = parseTagsFromMd(newMarkdown);
         markdown.value = newMarkdown;
         templateVersion.value = resolveVersion(newMarkdown);
         if (roundTripsExactly(newMarkdown, templateVersion.value)) {
-            adr.value = parse(newMarkdown, templateVersion.value);
+            adr.value = parse(stripTagComment(newMarkdown), templateVersion.value);
             requiresConversion.value = false;
         } else {
             requiresConversion.value = true;
@@ -83,9 +93,17 @@ export function useAdrEditor() {
     }
 
     function acceptConversion(convertedMarkdown: string): void {
-        adr.value = parse(convertedMarkdown, templateVersion.value);
+        tags.value = parseTagsFromMd(convertedMarkdown);
+        adr.value = parse(stripTagComment(convertedMarkdown), templateVersion.value);
         markdown.value = convertedMarkdown;
         requiresConversion.value = false;
+    }
+
+    function setTags(newTags: Tag[]): void {
+        tags.value = newTags;
+        if (!requiresConversion.value) {
+            markdown.value = serialize(adr.value, templateVersion.value, newTags);
+        }
     }
 
     /**
@@ -107,7 +125,7 @@ export function useAdrEditor() {
         if (version === "2.1.2" && record.deciders === "" && record.decisionMakers !== "") {
             record.deciders = record.decisionMakers;
         }
-        markdown.value = serialize(record, version);
+        markdown.value = serialize(record, version, tags.value);
     }
 
     watch(() => store.currentlyEditedAdr, openAdrFile, { immediate: true });
@@ -117,7 +135,7 @@ export function useAdrEditor() {
         adr,
         (updated) => {
             if (!requiresConversion.value) {
-                markdown.value = serialize(updated, templateVersion.value);
+                markdown.value = serialize(updated, templateVersion.value, tags.value);
             }
         },
         { deep: true }
@@ -128,20 +146,22 @@ export function useAdrEditor() {
     });
 
     watch(
-    () => store.fieldVisibility,
-    () => {
-        if (!requiresConversion.value) {
-            markdown.value = serialize(adr.value, templateVersion.value);
-        }
-    },
-    { deep: true }
+        () => store.fieldVisibility,
+        () => {
+            if (!requiresConversion.value) {
+                markdown.value = serialize(adr.value, templateVersion.value, tags.value);
+            }
+        },
+        { deep: true }
     );
 
     return {
         adr,
+        tags: readonly(tags),
         markdown: readonly(markdown),
         requiresConversion: readonly(requiresConversion),
         templateVersion: readonly(templateVersion),
+        setTags,
         setTemplateVersion,
         updateFromRaw,
         acceptConversion

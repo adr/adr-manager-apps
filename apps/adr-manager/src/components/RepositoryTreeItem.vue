@@ -30,7 +30,7 @@
 
         <div v-if="open" class="adr-files">
             <div
-                v-for="file in sortedAdrs(repo)"
+                v-for="file in visibleAdrs"
                 :key="file.path"
                 data-cy="adrList"
                 class="adr-file"
@@ -50,6 +50,28 @@
                     <span class="mdi mdi-delete-outline" aria-hidden="true"></span>
                 </button>
             </div>
+
+            <button
+                v-if="hiddenCount > 0"
+                type="button"
+                class="adr-show-more"
+                data-cy="adrShowMore"
+                @click.stop="expanded = true"
+            >
+                <span class="mdi mdi-chevron-down" aria-hidden="true"></span>
+                {{ hiddenCount }} more
+            </button>
+            <button
+                v-else-if="expanded"
+                type="button"
+                class="adr-show-more"
+                data-cy="adrShowLess"
+                @click.stop="expanded = false"
+            >
+                <span class="mdi mdi-chevron-up" aria-hidden="true"></span>
+                Show less
+            </button>
+
             <button type="button" data-cy="newADR" class="adr-new" @click.prevent.stop="emit('new-adr')">
                 <span class="mdi mdi-plus" aria-hidden="true"></span>
                 New ADR
@@ -59,16 +81,39 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { sortedAdrs, fileLabel, isDirty } from "@/utils/adrFiles";
 import type { Repository } from "@/plugins/classes";
 import type { AdrFile } from "@/types/adr";
+
+const PAGE_SIZE = 10;
 
 const props = defineProps<{
     repo: Repository;
     open: boolean;
     activeAdr: AdrFile | null;
+    /** Pre-filtered list from RepositoryExplorer when a search is active. Undefined = show all. */
+    filteredAdrs?: AdrFile[];
 }>();
+
+// Full candidate list — filtered when search is active, sorted full list otherwise.
+const allAdrs = computed(() => props.filteredAdrs ?? sortedAdrs(props.repo));
+
+// When a search is active we show every match; pagination only applies to the full list.
+const paginated = computed(() => props.filteredAdrs !== undefined);
+
+const expanded = ref(false);
+
+// Collapse back to PAGE_SIZE whenever the underlying list changes (e.g. new search).
+watch(allAdrs, () => { expanded.value = false; });
+
+const visibleAdrs = computed(() =>
+    paginated.value || expanded.value ? allAdrs.value : allAdrs.value.slice(0, PAGE_SIZE)
+);
+
+const hiddenCount = computed(() =>
+    paginated.value || expanded.value ? 0 : Math.max(0, allAdrs.value.length - PAGE_SIZE)
+);
 
 const emit = defineEmits<{
     select: [];
@@ -238,6 +283,34 @@ const shortName = computed(() => props.repo.fullName.split("/").slice(1).join("/
 
 .adr-file:hover .file-del {
     opacity: 1;
+}
+
+.adr-show-more {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 8px 0 12px;
+    margin: 1px 0 0 5px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--adr-ink-3);
+    font-size: 11.5px;
+    font-weight: 600;
+    background: transparent;
+    border: 0;
+    font-family: inherit;
+    width: calc(100% - 5px);
+    white-space: nowrap;
+}
+
+.adr-show-more:hover {
+    background: var(--adr-surface-2);
+    color: var(--adr-ink-2);
+}
+
+.adr-show-more .mdi {
+    font-size: 14px;
 }
 
 .adr-new {

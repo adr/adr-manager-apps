@@ -13,6 +13,7 @@
   --adr-error: var(--vscode-editorError-foreground, #ff5252);
   --adr-warning: var(--vscode-editorWarning-foreground, #fb8c00);
   --adr-info: #2196f3;
+  --adr-superseded: #a855f7;
 
   --accent: var(--adr-blue);
   --accent-600: var(--adr-blue-600);
@@ -429,10 +430,14 @@ textarea.field {
   color: var(--adr-info);
 }
 
-.chip.status[data-tone="deprecated"],
-.chip.status[data-tone="superseded"] {
+.chip.status[data-tone="deprecated"] {
   border-color: var(--adr-warning);
   color: var(--adr-warning);
+}
+
+.chip.status[data-tone="superseded"] {
+  border-color: var(--adr-superseded);
+  color: var(--adr-superseded);
 }
 
 .chip-input {

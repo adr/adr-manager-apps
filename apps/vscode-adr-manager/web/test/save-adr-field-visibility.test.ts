@@ -90,6 +90,21 @@ describe("save-adr mixin – field visibility persistence", () => {
       const vm = wrapper.vm as any;
       expect(vm.fieldVisibility).toEqual(DEFAULT_FIELD_VISIBILITY);
     });
+
+    it("removes the extension message listener on unmount", () => {
+      const addListener = vi.spyOn(window, "addEventListener");
+      const removeListener = vi.spyOn(window, "removeEventListener");
+      const isolated = mount(TestComponent);
+
+      const messageHandler = addListener.mock.calls.find(([event]) => event === "message")?.[1];
+      expect(messageHandler).toBeTypeOf("function");
+
+      isolated.unmount();
+      expect(removeListener).toHaveBeenCalledWith("message", messageHandler);
+
+      addListener.mockRestore();
+      removeListener.mockRestore();
+    });
   });
 
   // ── synchronous initialisation from embedded HTML variable ──────────────────

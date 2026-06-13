@@ -45,7 +45,7 @@ async function openFilters(wrapper: ReturnType<typeof mountBar>) {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("AdrSearchBar", () => {
-    const { clearQuery, toggleStatus, toggleTagId } = useAdrSearch();
+    const { clearQuery } = useAdrSearch();
 
     // Reset the singleton query state and unmount after each test
     let wrapper: ReturnType<typeof mountBar>;
@@ -117,15 +117,15 @@ describe("AdrSearchBar", () => {
             expect(wrapper.find("[data-cy=adr-filter-panel]").exists()).toBe(false);
         });
 
-        it("the toggle gets class 'open' while the panel is open", async () => {
+        it("marks the toggle as expanded while the panel is open", async () => {
             await openFilters(wrapper);
-            expect(wrapper.find("[data-cy=adr-filter-toggle]").classes()).toContain("open");
+            expect(wrapper.find("[data-cy=adr-filter-toggle]").attributes("aria-expanded")).toBe("true");
         });
 
-        it("the toggle loses class 'open' after closing", async () => {
+        it("marks the toggle as collapsed after closing", async () => {
             await openFilters(wrapper);
             await wrapper.find("[data-cy=adr-filter-toggle]").trigger("click");
-            expect(wrapper.find("[data-cy=adr-filter-toggle]").classes()).not.toContain("open");
+            expect(wrapper.find("[data-cy=adr-filter-toggle]").attributes("aria-expanded")).toBe("false");
         });
     });
 
@@ -146,22 +146,23 @@ describe("AdrSearchBar", () => {
             }
         });
 
-        it("clicking a chip adds the 'active' class", async () => {
+        it("clicking a chip marks it as pressed", async () => {
             const chip = wrapper.find("[data-cy=status-filter-accepted]");
             await chip.trigger("click");
-            expect(chip.classes()).toContain("active");
+            expect(chip.attributes("aria-pressed")).toBe("true");
         });
 
         it("clicking an active chip deactivates it", async () => {
             const chip = wrapper.find("[data-cy=status-filter-accepted]");
             await chip.trigger("click");
             await chip.trigger("click");
-            expect(chip.classes()).not.toContain("active");
+            expect(chip.attributes("aria-pressed")).toBe("false");
         });
 
-        it("activating a chip adds has-active class to the toggle", async () => {
+        it("activating a chip exposes pressed state and shows the active-filter badge", async () => {
             await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
-            expect(wrapper.find("[data-cy=adr-filter-toggle]").classes()).toContain("has-active");
+            expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("true");
+            expect(wrapper.find(".filter-badge").exists()).toBe(true);
         });
 
         it("shows the filter-badge dot when a filter is active", async () => {
@@ -172,8 +173,8 @@ describe("AdrSearchBar", () => {
         it("multiple status chips can be active simultaneously", async () => {
             await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
             await wrapper.find("[data-cy=status-filter-proposed]").trigger("click");
-            expect(wrapper.find("[data-cy=status-filter-accepted]").classes()).toContain("active");
-            expect(wrapper.find("[data-cy=status-filter-proposed]").classes()).toContain("active");
+            expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("true");
+            expect(wrapper.find("[data-cy=status-filter-proposed]").attributes("aria-pressed")).toBe("true");
         });
     });
 
@@ -191,22 +192,23 @@ describe("AdrSearchBar", () => {
             expect(wrapper.findAll("[data-cy^=tag-filter-Tag]")).toHaveLength(3);
         });
 
-        it("clicking a chip marks it as active", async () => {
+        it("clicking a chip marks it as pressed", async () => {
             const chip = wrapper.find("[data-cy=tag-filter-Tag1]");
             await chip.trigger("click");
-            expect(chip.classes()).toContain("active");
+            expect(chip.attributes("aria-pressed")).toBe("true");
         });
 
         it("clicking an active chip deactivates it", async () => {
             const chip = wrapper.find("[data-cy=tag-filter-Tag1]");
             await chip.trigger("click");
             await chip.trigger("click");
-            expect(chip.classes()).not.toContain("active");
+            expect(chip.attributes("aria-pressed")).toBe("false");
         });
 
-        it("activating a tag chip adds has-active class to the toggle", async () => {
+        it("activating a tag chip exposes pressed state and shows the active-filter badge", async () => {
             await wrapper.find("[data-cy=tag-filter-Tag1]").trigger("click");
-            expect(wrapper.find("[data-cy=adr-filter-toggle]").classes()).toContain("has-active");
+            expect(wrapper.find("[data-cy=tag-filter-Tag1]").attributes("aria-pressed")).toBe("true");
+            expect(wrapper.find(".filter-badge").exists()).toBe(true);
         });
     });
 
@@ -293,7 +295,7 @@ describe("AdrSearchBar", () => {
                 await wrapper.find("[data-cy=tags-show-more]").trigger("click");
                 const lastChip = wrapper.find("[data-cy=tag-filter-Tag11]");
                 await lastChip.trigger("click");
-                expect(lastChip.classes()).toContain("active");
+                expect(lastChip.attributes("aria-pressed")).toBe("true");
             });
         });
 
@@ -359,15 +361,17 @@ describe("AdrSearchBar", () => {
 
     // ── 8. clearQuery also resets filter chips ────────────────────────────────
     describe("clearQuery resets active filters", () => {
-        it("removes has-active class from the toggle after clearQuery", async () => {
+        it("removes pressed state and active-filter badge after clearQuery", async () => {
             wrapper = mountBar([], ["accepted"]);
             await openFilters(wrapper);
             await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
-            expect(wrapper.find("[data-cy=adr-filter-toggle]").classes()).toContain("has-active");
+            expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("true");
+            expect(wrapper.find(".filter-badge").exists()).toBe(true);
 
             clearQuery();
             await wrapper.vm.$nextTick();
-            expect(wrapper.find("[data-cy=adr-filter-toggle]").classes()).not.toContain("has-active");
+            expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("false");
+            expect(wrapper.find(".filter-badge").exists()).toBe(false);
         });
 
         it("deactivates all status chips after clearQuery", async () => {
@@ -378,8 +382,8 @@ describe("AdrSearchBar", () => {
 
             clearQuery();
             await wrapper.vm.$nextTick();
-            expect(wrapper.find("[data-cy=status-filter-accepted]").classes()).not.toContain("active");
-            expect(wrapper.find("[data-cy=status-filter-proposed]").classes()).not.toContain("active");
+            expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("false");
+            expect(wrapper.find("[data-cy=status-filter-proposed]").attributes("aria-pressed")).toBe("false");
         });
 
         it("hides the filter-badge dot after clearQuery", async () => {

@@ -1,13 +1,8 @@
-import { TEST_BASE_URL, REST_LIST_REPO_URL } from "../../support/e2e";
+import { TEST_BASE_URL } from "../../support/e2e";
 
 // Helper: navigate to a new professional-mode ADR.
 function openNewProfessionalAdr() {
-    window.localStorage.clear();
-    window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
-    window.localStorage.setItem("user", Cypress.env("USER"));
-    window.localStorage.setItem("tourSeen", "1");
-    cy.visit(TEST_BASE_URL);
-    cy.intercept("GET", REST_LIST_REPO_URL).as("getRepos");
+    cy.visitAuthenticatedManager(TEST_BASE_URL);
     cy.get("[data-cy=addRepo]").click();
     cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
     cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();
@@ -22,13 +17,10 @@ function openNewProfessionalAdr() {
  * previously-stored field-visibility settings are preserved exactly as they were.
  */
 function openNewProfessionalAdrKeepFieldVisibility() {
-    window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
-    window.localStorage.setItem("user", Cypress.env("USER"));
-    window.localStorage.setItem("tourSeen", "1");
     // The repo was already added by the preceding openNewProfessionalAdr() call,
     // so addedRepositories is still in localStorage. Reload the app and use the
     // existing repo directly — no need to go through the Add Repositories dialog.
-    cy.visit(TEST_BASE_URL);
+    cy.visitAuthenticatedManager(TEST_BASE_URL, { clearStorage: false });
     cy.get("[data-cy=newADR]").click({ force: true });
     cy.get("[data-cy=modeProfessional]").click();
 }
@@ -195,32 +187,27 @@ context("Field Visibility", () => {
 
         it("loads persisted field-visibility from localStorage when a new ADR is opened", () => {
             // Pre-populate localStorage with a non-default visibility (date hidden)
-            window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
-            window.localStorage.setItem("user", Cypress.env("USER"));
-            window.localStorage.setItem("tourSeen", "1");
-            window.localStorage.setItem(
-                "fieldVisibility",
-                JSON.stringify({
-                    date: false,
-                    status: true,
-                    deciders: true,
-                    technicalStory: true,
-                    decisionDrivers: true,
-                    optionDescription: true,
-                    optionProsAndCons: true,
-                    positiveConsequences: true,
-                    negativeConsequences: true,
-                    consequences: true,
-                    confirmation: true,
-                    links: true,
-                    moreInformation: true,
-                    consulted: true,
-                    informed: true
-                })
-            );
-
-            cy.visit(TEST_BASE_URL);
-            cy.intercept("GET", REST_LIST_REPO_URL).as("getRepos");
+            cy.visitAuthenticatedManager(TEST_BASE_URL, {
+                extraLocalStorage: {
+                    fieldVisibility: JSON.stringify({
+                        date: false,
+                        status: true,
+                        deciders: true,
+                        technicalStory: true,
+                        decisionDrivers: true,
+                        optionDescription: true,
+                        optionProsAndCons: true,
+                        positiveConsequences: true,
+                        negativeConsequences: true,
+                        consequences: true,
+                        confirmation: true,
+                        links: true,
+                        moreInformation: true,
+                        consulted: true,
+                        informed: true
+                    })
+                }
+            });
             cy.get("[data-cy=addRepo]").click();
             cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
             cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();

@@ -61,7 +61,13 @@ export default defineComponent({
   },
   mixins: [vscode, adrData],
   mounted() {
-    window.addEventListener("message", (event) => {
+    window.addEventListener("message", this.handleBasicTemplateMessage);
+  },
+  beforeUnmount() {
+    window.removeEventListener("message", this.handleBasicTemplateMessage);
+  },
+  methods: {
+    handleBasicTemplateMessage(event: MessageEvent) {
       const message = event.data;
       switch (message.command) {
         case "requestBasicOptionEdit": {
@@ -77,7 +83,7 @@ export default defineComponent({
           break;
         }
       }
-    });
+    }
   }
 });
 </script>

@@ -39,10 +39,7 @@ context("Empirically test if ADRs can be opened by the ADR-Manager and count how
     beforeEach(() => {
         cy.visit("http://localhost:8080/#/manager");
         window.localStorage.clear();
-        window.localStorage.setItem(
-            "authId",
-            Cypress.env("OAUTH_E2E_AUTH_ID")
-        );
+        window.localStorage.setItem("authId", "legacy-evaluation-token");
 
         cy.intercept("GET", "**/user/repos**").as("getRepos");
         cy.get("[data-cy=addRepo]").click();

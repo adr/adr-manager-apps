@@ -1,8 +1,10 @@
 import "./commands";
 import "@cypress/code-coverage/support";
+export {
+    GITHUB_ADR_REPO_FULL_NAME,
+    GITHUB_EMPTY_REPO_BRANCH,
+    GITHUB_EMPTY_REPO_FULL_NAME,
+    GITLAB_ADR_REPO_FULL_NAME
+} from "./providerMocks";
 
 export const TEST_BASE_URL = "http://localhost:8000/adr-manager-apps/#/manager";
-export const REST_LIST_REPO_URL = "**/user/repos**";
-export const REST_REPO_URL = "**/repos/**";
-export const REST_BRANCH_URL = "**/repos/**/branches/**";
-export const REST_COMMIT_URL = "**/repos/**/git/commits?**";

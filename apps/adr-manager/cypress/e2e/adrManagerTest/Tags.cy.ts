@@ -1,4 +1,4 @@
-import { TEST_BASE_URL, REST_LIST_REPO_URL } from "../../support/e2e";
+import { TEST_BASE_URL } from "../../support/e2e";
 
 // Inline shape so the test file has no dependency on app source types.
 interface TagFixture {
@@ -12,14 +12,7 @@ const LABEL_B = "TagTestBackend";
 
 // ─── Setup helpers ────────────────────────────────────────────────────────────
 
-function setupAuth(): void {
-    window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
-    window.localStorage.setItem("user", Cypress.env("USER"));
-    window.localStorage.setItem("tourSeen", "1");
-}
-
 function addRepoAndCreateAdr(): void {
-    cy.intercept("GET", REST_LIST_REPO_URL).as("getRepos");
     cy.get("[data-cy=addRepo]").click();
     cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
     cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();
@@ -29,9 +22,7 @@ function addRepoAndCreateAdr(): void {
 
 /** Start from a completely empty localStorage, then open a fresh ADR. */
 function openFreshAdr(): void {
-    window.localStorage.clear();
-    setupAuth();
-    cy.visit(TEST_BASE_URL);
+    cy.visitAuthenticatedManager(TEST_BASE_URL);
     addRepoAndCreateAdr();
 }
 
@@ -40,12 +31,7 @@ function openFreshAdr(): void {
  * e.g. to pre-populate recentTags for suggestion tests.
  */
 function openFreshAdrWith(extras: Record<string, string>): void {
-    window.localStorage.clear();
-    setupAuth();
-    for (const [key, val] of Object.entries(extras)) {
-        window.localStorage.setItem(key, val);
-    }
-    cy.visit(TEST_BASE_URL);
+    cy.visitAuthenticatedManager(TEST_BASE_URL, { extraLocalStorage: extras });
     addRepoAndCreateAdr();
 }
 

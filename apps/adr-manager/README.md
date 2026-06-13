@@ -64,9 +64,8 @@ You need a GitHub account with access to a repository that contains MADRs, norma
 ### End-to-end tests
 
 We use [Cypress](https://www.cypress.io/) for end-to-end testing.
-The Cypress tests need the web app dev server running and a valid GitHub OAuth session.
-The CI pipeline provides the necessary OAuth `authId` as an environment variable.
-Locally you need to provide one yourself.
+The Cypress tests run against mocked GitHub and GitLab provider APIs.
+They need the web app dev server running, but do not need OAuth tokens, provider credentials, or live repositories.
 
 Run the dev server in one terminal:
 
@@ -74,24 +73,11 @@ Run the dev server in one terminal:
 pnpm dev:web
 ```
 
-Then run the tests with the credentials set as environment variables:
+Then run the tests:
 
 ```bash
-CYPRESS_OAUTH_E2E_AUTH_ID=<auth-id> CYPRESS_USER=<github-user> pnpm e2e:web
+pnpm e2e:web
 ```
-
-Alternatively, create `apps/adr-manager/cypress.env.json` and fill it with the following content:
-
-```json
-{
-  "OAUTH_E2E_AUTH_ID": "<auth-id>",
-  "USER": "<github-user>"
-}
-```
-
-The value of `OAUTH_E2E_AUTH_ID` and `USER` needs to be a valid `authId` and `user` from an active OAuth session.
-To get a local `authId`, sign in through the running web app, open the browser developer tools, and inspect local storage for `http://localhost:8000` (`authId`, `user`).
-The involved GitHub account also needs to have developer access to the repo `adr/adr-test-repository-empty`.
 
 ### Backend setup (GitHub)
 

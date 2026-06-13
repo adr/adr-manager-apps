@@ -22,7 +22,10 @@ vi.stubGlobal("vscode", { postMessage });
 
 // ── Stub heavy child components so they don't blow up ───────────────────────
 const stubs = {
-  ADRContainer: { template: '<div class="adr-container-stub"></div>' },
+  ADRContainer: {
+    props: ["adr"],
+    template: '<article data-cy="adr-card">{{ adr.adr.title }}</article>'
+  },
   TourOverlay: { template: "<div></div>" }
 };
 
@@ -54,9 +57,9 @@ function seedAdrs(entries: ReturnType<typeof makeEntry>[]) {
   dispatchMessage({ command: "fetchAdrs", adrs: JSON.stringify(entries) });
   dispatchMessage({
     command: "getWorkspaceFolders",
-    workspaceFolders: JSON.stringify(["MyWorkspace"])
+    workspaceFolders: JSON.stringify(["docs"])
   });
-  dispatchMessage({ command: "getAdrDirectory", adrDirectory: "docs/decisions" });
+  dispatchMessage({ command: "getAdrDirectory", adrDirectory: "decisions" });
 }
 
 /** Build N unique tags */
@@ -99,6 +102,26 @@ describe("MainView – search and tag-filter pagination", () => {
     it("filter panel is hidden by default", () => {
       expect(wrapper.find("[data-cy=adr-filter-panel]").exists()).toBe(false);
     });
+
+    it("removes registered message listeners on unmount", () => {
+      const addListener = vi.spyOn(window, "addEventListener");
+      const removeListener = vi.spyOn(window, "removeEventListener");
+      const isolated = mount(MainView, { global: { stubs } });
+
+      const messageHandlers = addListener.mock.calls
+        .filter(([event]) => event === "message")
+        .map(([, handler]) => handler);
+
+      expect(messageHandlers).toHaveLength(2);
+      isolated.unmount();
+
+      for (const handler of messageHandlers) {
+        expect(removeListener).toHaveBeenCalledWith("message", handler);
+      }
+
+      addListener.mockRestore();
+      removeListener.mockRestore();
+    });
   });
 
   // ── 2. Filter toggle visibility ─────────────────────────────────────────────
@@ -123,10 +146,11 @@ describe("MainView – search and tag-filter pagination", () => {
       expect(wrapper.find("[data-cy=adr-filter-panel]").exists()).toBe(false);
     });
 
-    it("adds 'has-active' class when a status filter is active", async () => {
+    it("marks a selected status filter as pressed and shows the active-filter badge", async () => {
       await wrapper.find("[data-cy=adr-filter-toggle]").trigger("click");
       await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
-      expect(wrapper.find("[data-cy=adr-filter-toggle]").classes()).toContain("has-active");
+      expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("true");
+      expect(wrapper.find(".filter-badge").exists()).toBe(true);
     });
   });
 
@@ -146,42 +170,42 @@ describe("MainView – search and tag-filter pagination", () => {
       expect(wrapper.find("[data-cy=adr-search-clear]").exists()).toBe(true);
     });
 
-    it("searchActive is true when text is non-empty", async () => {
+    it("shows the clear button when text is non-empty", async () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("post");
-      expect((wrapper.vm as any).searchActive).toBe(true);
+      expect(wrapper.find("[data-cy=adr-search-clear]").exists()).toBe(true);
     });
 
     it("filters ADR list to entries matching the typed text", async () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("postgres");
-      const vm = wrapper.vm as any;
-      expect(vm.filteredDisplayedAdrs).toHaveLength(1);
-      expect(vm.filteredDisplayedAdrs[0].adr.title).toBe("Use Postgres");
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual(["Use Postgres"]);
     });
 
     it("match is case-insensitive", async () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("REDIS");
-      const vm = wrapper.vm as any;
-      expect(vm.filteredDisplayedAdrs).toHaveLength(1);
-      expect(vm.filteredDisplayedAdrs[0].adr.title).toBe("Use Redis");
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual(["Use Redis"]);
     });
 
     it("pressing Escape clears the search", async () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("post");
       await wrapper.find("[data-cy=adr-search-input]").trigger("keydown", { key: "Escape" });
-      expect((wrapper.vm as any).searchText).toBe("");
+      expect((wrapper.find("[data-cy=adr-search-input]").element as HTMLInputElement).value).toBe("");
     });
 
     it("clicking the clear button resets the search", async () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("post");
       await wrapper.find("[data-cy=adr-search-clear]").trigger("click");
-      expect((wrapper.vm as any).searchText).toBe("");
+      expect((wrapper.find("[data-cy=adr-search-input]").element as HTMLInputElement).value).toBe("");
       expect(wrapper.find("[data-cy=adr-search-clear]").exists()).toBe(false);
     });
 
     it("returns all ADRs when search is cleared", async () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("postgres");
       await wrapper.find("[data-cy=adr-search-clear]").trigger("click");
-      expect((wrapper.vm as any).filteredDisplayedAdrs).toHaveLength(3);
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual([
+        "Use Postgres",
+        "Use Redis",
+        "Adopt TypeScript"
+      ]);
     });
   });
 
@@ -202,29 +226,35 @@ describe("MainView – search and tag-filter pagination", () => {
       expect(chips).toHaveLength(2);
     });
 
-    it("clicking a status chip adds it to filterStatuses", async () => {
+    it("clicking a status chip marks it as pressed", async () => {
       await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
-      expect((wrapper.vm as any).filterStatuses).toContain("accepted");
+      expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("true");
     });
 
     it("filters the ADR list to only matching statuses", async () => {
       await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
-      const vm = wrapper.vm as any;
-      expect(vm.filteredDisplayedAdrs).toHaveLength(2);
-      expect(vm.filteredDisplayedAdrs.every((e: any) => e.adr.status === "accepted")).toBe(true);
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual(["Use Postgres", "Use Kafka"]);
     });
 
     it("clicking the same status chip again removes the filter", async () => {
       await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
       await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
-      expect((wrapper.vm as any).filterStatuses).not.toContain("accepted");
-      expect((wrapper.vm as any).filteredDisplayedAdrs).toHaveLength(3);
+      expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("false");
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual([
+        "Use Postgres",
+        "Use Redis",
+        "Use Kafka"
+      ]);
     });
 
     it("multiple status filters apply as OR", async () => {
       await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
       await wrapper.find("[data-cy=status-filter-proposed]").trigger("click");
-      expect((wrapper.vm as any).filteredDisplayedAdrs).toHaveLength(3);
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual([
+        "Use Postgres",
+        "Use Redis",
+        "Use Kafka"
+      ]);
     });
   });
 
@@ -248,29 +278,36 @@ describe("MainView – search and tag-filter pagination", () => {
       expect(wrapper.find("[data-cy=tag-filter-backend]").exists()).toBe(true);
     });
 
-    it("clicking a tag chip adds its id to filterTagIds", async () => {
+    it("clicking a tag chip marks it as pressed", async () => {
       await wrapper.find("[data-cy=tag-filter-frontend]").trigger("click");
-      expect((wrapper.vm as any).filterTagIds).toContain("fe");
+      expect(wrapper.find("[data-cy=tag-filter-frontend]").attributes("aria-pressed")).toBe("true");
     });
 
     it("filters the ADR list to ADRs containing the selected tag", async () => {
       await wrapper.find("[data-cy=tag-filter-frontend]").trigger("click");
-      const vm = wrapper.vm as any;
-      expect(vm.filteredDisplayedAdrs).toHaveLength(2);
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual(["Use React", "Use Vite"]);
     });
 
     it("clicking the same tag chip again deselects it", async () => {
       await wrapper.find("[data-cy=tag-filter-frontend]").trigger("click");
       await wrapper.find("[data-cy=tag-filter-frontend]").trigger("click");
-      expect((wrapper.vm as any).filterTagIds).not.toContain("fe");
-      expect((wrapper.vm as any).filteredDisplayedAdrs).toHaveLength(3);
+      expect(wrapper.find("[data-cy=tag-filter-frontend]").attributes("aria-pressed")).toBe("false");
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual([
+        "Use React",
+        "Use Node",
+        "Use Vite"
+      ]);
     });
 
     it("multiple tag filters use OR logic — any matching tag passes", async () => {
       await wrapper.find("[data-cy=tag-filter-frontend]").trigger("click");
       await wrapper.find("[data-cy=tag-filter-backend]").trigger("click");
       // All three ADRs have at least one of the two selected tags
-      expect((wrapper.vm as any).filteredDisplayedAdrs).toHaveLength(3);
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual([
+        "Use React",
+        "Use Node",
+        "Use Vite"
+      ]);
     });
   });
 
@@ -291,21 +328,21 @@ describe("MainView – search and tag-filter pagination", () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("react");
       await wrapper.find("[data-cy=adr-filter-toggle]").trigger("click");
       await wrapper.find("[data-cy=tag-filter-frontend]").trigger("click");
-      const vm = wrapper.vm as any;
-      expect(vm.filteredDisplayedAdrs).toHaveLength(1);
-      expect(vm.filteredDisplayedAdrs[0].adr.title).toBe("Use React");
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual(["Use React"]);
     });
 
-    it("clearSearch resets both text and filter state", async () => {
+    it("the clear button resets both text and filter state", async () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("react");
       await wrapper.find("[data-cy=adr-filter-toggle]").trigger("click");
       await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
-      await (wrapper.vm as any).clearSearch();
-      const vm = wrapper.vm as any;
-      expect(vm.searchText).toBe("");
-      expect(vm.filterStatuses).toHaveLength(0);
-      expect(vm.filterTagIds).toHaveLength(0);
-      expect(vm.searchActive).toBe(false);
+      await wrapper.find("[data-cy=adr-search-clear]").trigger("click");
+      expect((wrapper.find("[data-cy=adr-search-input]").element as HTMLInputElement).value).toBe("");
+      expect(wrapper.find("[data-cy=status-filter-accepted]").attributes("aria-pressed")).toBe("false");
+      expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual([
+        "Use React",
+        "Use Vue",
+        "Use Node"
+      ]);
     });
   });
 
@@ -411,11 +448,8 @@ describe("MainView – search and tag-filter pagination", () => {
       });
 
       it("aggregates all 15 unique tags from both ADRs", () => {
-        expect((wrapper.vm as any).availableTags).toHaveLength(15);
-      });
-
-      it("reports hiddenTagCount of 5", () => {
-        expect((wrapper.vm as any).hiddenTagCount).toBe(5);
+        expect(wrapper.findAll("[data-cy^=tag-filter-Tag]")).toHaveLength(10);
+        expect(wrapper.find("[data-cy=tags-show-more]").text()).toContain("+5 more");
       });
 
       it("shows '+5 more' on the button", () => {
@@ -432,25 +466,29 @@ describe("MainView – search and tag-filter pagination", () => {
       it("is 0 when there are fewer than 10 tags", async () => {
         seedAdrs([makeEntry("ADR One", "accepted", makeTags(3), 1)]);
         await wrapper.vm.$nextTick();
-        expect((wrapper.vm as any).hiddenTagCount).toBe(0);
+        await wrapper.find("[data-cy=adr-filter-toggle]").trigger("click");
+        expect(wrapper.find("[data-cy=tags-show-more]").exists()).toBe(false);
       });
 
       it("is 0 when there are exactly 10 tags", async () => {
         seedAdrs([makeEntry("ADR One", "accepted", makeTags(10), 1)]);
         await wrapper.vm.$nextTick();
-        expect((wrapper.vm as any).hiddenTagCount).toBe(0);
+        await wrapper.find("[data-cy=adr-filter-toggle]").trigger("click");
+        expect(wrapper.find("[data-cy=tags-show-more]").exists()).toBe(false);
       });
 
       it("is 1 when there are 11 tags", async () => {
         seedAdrs([makeEntry("ADR One", "accepted", makeTags(11), 1)]);
         await wrapper.vm.$nextTick();
-        expect((wrapper.vm as any).hiddenTagCount).toBe(1);
+        await wrapper.find("[data-cy=adr-filter-toggle]").trigger("click");
+        expect(wrapper.find("[data-cy=tags-show-more]").text()).toContain("+1 more");
       });
 
       it("equals total - 10 for any count above 10", async () => {
         seedAdrs([makeEntry("ADR One", "accepted", makeTags(17), 1)]);
         await wrapper.vm.$nextTick();
-        expect((wrapper.vm as any).hiddenTagCount).toBe(7);
+        await wrapper.find("[data-cy=adr-filter-toggle]").trigger("click");
+        expect(wrapper.find("[data-cy=tags-show-more]").text()).toContain("+7 more");
       });
     });
   });

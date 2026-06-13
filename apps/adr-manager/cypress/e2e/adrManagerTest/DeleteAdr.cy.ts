@@ -1,19 +1,13 @@
-import { REST_REPO_URL, REST_LIST_REPO_URL, TEST_BASE_URL } from "../../support/e2e";
+import { TEST_BASE_URL } from "../../support/e2e";
 
 context("Deleting an ADR from a repo", () => {
     it("Remove one ADR", () => {
-        window.localStorage.clear();
-        window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
-        window.localStorage.setItem("tourSeen", "1");
-        window.localStorage.setItem("user", Cypress.env("USER"));
-        cy.visit(TEST_BASE_URL);
-        cy.intercept("GET", REST_LIST_REPO_URL).as("getRepos");
+        cy.visitAuthenticatedManager(TEST_BASE_URL);
 
         cy.get("[data-cy=addRepo]").click();
         cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
         cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();
         cy.get("[data-cy=addRepoDialog]").click();
-        cy.intercept("GET", REST_REPO_URL).as("showRepos");
         cy.wait("@showRepos", { timeout: 10000 });
         cy.get("[data-cy=adrList]").then((adrList) => {
             const adrCount = Cypress.$(adrList).length;

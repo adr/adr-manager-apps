@@ -10,10 +10,7 @@ function fv(overrides: Partial<FieldVisibility> = {}): FieldVisibility {
 }
 
 function findToggleFor(wrapper: ReturnType<typeof mount>, label: string): DOMWrapper<HTMLInputElement> {
-  const row = wrapper
-    .findAll(".fvp-row")
-    .find((r) => r.find(".fvp-label").text() === label);
-  return row!.find<HTMLInputElement>("input[type=checkbox]");
+  return wrapper.find<HTMLInputElement>(`input[aria-label="Show ${label}"]`);
 }
 
 describe("FieldVisibilityPanel", () => {
@@ -22,24 +19,27 @@ describe("FieldVisibilityPanel", () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "2.1.2", fieldVisibility: fv() }
       });
-      expect(wrapper.find(".fvp-panel").exists()).toBe(false);
+      expect(wrapper.find("[data-cy=field-visibility-panel]").exists()).toBe(false);
+      expect(wrapper.find("[data-cy=field-visibility-toggle]").attributes("aria-expanded")).toBe("false");
     });
 
     it("opens when the Fields button is clicked", async () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "2.1.2", fieldVisibility: fv() }
       });
-      await wrapper.find("button.fvp-btn").trigger("click");
-      expect(wrapper.find(".fvp-panel").exists()).toBe(true);
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
+      expect(wrapper.find("[data-cy=field-visibility-panel]").exists()).toBe(true);
+      expect(wrapper.find("[data-cy=field-visibility-toggle]").attributes("aria-expanded")).toBe("true");
     });
 
     it("closes when the Fields button is clicked a second time", async () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "2.1.2", fieldVisibility: fv() }
       });
-      await wrapper.find("button.fvp-btn").trigger("click");
-      await wrapper.find("button.fvp-btn").trigger("click");
-      expect(wrapper.find(".fvp-panel").exists()).toBe(false);
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
+      expect(wrapper.find("[data-cy=field-visibility-panel]").exists()).toBe(false);
+      expect(wrapper.find("[data-cy=field-visibility-toggle]").attributes("aria-expanded")).toBe("false");
     });
   });
 
@@ -48,7 +48,7 @@ describe("FieldVisibilityPanel", () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "2.1.2", fieldVisibility: fv() }
       });
-      await wrapper.find("button.fvp-btn").trigger("click");
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
       const labels = wrapper.findAll(".fvp-label").map((l) => l.text());
       expect(labels).toContain("Deciders");
       expect(labels).toContain("Technical Story");
@@ -65,7 +65,7 @@ describe("FieldVisibilityPanel", () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "4.0.0", fieldVisibility: fv() }
       });
-      await wrapper.find("button.fvp-btn").trigger("click");
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
       const labels = wrapper.findAll(".fvp-label").map((l) => l.text());
       expect(labels).toContain("Consulted");
       expect(labels).toContain("Informed");
@@ -81,7 +81,7 @@ describe("FieldVisibilityPanel", () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "2.1.2", fieldVisibility: fv() }
       });
-      await wrapper.find("button.fvp-btn").trigger("click");
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
       const checkbox = findToggleFor(wrapper, "Deciders");
       (checkbox.element as HTMLInputElement).checked = false;
       await checkbox.trigger("change");
@@ -92,7 +92,7 @@ describe("FieldVisibilityPanel", () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "2.1.2", fieldVisibility: fv({ deciders: false }) }
       });
-      await wrapper.find("button.fvp-btn").trigger("click");
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
       const checkbox = findToggleFor(wrapper, "Deciders");
       (checkbox.element as HTMLInputElement).checked = true;
       await checkbox.trigger("change");
@@ -103,7 +103,7 @@ describe("FieldVisibilityPanel", () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "2.1.2", fieldVisibility: fv({ deciders: false }) }
       });
-      await wrapper.find("button.fvp-btn").trigger("click");
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
       const checkbox = findToggleFor(wrapper, "Deciders");
       expect((checkbox.element as HTMLInputElement).checked).toBe(false);
     });
@@ -112,7 +112,7 @@ describe("FieldVisibilityPanel", () => {
       const wrapper = mount(FieldVisibilityPanel, {
         props: { templateVersion: "2.1.2", fieldVisibility: fv() }
       });
-      await wrapper.find("button.fvp-btn").trigger("click");
+      await wrapper.find("[data-cy=field-visibility-toggle]").trigger("click");
       const checkbox = findToggleFor(wrapper, "Deciders");
       expect((checkbox.element as HTMLInputElement).checked).toBe(true);
     });

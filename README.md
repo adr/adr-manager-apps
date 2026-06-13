@@ -120,23 +120,12 @@ Replace `<version>` with the version from `apps/vscode-adr-manager/package.json`
 
 ### End-to-end tests
 
-The Cypress tests need the web app dev server running and a valid GitHub OAuth session:
+The Cypress tests run against mocked GitHub and GitLab provider APIs. They need the web app dev server running, but do not need OAuth tokens, provider credentials, or live repositories:
 
 ```bash
 pnpm dev:web   # in a separate terminal
-CYPRESS_OAUTH_E2E_AUTH_ID=<auth-id> CYPRESS_USER=<github-user> pnpm e2e:web
+pnpm e2e:web
 ```
-
-Alternatively, create `apps/adr-manager/cypress.env.json`:
-
-```json
-{
-  "OAUTH_E2E_AUTH_ID": "<auth-id>",
-  "USER": "<github-user>"
-}
-```
-
-To get a local `authId`, sign in through the running web app, open the browser developer tools, and inspect local storage for `http://localhost:8000`.
 
 ## Releases and CI
 

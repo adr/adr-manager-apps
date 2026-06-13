@@ -1,16 +1,24 @@
 <template>
   <div ref="wrap" class="fvp">
-    <button type="button" class="btn btn-ghost fvp-btn" @click="open = !open">
+    <button
+      type="button"
+      class="btn btn-ghost fvp-btn"
+      data-cy="field-visibility-toggle"
+      :aria-expanded="open"
+      @click="open = !open"
+    >
       <i class="codicon codicon-settings-gear"></i>
       Fields
     </button>
-    <div v-if="open" class="fvp-panel">
+    <div v-if="open" class="fvp-panel" data-cy="field-visibility-panel">
       <div class="fvp-title">Visible fields</div>
       <label v-for="item in visibleFields" :key="item.key" class="fvp-row">
         <span class="fvp-label">{{ item.label }}</span>
         <span class="fvp-switch" :class="{ on: fieldVisibility[item.key as keyof FieldVisibility] }">
           <input
             type="checkbox"
+            :data-cy="`field-visibility-${item.key}`"
+            :aria-label="`Show ${item.label}`"
             :checked="fieldVisibility[item.key as keyof FieldVisibility]"
             @change="$emit('setFieldVisibility', item.key, ($event.target as HTMLInputElement).checked)"
           />

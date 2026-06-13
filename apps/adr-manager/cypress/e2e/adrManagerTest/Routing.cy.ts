@@ -1,15 +1,10 @@
-import { REST_LIST_REPO_URL, TEST_BASE_URL } from "../../support/e2e";
+import { TEST_BASE_URL } from "../../support/e2e";
 context("Routing and correct URLs", () => {
     beforeEach(() => {
-        window.localStorage.clear();
-        window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
-        window.localStorage.setItem("tourSeen", "1");
-        window.localStorage.setItem("user", Cypress.env("USER"));
-        cy.visit(TEST_BASE_URL);
+        cy.visitAuthenticatedManager(TEST_BASE_URL);
     });
     it("URL corresponds to opened repo and ADR", () => {
         cy.url().should("equal", TEST_BASE_URL);
-        cy.intercept("GET", REST_LIST_REPO_URL).as("getRepos");
         cy.get("[data-cy=addRepo]").click();
         cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
         cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();

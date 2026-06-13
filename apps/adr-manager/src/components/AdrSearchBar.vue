@@ -18,6 +18,8 @@
                 class="filter-toggle"
                 :class="{ open: filtersOpen, 'has-active': hasActiveFilters }"
                 data-cy="adr-filter-toggle"
+                :aria-expanded="filtersOpen"
+                aria-label="Toggle ADR filters"
                 title="Toggle filters"
                 @click="filtersOpen = !filtersOpen"
             >
@@ -50,6 +52,7 @@
                         :class="{ active: query.statuses.includes(status) }"
                         :data-tone="status"
                         :data-cy="`status-filter-${status}`"
+                        :aria-pressed="query.statuses.includes(status)"
                         @click="toggleStatus(status)"
                     >
                         {{ status }}
@@ -69,6 +72,7 @@
                         :class="{ active: query.tagIds.includes(tag.id) }"
                         :style="{ '--tag-color': tag.color }"
                         :data-cy="`tag-filter-${tag.label}`"
+                        :aria-pressed="query.tagIds.includes(tag.id)"
                         @click="toggleTagId(tag.id)"
                     >
                         <span class="tag-dot" aria-hidden="true"></span>

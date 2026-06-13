@@ -1,13 +1,8 @@
-import { TEST_BASE_URL, REST_LIST_REPO_URL } from "../../support/e2e";
+import { TEST_BASE_URL } from "../../support/e2e";
 
 context("Using editor modes", () => {
     it("Switch to professional mode and create a new ADR", () => {
-        window.localStorage.clear();
-        window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
-        window.localStorage.setItem("tourSeen", "1");
-        window.localStorage.setItem("user", Cypress.env("USER"));
-        cy.visit(TEST_BASE_URL);
-        cy.intercept("GET", REST_LIST_REPO_URL).as("getRepos");
+        cy.visitAuthenticatedManager(TEST_BASE_URL);
         cy.get("[data-cy=addRepo]").click();
         cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
         cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();

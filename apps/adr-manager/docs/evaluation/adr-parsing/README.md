@@ -11,17 +11,8 @@ An automatic test checking whether an ADR can be parsed was implemented.
 
 ### Prerequisites
 
-1. The repositories that are checked are defined in the list `REPO_NAMES` in `cypress/integration/EmpriricalAnalysis.js`. Your GitHub account must have access to those.
-2. Add a file `cypress.env.json` in this folder with the auth ID of an active session. While running the ADR-Manager, you can find your `authId` in the local storage.
-   The file content of `cypress.env.json` should look like
-
-   ```[JavaScript]
-   {
-      "OAUTH_E2E_AUTH_ID": "abcdefg-123456"
-   }
-   ```
-
-   where `abcdefg-123456` is your `authId`.
+The repositories that are checked are defined in the list `REPO_NAMES` in `cypress/integration/EmpriricalAnalysis.js`.
+This historical evaluation is separate from the maintained app E2E suite, which now runs against mocked provider APIs.
 
 ### Execute tests
 
@@ -31,7 +22,7 @@ An automatic test checking whether an ADR can be parsed was implemented.
    npm run serve
    ```
 
-2. Run the tests: In this directory (i.e. the same as this `README`, `cypress.json` and `cypress.env.json`) execute one of the following commands
+2. Run the tests: In this directory (i.e. the same as this `README` and `cypress.json`) execute one of the following commands
 
    ```[bash]
    # Open the Cypress GUI to execute tests interactively
@@ -44,7 +35,6 @@ An automatic test checking whether an ADR can be parsed was implemented.
    Possible reasons for failing tests:
 
    * The ADR-Manager is not run at `localhost:8080`. --> Start it.
-   * The auth ID is not valid. --> Add or update `cypress.env.json`.
    * The repository was not found. Possible reasons I can think of:
       * You do not have access to a repository with a name defined in `REPO_NAMES`. --> Only include repositories you have access to.
       * <s>The repository does not appear in the first tab of the "Add repositories" dialogue because e.g. are too many other repositories that were recently updated. (I didn't have problems with that but I think it will cause issues...)

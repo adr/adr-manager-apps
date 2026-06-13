@@ -24,7 +24,14 @@ export default function createTourMixin(kind: "main" | "editor") {
       };
     },
     mounted() {
-      window.addEventListener("message", (event) => {
+      window.addEventListener("message", this.handleTourStateMessage);
+      vscode.postMessage({ command: "getTourState" });
+    },
+    beforeUnmount() {
+      window.removeEventListener("message", this.handleTourStateMessage);
+    },
+    methods: {
+      handleTourStateMessage(event: MessageEvent) {
         const message = event.data;
         if (message.command !== "getTourState") {
           return;
@@ -34,10 +41,7 @@ export default function createTourMixin(kind: "main" | "editor") {
         if (!seen || (kind === "main" && message.forceStart)) {
           this.startTour();
         }
-      });
-      vscode.postMessage({ command: "getTourState" });
-    },
-    methods: {
+      },
       startTour() {
         if (this.tourActive) {
           return;
@@ -46,7 +50,7 @@ export default function createTourMixin(kind: "main" | "editor") {
         // The hook may be async (the main view waits for the initial ADR list
         // before deciding whether to show demo entries).
         const hook = (this as unknown as { beforeTourStart?: () => void | Promise<void> }).beforeTourStart?.();
-        void Promise.resolve(hook).then(() => {
+        Promise.resolve(hook).then(() => {
           this.$nextTick(() => {
             this.tourActive = true;
           });

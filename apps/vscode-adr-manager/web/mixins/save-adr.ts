@@ -146,6 +146,25 @@ export default defineComponent({
       return `The fields ${fields.join(", ")} of this ADR have values, but are not shown in the basic editor mode.`;
     }
   },
+  mounted() {
+    // Apply the field visibility baked into the webview HTML by the extension host.
+    // Reading it synchronously here avoids a race where async message delivery could
+    // arrive before window.addEventListener is registered below.
+    if (window.__INITIAL_FIELD_VISIBILITY__) {
+      this.fieldVisibility = window.__INITIAL_FIELD_VISIBILITY__;
+    }
+
+    // Request persisted field visibility from the extension host (updates fieldVisibility
+    // when the round-trip completes, confirming the embedded value).
+    this.sendMessage("getFieldVisibility");
+
+    this.sendMessage("getRecentTags");
+
+    window.addEventListener("message", this.handleSaveAdrMessage);
+  },
+  beforeUnmount() {
+    window.removeEventListener("message", this.handleSaveAdrMessage);
+  },
   methods: {
     /**
      * Saves the values of the MADR template in the view component's data variables.
@@ -334,25 +353,8 @@ export default defineComponent({
      */
     openEditor() {
       this.sendMessage("requestEdit", { fullPath: this.fullPath });
-    }
-  },
-  mounted() {
-    // Apply the field visibility baked into the webview HTML by the extension host.
-    // Reading it synchronously here avoids a race where async message delivery could
-    // arrive before window.addEventListener is registered below.
-    if (window.__INITIAL_FIELD_VISIBILITY__) {
-      this.fieldVisibility = window.__INITIAL_FIELD_VISIBILITY__;
-    }
-
-    // Request persisted field visibility from the extension host (updates fieldVisibility
-    // when the round-trip completes, confirming the embedded value).
-    this.sendMessage("getFieldVisibility");
-
-    // Request persisted recent tags from the extension host globalState.
-    this.sendMessage("getRecentTags");
-
-    // add listeners to receive data from extension
-    window.addEventListener("message", (event) => {
+    },
+    handleSaveAdrMessage(event: MessageEvent) {
       const message = event.data;
       switch (message.command) {
         case "fetchAdrValues": {
@@ -376,6 +378,6 @@ export default defineComponent({
           break;
         }
       }
-    });
+    }
   }
 });

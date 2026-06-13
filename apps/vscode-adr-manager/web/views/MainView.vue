@@ -36,6 +36,8 @@
           class="filter-toggle"
           :class="{ open: filtersOpen, 'has-active': hasActiveFilters }"
           data-cy="adr-filter-toggle"
+          :aria-expanded="filtersOpen"
+          aria-label="Toggle ADR filters"
           title="Toggle filters"
           @click="filtersOpen = !filtersOpen"
         >
@@ -66,6 +68,7 @@
               :class="{ active: filterStatuses.includes(status) }"
               :data-tone="status"
               :data-cy="`status-filter-${status}`"
+              :aria-pressed="filterStatuses.includes(status)"
               @click="toggleStatus(status)"
             >
               {{ status }}
@@ -83,6 +86,7 @@
               :class="{ active: filterTagIds.includes(tag.id) }"
               :style="{ '--tag-color': tag.color }"
               :data-cy="`tag-filter-${tag.label}`"
+              :aria-pressed="filterTagIds.includes(tag.id)"
               @click="toggleTagId(tag.id)"
             >
               <span class="tag-dot" aria-hidden="true"></span>
@@ -314,7 +318,16 @@ export default defineComponent({
    * upon rendering the view.
    */
   mounted() {
-    window.addEventListener("message", (event) => {
+    window.addEventListener("message", this.handleExtensionMessage);
+    this.sendMessage("fetchAdrs");
+    this.sendMessage("getWorkspaceFolders");
+    this.sendMessage("getAdrDirectory");
+  },
+  beforeUnmount() {
+    window.removeEventListener("message", this.handleExtensionMessage);
+  },
+  methods: {
+    handleExtensionMessage(event: MessageEvent) {
       const message = event.data;
       switch (message.command) {
         case "fetchAdrs": {
@@ -332,12 +345,7 @@ export default defineComponent({
           break;
         }
       }
-    });
-    this.sendMessage("fetchAdrs");
-    this.sendMessage("getWorkspaceFolders");
-    this.sendMessage("getAdrDirectory");
-  },
-  methods: {
+    },
     /**
      * Returns an array of ADRs that are located inside of the specified folder.
      * @param folder The folder the ADRs should be located in

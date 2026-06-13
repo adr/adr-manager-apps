@@ -1,16 +1,8 @@
-import { TEST_BASE_URL, REST_LIST_REPO_URL } from "../../support/e2e";
+import { TEST_BASE_URL } from "../../support/e2e";
 
 // ─── Setup helpers ─────────────────────────────────────────────────────────────
 
-function setupAuth(): void {
-    window.localStorage.clear();
-    window.localStorage.setItem("authId", Cypress.env("OAUTH_E2E_AUTH_ID"));
-    window.localStorage.setItem("user", Cypress.env("USER"));
-    window.localStorage.setItem("tourSeen", "1");
-}
-
 function addRepo(): void {
-    cy.intercept("GET", REST_LIST_REPO_URL).as("getRepos");
     cy.get("[data-cy=addRepo]").click();
     cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
     cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();
@@ -23,8 +15,7 @@ function addRepo(): void {
 
 /** Open the app and add the test repo, returning with the explorer visible. */
 function openApp(): void {
-    setupAuth();
-    cy.visit(TEST_BASE_URL);
+    cy.visitAuthenticatedManager(TEST_BASE_URL);
     addRepo();
 }
 

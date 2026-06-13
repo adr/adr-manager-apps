@@ -56,8 +56,7 @@ const { availableTags } = useAdrSearch();
 describe("parseTagsFromMd – color extraction", () => {
     it("extracts the exact color hex stored in the markdown comment", () => {
         const md = `${BASE_MD}\n<!-- adr-manager-tags: [{"id":"a1","label":"frontend","color":"#6366f1"}] -->`;
-        const [tag] = parseTagsFromMd(md);
-        expect(tag.color).toBe("#6366f1");
+        expect(parseTagsFromMd(md)).toEqual([TAG_A]);
     });
 
     it("extracts distinct colors for each tag in a multi-tag comment", () => {
@@ -102,8 +101,7 @@ describe("setTagsInMd → parseTagsFromMd round-trip", () => {
 
     it("round-trip does not introduce extra fields", () => {
         const md = setTagsInMd(BASE_MD, [TAG_A]);
-        const [tag] = parseTagsFromMd(md);
-        expect(Object.keys(tag).sort()).toEqual(["color", "id", "label"]);
+        expect(parseTagsFromMd(md).map((tag) => Object.keys(tag).sort())).toEqual([["color", "id", "label"]]);
     });
 });
 
@@ -112,7 +110,7 @@ describe("availableTags – color correctness from repository ADRs", () => {
     it("returns the tag with the correct color from a single ADR file", () => {
         const repo = makeRepo([makeAdrFile(setTagsInMd(BASE_MD, [TAG_A]))]);
         const tags = availableTags([repo]);
-        expect(tags[0].color).toBe(TAG_A.color);
+        expect(tags).toEqual([TAG_A]);
     });
 
     it("returns distinct colors from multiple ADR files", () => {
@@ -180,9 +178,9 @@ describe("remove and re-add repository – tag color consistency", () => {
     it("a single specific tag color matches the original after re-add", () => {
         const md = setTagsInMd(BASE_MD, [TAG_C]);
 
-        const [before] = availableTags([makeRepo([makeAdrFile(md)])]);
-        const [after]  = availableTags([makeRepo([makeAdrFile(md)])]);
-        expect(after.color).toBe(before.color);
-        expect(after.color).toBe(TAG_C.color);
+        const before = availableTags([makeRepo([makeAdrFile(md)])]);
+        const after  = availableTags([makeRepo([makeAdrFile(md)])]);
+        expect(after).toEqual(before);
+        expect(after).toEqual([TAG_C]);
     });
 });

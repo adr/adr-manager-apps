@@ -249,10 +249,14 @@ textarea.field {
     color: var(--adr-info);
 }
 
-.chip.status[data-tone="deprecated"],
-.chip.status[data-tone="superseded"] {
+.chip.status[data-tone="deprecated"] {
     border-color: var(--adr-warning);
     color: var(--adr-warning);
+}
+
+.chip.status[data-tone="superseded"] {
+    border-color: var(--adr-superseded);
+    color: var(--adr-superseded);
 }
 
 .chip-input {

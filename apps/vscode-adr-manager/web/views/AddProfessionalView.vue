@@ -108,7 +108,8 @@ export default defineComponent({
           confirmation: this.confirmation,
           moreInformation: this.moreInformation,
           templateVersion: this.templateVersion,
-          fullPath: this.fullPath
+          fullPath: this.fullPath,
+          tags: this.tags.map((t) => ({ ...t }))
         })
       );
     }

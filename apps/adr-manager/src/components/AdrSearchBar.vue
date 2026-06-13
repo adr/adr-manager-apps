@@ -281,17 +281,20 @@ function onTextInput(e: Event) {
     transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 
-/* Status chip active states */
-.status-chip.active[data-tone="accepted"]   { background: #dcfce7; border-color: #22c55e; color: #15803d; }
-.status-chip.active[data-tone="proposed"]   { background: #dbeafe; border-color: #3b82f6; color: #1d4ed8; }
-.status-chip.active[data-tone="rejected"]   { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
-.status-chip.active[data-tone="deprecated"] { background: #fef9c3; border-color: #eab308; color: #854d0e; }
-.status-chip.active[data-tone="superseded"] { background: #f3e8ff; border-color: #a855f7; color: #7e22ce; }
+/* Status chip colors — mirrors .chip.status[data-tone] palette from global.css */
+.status-chip[data-tone="accepted"]   { color: var(--adr-success); border-color: var(--adr-success); }
+.status-chip[data-tone="proposed"]   { color: var(--adr-info);    border-color: var(--adr-info); }
+.status-chip[data-tone="rejected"]   { color: var(--adr-error);   border-color: var(--adr-error); }
+.status-chip[data-tone="deprecated"] { color: var(--adr-warning);    border-color: var(--adr-warning); }
+.status-chip[data-tone="superseded"] { color: var(--adr-superseded); border-color: var(--adr-superseded); }
 
-.status-chip:not(.active):hover {
-    background: var(--adr-surface-2);
-    color: var(--adr-ink);
-}
+.status-chip.active[data-tone="accepted"]   { background: color-mix(in srgb, var(--adr-success)    15%, transparent); }
+.status-chip.active[data-tone="proposed"]   { background: color-mix(in srgb, var(--adr-info)        15%, transparent); }
+.status-chip.active[data-tone="rejected"]   { background: color-mix(in srgb, var(--adr-error)       15%, transparent); }
+.status-chip.active[data-tone="deprecated"] { background: color-mix(in srgb, var(--adr-warning)     15%, transparent); }
+.status-chip.active[data-tone="superseded"] { background: color-mix(in srgb, var(--adr-superseded)  15%, transparent); }
+
+.status-chip:not(.active):hover { background: var(--adr-surface-2); }
 
 /* Tag chip */
 .tag-chip {

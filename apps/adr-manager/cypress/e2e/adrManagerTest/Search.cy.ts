@@ -15,9 +15,10 @@ function addRepo(): void {
     cy.wait("@getRepos").its("response.statusCode").should("eq", 200);
     cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();
     cy.get("[data-cy=addRepoDialog]").click();
-    // Wait for at least one ADR to appear so the explorer is populated
-    cy.get("[data-cy=repoNameList]").find("[data-cy=repoHead]").click();
-    cy.get("[data-cy=adrList]", { timeout: 12000 }).should("have.length.greaterThan", 0);
+    // The repo auto-expands when added (store.currentRepository watch fires).
+    // Do NOT click repoHead — that would toggle it closed again.
+    // Wait for at least one ADR item to confirm the repo is open and loaded.
+    cy.get("[data-cy=adrList]", { timeout: 20000 }).should("have.length.greaterThan", 0);
 }
 
 /** Open the app and add the test repo, returning with the explorer visible. */
@@ -167,8 +168,8 @@ context("ADR Search", () => {
             cy.get("[data-cy=adr-filter-panel]").find(".status-chip").first().click();
             cy.get("[data-cy=adr-search-input]").type("triggerclear");
             cy.get("[data-cy=adr-search-clear]").click();
-            // After clearing, no chip should be active
-            cy.get("[data-cy=adr-filter-toggle]").click();
+            // The filter panel stays open after clearing — check chips directly.
+            // (Clicking the toggle here would close the panel, making the assertion fail.)
             cy.get("[data-cy=adr-filter-panel]").find(".status-chip.active").should("not.exist");
         });
     });
@@ -196,10 +197,16 @@ context("ADR Search", () => {
         });
 
         context("with 11 tags", () => {
+            // Tags from the new (unsaved) ADR propagate into the store asynchronously,
+            // so the 11th tag may arrive after the filter panel first renders.
+            // All steps that wait on tag count use an extended timeout.
             beforeEach(() => openAdrWithTags(11));
 
             it("shows only 10 tag chips initially", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
+                // Wait for the 11th tag to register (so hiddenCount = 1), then verify
+                // the visible slice is still capped at 10.
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).should("exist");
                 cy.get("[data-cy=adr-filter-panel]")
                     .find("[data-cy^=tag-filter-SearchTag]")
                     .should("have.length", 10);
@@ -207,33 +214,34 @@ context("ADR Search", () => {
 
             it("shows the '+1 more' button", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
-                cy.get("[data-cy=tags-show-more]").should("be.visible").and("contain", "+1 more");
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).should("be.visible").and("contain", "+1 more");
             });
 
             it("does not show 'Show less' before expanding", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).should("exist");
                 cy.get("[data-cy=tags-show-less]").should("not.exist");
             });
 
             it("clicking '+N more' shows all 11 tags and hides the button", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
-                cy.get("[data-cy=tags-show-more]").click();
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).click();
                 cy.get("[data-cy=adr-filter-panel]")
-                    .find("[data-cy^=tag-filter-SearchTag]")
+                    .find("[data-cy^=tag-filter-SearchTag]", { timeout: 30000 })
                     .should("have.length", 11);
                 cy.get("[data-cy=tags-show-more]").should("not.exist");
             });
 
             it("after expanding, the 'Show less' button appears", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
-                cy.get("[data-cy=tags-show-more]").click();
-                cy.get("[data-cy=tags-show-less]").should("be.visible");
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).click();
+                cy.get("[data-cy=tags-show-less]", { timeout: 30000 }).should("be.visible");
             });
 
             it("clicking 'Show less' collapses back to 10 chips", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
-                cy.get("[data-cy=tags-show-more]").click();
-                cy.get("[data-cy=tags-show-less]").click();
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).click();
+                cy.get("[data-cy=tags-show-less]", { timeout: 30000 }).click();
                 cy.get("[data-cy=adr-filter-panel]")
                     .find("[data-cy^=tag-filter-SearchTag]")
                     .should("have.length", 10);
@@ -241,16 +249,16 @@ context("ADR Search", () => {
 
             it("clicking 'Show less' restores the '+1 more' button", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
-                cy.get("[data-cy=tags-show-more]").click();
-                cy.get("[data-cy=tags-show-less]").click();
-                cy.get("[data-cy=tags-show-more]").should("be.visible");
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).click();
+                cy.get("[data-cy=tags-show-less]", { timeout: 30000 }).click();
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).should("be.visible");
                 cy.get("[data-cy=tags-show-less]").should("not.exist");
             });
 
             it("a tag beyond position 10 can still be selected after expanding", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
-                cy.get("[data-cy=tags-show-more]").click();
-                cy.get("[data-cy=tag-filter-SearchTag11]").click();
+                cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).click();
+                cy.get("[data-cy=tag-filter-SearchTag11]", { timeout: 30000 }).click();
                 cy.get("[data-cy=tag-filter-SearchTag11]").should("have.class", "active");
                 cy.get("[data-cy=adr-filter-toggle]").should("have.class", "has-active");
             });

@@ -598,11 +598,18 @@ export default defineComponent({
   opacity: 1;
 }
 
-.status-chip.active[data-tone="accepted"]   { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #22c55e; opacity: 1; }
-.status-chip.active[data-tone="proposed"]   { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #3b82f6; opacity: 1; }
-.status-chip.active[data-tone="rejected"]   { background: rgba(239,68,68,0.15);  border-color: #ef4444; color: #ef4444;  opacity: 1; }
-.status-chip.active[data-tone="deprecated"] { background: rgba(234,179,8,0.15);  border-color: #eab308; color: #eab308;  opacity: 1; }
-.status-chip.active[data-tone="superseded"] { background: rgba(168,85,247,0.15); border-color: #a855f7; color: #a855f7; opacity: 1; }
+/* Status chip colors — mirrors .chip.status[data-tone] palette from adr-design.css */
+.status-chip[data-tone="accepted"]   { color: var(--adr-success);    border-color: var(--adr-success);    opacity: 1; }
+.status-chip[data-tone="proposed"]   { color: var(--adr-info);       border-color: var(--adr-info);       opacity: 1; }
+.status-chip[data-tone="rejected"]   { color: var(--adr-error);      border-color: var(--adr-error);      opacity: 1; }
+.status-chip[data-tone="deprecated"] { color: var(--adr-warning);    border-color: var(--adr-warning);    opacity: 1; }
+.status-chip[data-tone="superseded"] { color: var(--adr-superseded); border-color: var(--adr-superseded); opacity: 1; }
+
+.status-chip.active[data-tone="accepted"]   { background: color-mix(in srgb, var(--adr-success)    15%, transparent); }
+.status-chip.active[data-tone="proposed"]   { background: color-mix(in srgb, var(--adr-info)        15%, transparent); }
+.status-chip.active[data-tone="rejected"]   { background: color-mix(in srgb, var(--adr-error)       15%, transparent); }
+.status-chip.active[data-tone="deprecated"] { background: color-mix(in srgb, var(--adr-warning)     15%, transparent); }
+.status-chip.active[data-tone="superseded"] { background: color-mix(in srgb, var(--adr-superseded)  15%, transparent); }
 
 .tag-chip {
   border-color: color-mix(in srgb, var(--tag-color) 40%, transparent);

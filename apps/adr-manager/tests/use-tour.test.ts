@@ -50,7 +50,10 @@ test("the toggle-fields step forces professional mode and restores it on exit", 
     goTo("toggle-fields");
     expect(store.mode).toBe("professional");
 
-    tour.next();
+    tour.next(); // exits toggle-fields, enters field-visibility (also forces professional)
+    expect(store.mode).toBe("professional");
+
+    tour.next(); // exits field-visibility, restores mode to original
     expect(store.mode).toBe("basic");
 });
 

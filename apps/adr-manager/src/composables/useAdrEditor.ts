@@ -2,7 +2,13 @@ import { readonly, ref, watch } from "vue";
 import { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import { adr2md, adr2md400, detectMadrVersion, md2adr, md2adr400 } from "@/plugins/parser";
 import { store } from "@/plugins/store";
-import { matchesIgnoringFormatting, applyFieldVisibilityFilter, parseTagsFromMd, stripTagComment, setTagsInMd } from "@adr-manager/core";
+import {
+    matchesIgnoringFormatting,
+    applyFieldVisibilityFilter,
+    parseTagsFromMd,
+    stripTagComment,
+    setTagsInMd
+} from "@adr-manager/core";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { AdrFile, Tag } from "@/types/adr";
 

@@ -37,12 +37,7 @@ function dispatchMessage(data: Record<string, unknown>) {
 }
 
 /** Build a minimal ADR entry that fetchAdrs would send (JSON-parsed form). */
-function makeEntry(
-  title: string,
-  status: string,
-  tags: Tag[] = [],
-  index = 0
-): Record<string, unknown> {
+function makeEntry(title: string, status: string, tags: Tag[] = [], index = 0): Record<string, unknown> {
   return {
     adr: { title, status, conforming: true, parseErrors: [] },
     tags,

@@ -47,7 +47,7 @@ const FOUR_TAGS: TagFixture[] = [
     { id: "fix-1", label: "alpha", color: "#6366f1" },
     { id: "fix-2", label: "beta", color: "#22c55e" },
     { id: "fix-3", label: "gamma", color: "#f59e0b" },
-    { id: "fix-4", label: "delta", color: "#ef4444" },
+    { id: "fix-4", label: "delta", color: "#ef4444" }
 ];
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -334,8 +334,8 @@ context("ADR Tags", () => {
                 recentTags: JSON.stringify([
                     { id: "r1", label: "alpha", color: "#6366f1" },
                     { id: "r2", label: "beta", color: "#22c55e" },
-                    { id: "r3", label: "gamma", color: "#f59e0b" },
-                ]),
+                    { id: "r3", label: "gamma", color: "#f59e0b" }
+                ])
             });
             createTagViaUI("newFirst");
 

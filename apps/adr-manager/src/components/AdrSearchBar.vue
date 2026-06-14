@@ -122,7 +122,7 @@ const TAG_PAGE = 10;
 
 const hasFilters = computed(() => props.statuses.length > 0 || props.tags.length > 0);
 const hasActiveFilters = computed(() => query.value.statuses.length > 0 || query.value.tagIds.length > 0);
-const visibleTags = computed(() => tagsExpanded.value ? props.tags : props.tags.slice(0, TAG_PAGE));
+const visibleTags = computed(() => (tagsExpanded.value ? props.tags : props.tags.slice(0, TAG_PAGE)));
 const hiddenTagCount = computed(() => Math.max(0, props.tags.length - TAG_PAGE));
 
 function onTextInput(e: Event) {
@@ -192,7 +192,9 @@ function onTextInput(e: Event) {
     color: var(--adr-ink-3);
     cursor: pointer;
     padding: 0;
-    transition: background 0.12s, color 0.12s;
+    transition:
+        background 0.12s,
+        color 0.12s;
 }
 
 .filter-toggle:hover,
@@ -282,23 +284,53 @@ function onTextInput(e: Event) {
     font-weight: 600;
     cursor: pointer;
     text-transform: capitalize;
-    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    transition:
+        background 0.12s,
+        border-color 0.12s,
+        color 0.12s;
 }
 
 /* Status chip colors — mirrors .chip.status[data-tone] palette from global.css */
-.status-chip[data-tone="accepted"]   { color: var(--adr-success); border-color: var(--adr-success); }
-.status-chip[data-tone="proposed"]   { color: var(--adr-info);    border-color: var(--adr-info); }
-.status-chip[data-tone="rejected"]   { color: var(--adr-error);   border-color: var(--adr-error); }
-.status-chip[data-tone="deprecated"] { color: var(--adr-warning);    border-color: var(--adr-warning); }
-.status-chip[data-tone="superseded"] { color: var(--adr-superseded); border-color: var(--adr-superseded); }
+.status-chip[data-tone="accepted"] {
+    color: var(--adr-success);
+    border-color: var(--adr-success);
+}
+.status-chip[data-tone="proposed"] {
+    color: var(--adr-info);
+    border-color: var(--adr-info);
+}
+.status-chip[data-tone="rejected"] {
+    color: var(--adr-error);
+    border-color: var(--adr-error);
+}
+.status-chip[data-tone="deprecated"] {
+    color: var(--adr-warning);
+    border-color: var(--adr-warning);
+}
+.status-chip[data-tone="superseded"] {
+    color: var(--adr-superseded);
+    border-color: var(--adr-superseded);
+}
 
-.status-chip.active[data-tone="accepted"]   { background: color-mix(in srgb, var(--adr-success)    15%, transparent); }
-.status-chip.active[data-tone="proposed"]   { background: color-mix(in srgb, var(--adr-info)        15%, transparent); }
-.status-chip.active[data-tone="rejected"]   { background: color-mix(in srgb, var(--adr-error)       15%, transparent); }
-.status-chip.active[data-tone="deprecated"] { background: color-mix(in srgb, var(--adr-warning)     15%, transparent); }
-.status-chip.active[data-tone="superseded"] { background: color-mix(in srgb, var(--adr-superseded)  15%, transparent); }
+.status-chip.active[data-tone="accepted"] {
+    background: color-mix(in srgb, var(--adr-success) 15%, transparent);
+}
+.status-chip.active[data-tone="proposed"] {
+    background: color-mix(in srgb, var(--adr-info) 15%, transparent);
+}
+.status-chip.active[data-tone="rejected"] {
+    background: color-mix(in srgb, var(--adr-error) 15%, transparent);
+}
+.status-chip.active[data-tone="deprecated"] {
+    background: color-mix(in srgb, var(--adr-warning) 15%, transparent);
+}
+.status-chip.active[data-tone="superseded"] {
+    background: color-mix(in srgb, var(--adr-superseded) 15%, transparent);
+}
 
-.status-chip:not(.active):hover { background: var(--adr-surface-2); }
+.status-chip:not(.active):hover {
+    background: var(--adr-surface-2);
+}
 
 /* Tag chip */
 .tag-chip {

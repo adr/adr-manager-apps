@@ -26,14 +26,6 @@ export function setTagsInMd(md: string, tags: Tag[]): string {
   return `${base}\n<!-- adr-manager-tags: ${JSON.stringify(tags)} -->`;
 }
 
-export const TAG_PALETTE = [
-  "#6366f1",
-  "#22c55e",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#06b6d4",
-  "#ec4899",
-] as const;
+export const TAG_PALETTE = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899"] as const;
 
 export type TagPaletteColor = (typeof TAG_PALETTE)[number];

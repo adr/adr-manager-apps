@@ -106,8 +106,7 @@ export const tourSteps: TourStep[] = [
         target: '[data-tour="field-visibility"]',
         placement: "bottom",
         title: "Customize visible fields",
-        body:
-            "The Fields button is a Professional mode feature that lets you toggle individual Professional mode sections on or off to match your personal preferences.",
+        body: "The Fields button is a Professional mode feature that lets you toggle individual Professional mode sections on or off to match your personal preferences.",
         onEnter: () => {
             modeBeforeFieldVisibilityStep = store.mode;
             store.mode = "professional";

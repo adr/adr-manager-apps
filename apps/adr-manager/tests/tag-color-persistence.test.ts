@@ -22,8 +22,8 @@ import type { Tag, AdrFile } from "@/types/adr";
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const TAG_A: Tag = { id: "a1", label: "frontend", color: "#6366f1" };
-const TAG_B: Tag = { id: "b2", label: "backend",  color: "#22c55e" };
-const TAG_C: Tag = { id: "c3", label: "infra",    color: "#f59e0b" };
+const TAG_B: Tag = { id: "b2", label: "backend", color: "#22c55e" };
+const TAG_C: Tag = { id: "c3", label: "infra", color: "#f59e0b" };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -142,26 +142,26 @@ describe("remove and re-add repository – tag color consistency", () => {
     const TAGGED_MD = setTagsInMd(BASE_MD, [TAG_A, TAG_B]);
 
     it("tags have the same colors after a repo is removed and re-added", () => {
-        const firstLoad  = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
+        const firstLoad = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
         const secondLoad = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
         expect(secondLoad.map((t) => t.color)).toEqual(firstLoad.map((t) => t.color));
     });
 
     it("tag IDs are stable across a remove/re-add cycle", () => {
-        const firstIds  = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.id);
+        const firstIds = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.id);
         const secondIds = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.id);
         expect(secondIds).toEqual(firstIds);
     });
 
     it("tag labels are stable across a remove/re-add cycle", () => {
-        const firstLabels  = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.label);
+        const firstLabels = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.label);
         const secondLabels = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.label);
         expect(secondLabels).toEqual(firstLabels);
     });
 
     it("full tag objects are identical after remove and re-add", () => {
         const before = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
-        const after  = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
+        const after = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
         expect(after).toEqual(before);
     });
 
@@ -171,7 +171,7 @@ describe("remove and re-add repository – tag color consistency", () => {
         const files = [makeAdrFile(md1, 1), makeAdrFile(md2, 2)];
 
         const before = availableTags([makeRepo(files)]);
-        const after  = availableTags([makeRepo(files)]);
+        const after = availableTags([makeRepo(files)]);
         expect(after).toEqual(before);
     });
 
@@ -179,7 +179,7 @@ describe("remove and re-add repository – tag color consistency", () => {
         const md = setTagsInMd(BASE_MD, [TAG_C]);
 
         const before = availableTags([makeRepo([makeAdrFile(md)])]);
-        const after  = availableTags([makeRepo([makeAdrFile(md)])]);
+        const after = availableTags([makeRepo([makeAdrFile(md)])]);
         expect(after).toEqual(before);
         expect(after).toEqual([TAG_C]);
     });

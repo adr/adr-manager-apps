@@ -97,7 +97,11 @@ import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 
 const props = withDefaults(
-    defineProps<{ adr: ArchitecturalDecisionRecord; templateVersion: MadrTemplateVersion; fieldVisibility?: FieldVisibility }>(),
+    defineProps<{
+        adr: ArchitecturalDecisionRecord;
+        templateVersion: MadrTemplateVersion;
+        fieldVisibility?: FieldVisibility;
+    }>(),
     { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
 );
 

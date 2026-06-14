@@ -198,9 +198,7 @@ context("ADR Search", () => {
                 // Wait for the 11th tag to register (so hiddenCount = 1), then verify
                 // the visible slice is still capped at 10.
                 cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).should("exist");
-                cy.get("[data-cy=adr-filter-panel]")
-                    .find("[data-cy^=tag-filter-SearchTag]")
-                    .should("have.length", 10);
+                cy.get("[data-cy=adr-filter-panel]").find("[data-cy^=tag-filter-SearchTag]").should("have.length", 10);
             });
 
             it("shows the '+1 more' button", () => {
@@ -233,9 +231,7 @@ context("ADR Search", () => {
                 cy.get("[data-cy=adr-filter-toggle]").click();
                 cy.get("[data-cy=tags-show-more]", { timeout: 30000 }).click();
                 cy.get("[data-cy=tags-show-less]", { timeout: 30000 }).click();
-                cy.get("[data-cy=adr-filter-panel]")
-                    .find("[data-cy^=tag-filter-SearchTag]")
-                    .should("have.length", 10);
+                cy.get("[data-cy=adr-filter-panel]").find("[data-cy^=tag-filter-SearchTag]").should("have.length", 10);
             });
 
             it("clicking 'Show less' restores the '+1 more' button", () => {

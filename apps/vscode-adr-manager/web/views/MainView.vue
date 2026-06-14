@@ -141,7 +141,10 @@
       <div v-else-if="searchActive && filteredDisplayedAdrs.length === 0" class="empty">
         <i class="codicon codicon-search-stop"></i>
         <h2>No ADRs match your search</h2>
-        <p>Try adjusting your filters or <button type="button" class="link-btn" @click="clearSearch">clear the search</button>.</p>
+        <p>
+          Try adjusting your filters or
+          <button type="button" class="link-btn" @click="clearSearch">clear the search</button>.
+        </p>
       </div>
     </main>
 
@@ -507,7 +510,9 @@ export default defineComponent({
   cursor: pointer;
   padding: 0;
   opacity: 0.7;
-  transition: background 0.12s, opacity 0.12s;
+  transition:
+    background 0.12s,
+    opacity 0.12s;
 }
 
 .filter-toggle:hover,
@@ -598,7 +603,10 @@ export default defineComponent({
   cursor: pointer;
   text-transform: capitalize;
   opacity: 0.8;
-  transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    opacity 0.12s;
 }
 
 .filter-chip:hover {
@@ -607,17 +615,47 @@ export default defineComponent({
 }
 
 /* Status chip colors — mirrors .chip.status[data-tone] palette from adr-design.css */
-.status-chip[data-tone="accepted"]   { color: var(--adr-success);    border-color: var(--adr-success);    opacity: 1; }
-.status-chip[data-tone="proposed"]   { color: var(--adr-info);       border-color: var(--adr-info);       opacity: 1; }
-.status-chip[data-tone="rejected"]   { color: var(--adr-error);      border-color: var(--adr-error);      opacity: 1; }
-.status-chip[data-tone="deprecated"] { color: var(--adr-warning);    border-color: var(--adr-warning);    opacity: 1; }
-.status-chip[data-tone="superseded"] { color: var(--adr-superseded); border-color: var(--adr-superseded); opacity: 1; }
+.status-chip[data-tone="accepted"] {
+  color: var(--adr-success);
+  border-color: var(--adr-success);
+  opacity: 1;
+}
+.status-chip[data-tone="proposed"] {
+  color: var(--adr-info);
+  border-color: var(--adr-info);
+  opacity: 1;
+}
+.status-chip[data-tone="rejected"] {
+  color: var(--adr-error);
+  border-color: var(--adr-error);
+  opacity: 1;
+}
+.status-chip[data-tone="deprecated"] {
+  color: var(--adr-warning);
+  border-color: var(--adr-warning);
+  opacity: 1;
+}
+.status-chip[data-tone="superseded"] {
+  color: var(--adr-superseded);
+  border-color: var(--adr-superseded);
+  opacity: 1;
+}
 
-.status-chip.active[data-tone="accepted"]   { background: color-mix(in srgb, var(--adr-success)    15%, transparent); }
-.status-chip.active[data-tone="proposed"]   { background: color-mix(in srgb, var(--adr-info)        15%, transparent); }
-.status-chip.active[data-tone="rejected"]   { background: color-mix(in srgb, var(--adr-error)       15%, transparent); }
-.status-chip.active[data-tone="deprecated"] { background: color-mix(in srgb, var(--adr-warning)     15%, transparent); }
-.status-chip.active[data-tone="superseded"] { background: color-mix(in srgb, var(--adr-superseded)  15%, transparent); }
+.status-chip.active[data-tone="accepted"] {
+  background: color-mix(in srgb, var(--adr-success) 15%, transparent);
+}
+.status-chip.active[data-tone="proposed"] {
+  background: color-mix(in srgb, var(--adr-info) 15%, transparent);
+}
+.status-chip.active[data-tone="rejected"] {
+  background: color-mix(in srgb, var(--adr-error) 15%, transparent);
+}
+.status-chip.active[data-tone="deprecated"] {
+  background: color-mix(in srgb, var(--adr-warning) 15%, transparent);
+}
+.status-chip.active[data-tone="superseded"] {
+  background: color-mix(in srgb, var(--adr-superseded) 15%, transparent);
+}
 
 .tag-chip {
   border-color: color-mix(in srgb, var(--tag-color) 40%, transparent);

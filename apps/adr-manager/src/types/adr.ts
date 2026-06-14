@@ -18,4 +18,3 @@ export interface AdrFile {
     /** Present only on freshly-created, not-yet-committed files. */
     newAdr?: boolean;
 }
-

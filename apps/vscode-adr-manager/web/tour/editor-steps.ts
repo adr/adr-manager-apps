@@ -42,8 +42,7 @@ export function buildEditorTourSteps(context: EditorTourContext = noopContext): 
       target: "[data-tour='field-visibility']",
       placement: "bottom",
       title: "Customize visible fields",
-      body:
-        "The Fields button is a Professional mode feature that lets you toggle individual Professional mode sections on or off to match your personal preferences.",
+      body: "The Fields button is a Professional mode feature that lets you toggle individual Professional mode sections on or off to match your personal preferences.",
       onEnter: () => context.revealFieldVisibilityPanel(true),
       onExit: () => context.revealFieldVisibilityPanel(false)
     },

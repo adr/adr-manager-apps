@@ -299,7 +299,10 @@ export default defineComponent({
      */
     updateRecentTags(tags: Tag[]) {
       this.recentTags = tags;
-      this.sendMessage("updateRecentTags", tags.map((t) => ({ ...t })));
+      this.sendMessage(
+        "updateRecentTags",
+        tags.map((t) => ({ ...t }))
+      );
     },
     /**
      * Sends a message to the extension to create and save the ADR as a Markdown file

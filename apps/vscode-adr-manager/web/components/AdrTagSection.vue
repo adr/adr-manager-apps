@@ -2,16 +2,13 @@
   <div class="tag-section">
     <div class="tags-header">
       <span class="tags-label">Tags</span>
-      <HelpTooltip>Tags are personal labels you can attach to an ADR to help organize and filter your decisions.</HelpTooltip>
+      <HelpTooltip
+        >Tags are personal labels you can attach to an ADR to help organize and filter your decisions.</HelpTooltip
+      >
     </div>
     <!-- Assigned chips row -->
     <div class="tag-row">
-      <span
-        v-for="tag in tags"
-        :key="tag.id"
-        class="tag-chip"
-        :style="{ '--tag-color': tag.color }"
-      >
+      <span v-for="tag in tags" :key="tag.id" class="tag-chip" :style="{ '--tag-color': tag.color }">
         <span class="tag-dot"></span>
         <span class="tag-label">{{ tag.label }}</span>
         <button type="button" class="tag-remove" :aria-label="`Remove tag ${tag.label}`" @click="removeTag(tag)">
@@ -20,12 +17,7 @@
       </span>
 
       <div ref="pickerWrap" class="picker-wrap">
-        <button
-          type="button"
-          class="tag-add-btn"
-          :class="{ open: dropdownOpen }"
-          @click="dropdownOpen = !dropdownOpen"
-        >
+        <button type="button" class="tag-add-btn" :class="{ open: dropdownOpen }" @click="dropdownOpen = !dropdownOpen">
           <i class="codicon codicon-tag"></i>
           Add tag
         </button>
@@ -35,12 +27,7 @@
           <!-- Recently used -->
           <template v-if="suggestions.length > 0">
             <p class="menu-label">Recently used</p>
-            <div
-              v-for="tag in suggestions"
-              :key="tag.id"
-              class="menu-tag-row"
-              @click="addTag(tag)"
-            >
+            <div v-for="tag in suggestions" :key="tag.id" class="menu-tag-row" @click="addTag(tag)">
               <span class="tag-chip" :style="{ '--tag-color': tag.color }">
                 <span class="tag-dot"></span>
                 <span class="tag-label">{{ tag.label }}</span>
@@ -72,14 +59,7 @@
             ></button>
           </div>
           <div class="menu-foot">
-            <button
-              type="button"
-              class="create-btn"
-              :disabled="!newLabel.trim()"
-              @click="createTag"
-            >
-              Create
-            </button>
+            <button type="button" class="create-btn" :disabled="!newLabel.trim()" @click="createTag">Create</button>
           </div>
         </div>
       </div>
@@ -138,15 +118,19 @@ export default defineComponent({
     }
 
     function removeTag(tag: Tag) {
-      emit("update:tags", props.tags.filter((t) => t.id !== tag.id));
+      emit(
+        "update:tags",
+        props.tags.filter((t) => t.id !== tag.id)
+      );
     }
 
     function createTag() {
       const label = newLabel.value.trim();
       if (!label) return;
-      const id = typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const id =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const tag: Tag = { id, label, color: newColor.value };
       const updatedRecent = pushRecent(tag);
       emit("update:recentTags", updatedRecent);
@@ -288,7 +272,9 @@ export default defineComponent({
   font-weight: 600;
   cursor: pointer;
   font-family: var(--vscode-font-family);
-  transition: border-color 0.12s, color 0.12s;
+  transition:
+    border-color 0.12s,
+    color 0.12s;
 }
 
 .tag-add-btn:hover,
@@ -310,7 +296,7 @@ export default defineComponent({
   background: var(--vscode-dropdown-background, #252526);
   border: 1px solid var(--vscode-dropdown-border, #454545);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   padding: 10px;
   z-index: 60;
 }
@@ -333,7 +319,7 @@ export default defineComponent({
 }
 
 .menu-tag-row:hover {
-  background: var(--vscode-list-hoverBackground, rgba(255,255,255,0.06));
+  background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.06));
 }
 
 .menu-divider {
@@ -374,7 +360,9 @@ export default defineComponent({
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: transform 0.1s, border-color 0.1s;
+  transition:
+    transform 0.1s,
+    border-color 0.1s;
   flex: 0 0 auto;
 }
 

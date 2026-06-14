@@ -89,9 +89,7 @@ describe("save-adr mixin – tag support", () => {
   // ── on mount ─────────────────────────────────────────────────────────────────
   describe("on mount", () => {
     it("requests persisted recent tags from the extension host", () => {
-      expect(postMessage).toHaveBeenCalledWith(
-        expect.objectContaining({ command: "getRecentTags" })
-      );
+      expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({ command: "getRecentTags" }));
     });
 
     it("initialises tags to an empty array before any message arrives", () => {

@@ -384,11 +384,7 @@ function adrRichFiles(adrPath: string): Record<string, string> {
             "proposed",
             "MADR"
         ),
-        [`${adrPath}0002-keep-decisions-near-code.md`]: adrMarkdown(
-            "Keep Decisions Near Code",
-            "deprecated",
-            "MADR"
-        ),
+        [`${adrPath}0002-keep-decisions-near-code.md`]: adrMarkdown("Keep Decisions Near Code", "deprecated", "MADR"),
         [`${adrPath}0003-use-git-provider-api.md`]: adrMarkdown("Use Git Provider API", "rejected", "Git provider API"),
         [`${adrPath}0004-add-search-filters.md`]: adrMarkdown(
             "Add Search Filters",
@@ -454,7 +450,10 @@ Plain Markdown ADRs.
 `;
 }
 
-function parseGitHubRepoRequest(urlText: string, repos: MockRepo[]): { repo: MockRepo; rest: string[]; url: URL } | undefined {
+function parseGitHubRepoRequest(
+    urlText: string,
+    repos: MockRepo[]
+): { repo: MockRepo; rest: string[]; url: URL } | undefined {
     const url = new URL(urlText);
     const segments = url.pathname.split("/").filter(Boolean).map(decodeURIComponent);
     const owner = segments[1];

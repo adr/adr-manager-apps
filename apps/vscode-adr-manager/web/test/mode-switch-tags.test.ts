@@ -32,256 +32,261 @@ vi.stubGlobal("vscode", { postMessage });
 
 // ── Child component stubs (avoid rendering complex sub-trees) ─────────────────
 const stubs = {
-    MadrTemplateBasic: { template: "<div></div>" },
-    MadrTemplateProfessional: { template: "<div></div>" },
-    AdrTagSection: { template: "<div></div>", props: ["tags", "recentTags"] },
-    TourOverlay: { template: "<div></div>", props: ["active", "steps"] },
-    VersionSelect: {
-        template: "<div></div>",
-        props: ["modelValue"],
-        emits: ["update:modelValue"]
-    },
-    FieldVisibilityPanel: {
-        template: "<div></div>",
-        props: ["templateVersion", "fieldVisibility"]
-    }
+  MadrTemplateBasic: { template: "<div></div>" },
+  MadrTemplateProfessional: { template: "<div></div>" },
+  AdrTagSection: { template: "<div></div>", props: ["tags", "recentTags"] },
+  TourOverlay: { template: "<div></div>", props: ["active", "steps"] },
+  VersionSelect: {
+    template: "<div></div>",
+    props: ["modelValue"],
+    emits: ["update:modelValue"]
+  },
+  FieldVisibilityPanel: {
+    template: "<div></div>",
+    props: ["templateVersion", "fieldVisibility"]
+  }
 };
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 const TAG_FRONTEND: Tag = { id: "a1", label: "frontend", color: "#6366f1" };
-const TAG_BACKEND: Tag = { id: "b2", label: "backend",  color: "#22c55e" };
-const TAG_INFRA: Tag   = { id: "c3", label: "infra",    color: "#f59e0b" };
+const TAG_BACKEND: Tag = { id: "b2", label: "backend", color: "#22c55e" };
+const TAG_INFRA: Tag = { id: "c3", label: "infra", color: "#f59e0b" };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Return the parsed payload sent with a specific command, or throw if not found. */
 function getSwitchPayload(command: string): Record<string, unknown> {
-    const call = postMessage.mock.calls.find(
-        (c: unknown[]) => (c[0] as { command: string }).command === command
-    );
-    if (!call) throw new Error(`No postMessage call found for command "${command}"`);
-    return JSON.parse(call[0].data as string);
+  const call = postMessage.mock.calls.find((c: unknown[]) => (c[0] as { command: string }).command === command);
+  if (!call) throw new Error(`No postMessage call found for command "${command}"`);
+  return JSON.parse(call[0].data as string);
 }
 
 /** Dispatch a simulated extension-host message into the webview. */
 function dispatchExtensionMessage(data: Record<string, unknown>) {
-    window.dispatchEvent(new MessageEvent("message", { data }));
+  window.dispatchEvent(new MessageEvent("message", { data }));
 }
 
 // ── Test suite ────────────────────────────────────────────────────────────────
 
 describe("mode-switch tag preservation", () => {
+  // ── 1. AddBasicView → switchToProfessionalTemplate ──────────────────────
+  describe("AddBasicView → switchToProfessionalTemplate", () => {
+    let wrapper: ReturnType<typeof mount>;
 
-    // ── 1. AddBasicView → switchToProfessionalTemplate ──────────────────────
-    describe("AddBasicView → switchToProfessionalTemplate", () => {
-        let wrapper: ReturnType<typeof mount>;
-
-        beforeEach(() => {
-            wrapper = mount(AddBasicView, { global: { stubs } });
-            postMessage.mockClear(); // discard mount-time getFieldVisibility / getRecentTags
-        });
-
-        afterEach(() => { wrapper.unmount(); });
-
-        it("includes a tags field in the switch payload", () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const payload = getSwitchPayload("switchAddViewBasicToProfessional");
-            expect(payload).toHaveProperty("tags");
-        });
-
-        it("sends all assigned tags in the payload", () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const { tags } = getSwitchPayload("switchAddViewBasicToProfessional") as { tags: Tag[] };
-            expect(tags).toEqual([TAG_FRONTEND, TAG_BACKEND]);
-        });
-
-        it("preserves each tag's color exactly", () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_INFRA];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const { tags } = getSwitchPayload("switchAddViewBasicToProfessional") as { tags: Tag[] };
-            expect(tags[0].color).toBe(TAG_FRONTEND.color);
-            expect(tags[1].color).toBe(TAG_INFRA.color);
-        });
-
-        it("sends an empty array when no tags are assigned", () => {
-            (wrapper.vm as any).tags = [];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const { tags } = getSwitchPayload("switchAddViewBasicToProfessional") as { tags: Tag[] };
-            expect(tags).toEqual([]);
-        });
-
-        it("sends tags as plain objects so structured-clone can serialise them", () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const { tags } = getSwitchPayload("switchAddViewBasicToProfessional") as { tags: Tag[] };
-            expect(Object.keys(tags[0]).sort()).toEqual(["color", "id", "label"]);
-        });
-
-        it("round-trip: payload tags survive fetchAdrValues and restore on the vm", async () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const payload = getSwitchPayload("switchAddViewBasicToProfessional");
-
-            // Simulate WebPanel echoing the payload back as fetchAdrValues
-            dispatchExtensionMessage({ command: "fetchAdrValues", adr: JSON.stringify(payload) });
-            await wrapper.vm.$nextTick();
-
-            expect((wrapper.vm as any).tags).toEqual([TAG_FRONTEND, TAG_BACKEND]);
-        });
+    beforeEach(() => {
+      wrapper = mount(AddBasicView, { global: { stubs } });
+      postMessage.mockClear(); // discard mount-time getFieldVisibility / getRecentTags
     });
 
-    // ── 2. AddProfessionalView → switchToBasicTemplate ──────────────────────
-    describe("AddProfessionalView → switchToBasicTemplate", () => {
-        let wrapper: ReturnType<typeof mount>;
-
-        beforeEach(() => {
-            wrapper = mount(AddProfessionalView, { global: { stubs } });
-            postMessage.mockClear();
-        });
-
-        afterEach(() => { wrapper.unmount(); });
-
-        it("includes a tags field in the switch payload", () => {
-            (wrapper.vm as any).tags = [TAG_BACKEND];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const payload = getSwitchPayload("switchAddViewProfessionalToBasic");
-            expect(payload).toHaveProperty("tags");
-        });
-
-        it("sends all assigned tags in the payload", () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND, TAG_INFRA];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const { tags } = getSwitchPayload("switchAddViewProfessionalToBasic") as { tags: Tag[] };
-            expect(tags).toEqual([TAG_FRONTEND, TAG_BACKEND, TAG_INFRA]);
-        });
-
-        it("preserves each tag's color exactly", () => {
-            (wrapper.vm as any).tags = [TAG_BACKEND];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const { tags } = getSwitchPayload("switchAddViewProfessionalToBasic") as { tags: Tag[] };
-            expect(tags[0].color).toBe(TAG_BACKEND.color);
-        });
-
-        it("sends an empty array when no tags are assigned", () => {
-            (wrapper.vm as any).tags = [];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const { tags } = getSwitchPayload("switchAddViewProfessionalToBasic") as { tags: Tag[] };
-            expect(tags).toEqual([]);
-        });
-
-        it("round-trip: payload tags survive fetchAdrValues and restore on the vm", async () => {
-            (wrapper.vm as any).tags = [TAG_INFRA];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const payload = getSwitchPayload("switchAddViewProfessionalToBasic");
-
-            dispatchExtensionMessage({ command: "fetchAdrValues", adr: JSON.stringify(payload) });
-            await wrapper.vm.$nextTick();
-
-            expect((wrapper.vm as any).tags).toEqual([TAG_INFRA]);
-        });
+    afterEach(() => {
+      wrapper.unmount();
     });
 
-    // ── 3. ViewBasicView → switchToProfessionalTemplate ─────────────────────
-    describe("ViewBasicView → switchToProfessionalTemplate", () => {
-        let wrapper: ReturnType<typeof mount>;
-
-        beforeEach(() => {
-            wrapper = mount(ViewBasicView, { global: { stubs } });
-            postMessage.mockClear();
-        });
-
-        afterEach(() => { wrapper.unmount(); });
-
-        it("includes a tags field in the switch payload", () => {
-            (wrapper.vm as any).tags = [TAG_INFRA];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const payload = getSwitchPayload("switchViewingViewBasicToProfessional");
-            expect(payload).toHaveProperty("tags");
-        });
-
-        it("sends all assigned tags in the payload", () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_INFRA];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const { tags } = getSwitchPayload("switchViewingViewBasicToProfessional") as { tags: Tag[] };
-            expect(tags).toEqual([TAG_FRONTEND, TAG_INFRA]);
-        });
-
-        it("preserves each tag's color exactly", () => {
-            (wrapper.vm as any).tags = [TAG_INFRA];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const { tags } = getSwitchPayload("switchViewingViewBasicToProfessional") as { tags: Tag[] };
-            expect(tags[0].color).toBe(TAG_INFRA.color);
-        });
-
-        it("sends an empty array when no tags are assigned", () => {
-            (wrapper.vm as any).tags = [];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const { tags } = getSwitchPayload("switchViewingViewBasicToProfessional") as { tags: Tag[] };
-            expect(tags).toEqual([]);
-        });
-
-        it("round-trip: payload tags survive fetchAdrValues and restore on the vm", async () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND];
-            (wrapper.vm as any).switchToProfessionalTemplate();
-            const payload = getSwitchPayload("switchViewingViewBasicToProfessional");
-
-            dispatchExtensionMessage({ command: "fetchAdrValues", adr: JSON.stringify(payload) });
-            await wrapper.vm.$nextTick();
-
-            expect((wrapper.vm as any).tags).toEqual([TAG_FRONTEND, TAG_BACKEND]);
-        });
+    it("includes a tags field in the switch payload", () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const payload = getSwitchPayload("switchAddViewBasicToProfessional");
+      expect(payload).toHaveProperty("tags");
     });
 
-    // ── 4. ViewProfessionalView → switchToBasicTemplate ─────────────────────
-    describe("ViewProfessionalView → switchToBasicTemplate", () => {
-        let wrapper: ReturnType<typeof mount>;
-
-        beforeEach(() => {
-            wrapper = mount(ViewProfessionalView, { global: { stubs } });
-            postMessage.mockClear();
-        });
-
-        afterEach(() => { wrapper.unmount(); });
-
-        it("includes a tags field in the switch payload", () => {
-            (wrapper.vm as any).tags = [TAG_BACKEND];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const payload = getSwitchPayload("switchViewingViewProfessionalToBasic");
-            expect(payload).toHaveProperty("tags");
-        });
-
-        it("sends all assigned tags in the payload", () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const { tags } = getSwitchPayload("switchViewingViewProfessionalToBasic") as { tags: Tag[] };
-            expect(tags).toEqual([TAG_FRONTEND, TAG_BACKEND]);
-        });
-
-        it("preserves each tag's color exactly", () => {
-            (wrapper.vm as any).tags = [TAG_BACKEND];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const { tags } = getSwitchPayload("switchViewingViewProfessionalToBasic") as { tags: Tag[] };
-            expect(tags[0].color).toBe(TAG_BACKEND.color);
-        });
-
-        it("sends an empty array when no tags are assigned", () => {
-            (wrapper.vm as any).tags = [];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const { tags } = getSwitchPayload("switchViewingViewProfessionalToBasic") as { tags: Tag[] };
-            expect(tags).toEqual([]);
-        });
-
-        it("round-trip: payload tags survive fetchAdrValues and restore on the vm", async () => {
-            (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_INFRA];
-            (wrapper.vm as any).switchToBasicTemplate();
-            const payload = getSwitchPayload("switchViewingViewProfessionalToBasic");
-
-            dispatchExtensionMessage({ command: "fetchAdrValues", adr: JSON.stringify(payload) });
-            await wrapper.vm.$nextTick();
-
-            expect((wrapper.vm as any).tags).toEqual([TAG_FRONTEND, TAG_INFRA]);
-        });
+    it("sends all assigned tags in the payload", () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const { tags } = getSwitchPayload("switchAddViewBasicToProfessional") as { tags: Tag[] };
+      expect(tags).toEqual([TAG_FRONTEND, TAG_BACKEND]);
     });
+
+    it("preserves each tag's color exactly", () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_INFRA];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const { tags } = getSwitchPayload("switchAddViewBasicToProfessional") as { tags: Tag[] };
+      expect(tags[0].color).toBe(TAG_FRONTEND.color);
+      expect(tags[1].color).toBe(TAG_INFRA.color);
+    });
+
+    it("sends an empty array when no tags are assigned", () => {
+      (wrapper.vm as any).tags = [];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const { tags } = getSwitchPayload("switchAddViewBasicToProfessional") as { tags: Tag[] };
+      expect(tags).toEqual([]);
+    });
+
+    it("sends tags as plain objects so structured-clone can serialise them", () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const { tags } = getSwitchPayload("switchAddViewBasicToProfessional") as { tags: Tag[] };
+      expect(Object.keys(tags[0]).sort()).toEqual(["color", "id", "label"]);
+    });
+
+    it("round-trip: payload tags survive fetchAdrValues and restore on the vm", async () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const payload = getSwitchPayload("switchAddViewBasicToProfessional");
+
+      // Simulate WebPanel echoing the payload back as fetchAdrValues
+      dispatchExtensionMessage({ command: "fetchAdrValues", adr: JSON.stringify(payload) });
+      await wrapper.vm.$nextTick();
+
+      expect((wrapper.vm as any).tags).toEqual([TAG_FRONTEND, TAG_BACKEND]);
+    });
+  });
+
+  // ── 2. AddProfessionalView → switchToBasicTemplate ──────────────────────
+  describe("AddProfessionalView → switchToBasicTemplate", () => {
+    let wrapper: ReturnType<typeof mount>;
+
+    beforeEach(() => {
+      wrapper = mount(AddProfessionalView, { global: { stubs } });
+      postMessage.mockClear();
+    });
+
+    afterEach(() => {
+      wrapper.unmount();
+    });
+
+    it("includes a tags field in the switch payload", () => {
+      (wrapper.vm as any).tags = [TAG_BACKEND];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const payload = getSwitchPayload("switchAddViewProfessionalToBasic");
+      expect(payload).toHaveProperty("tags");
+    });
+
+    it("sends all assigned tags in the payload", () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND, TAG_INFRA];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const { tags } = getSwitchPayload("switchAddViewProfessionalToBasic") as { tags: Tag[] };
+      expect(tags).toEqual([TAG_FRONTEND, TAG_BACKEND, TAG_INFRA]);
+    });
+
+    it("preserves each tag's color exactly", () => {
+      (wrapper.vm as any).tags = [TAG_BACKEND];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const { tags } = getSwitchPayload("switchAddViewProfessionalToBasic") as { tags: Tag[] };
+      expect(tags[0].color).toBe(TAG_BACKEND.color);
+    });
+
+    it("sends an empty array when no tags are assigned", () => {
+      (wrapper.vm as any).tags = [];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const { tags } = getSwitchPayload("switchAddViewProfessionalToBasic") as { tags: Tag[] };
+      expect(tags).toEqual([]);
+    });
+
+    it("round-trip: payload tags survive fetchAdrValues and restore on the vm", async () => {
+      (wrapper.vm as any).tags = [TAG_INFRA];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const payload = getSwitchPayload("switchAddViewProfessionalToBasic");
+
+      dispatchExtensionMessage({ command: "fetchAdrValues", adr: JSON.stringify(payload) });
+      await wrapper.vm.$nextTick();
+
+      expect((wrapper.vm as any).tags).toEqual([TAG_INFRA]);
+    });
+  });
+
+  // ── 3. ViewBasicView → switchToProfessionalTemplate ─────────────────────
+  describe("ViewBasicView → switchToProfessionalTemplate", () => {
+    let wrapper: ReturnType<typeof mount>;
+
+    beforeEach(() => {
+      wrapper = mount(ViewBasicView, { global: { stubs } });
+      postMessage.mockClear();
+    });
+
+    afterEach(() => {
+      wrapper.unmount();
+    });
+
+    it("includes a tags field in the switch payload", () => {
+      (wrapper.vm as any).tags = [TAG_INFRA];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const payload = getSwitchPayload("switchViewingViewBasicToProfessional");
+      expect(payload).toHaveProperty("tags");
+    });
+
+    it("sends all assigned tags in the payload", () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_INFRA];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const { tags } = getSwitchPayload("switchViewingViewBasicToProfessional") as { tags: Tag[] };
+      expect(tags).toEqual([TAG_FRONTEND, TAG_INFRA]);
+    });
+
+    it("preserves each tag's color exactly", () => {
+      (wrapper.vm as any).tags = [TAG_INFRA];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const { tags } = getSwitchPayload("switchViewingViewBasicToProfessional") as { tags: Tag[] };
+      expect(tags[0].color).toBe(TAG_INFRA.color);
+    });
+
+    it("sends an empty array when no tags are assigned", () => {
+      (wrapper.vm as any).tags = [];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const { tags } = getSwitchPayload("switchViewingViewBasicToProfessional") as { tags: Tag[] };
+      expect(tags).toEqual([]);
+    });
+
+    it("round-trip: payload tags survive fetchAdrValues and restore on the vm", async () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND];
+      (wrapper.vm as any).switchToProfessionalTemplate();
+      const payload = getSwitchPayload("switchViewingViewBasicToProfessional");
+
+      dispatchExtensionMessage({ command: "fetchAdrValues", adr: JSON.stringify(payload) });
+      await wrapper.vm.$nextTick();
+
+      expect((wrapper.vm as any).tags).toEqual([TAG_FRONTEND, TAG_BACKEND]);
+    });
+  });
+
+  // ── 4. ViewProfessionalView → switchToBasicTemplate ─────────────────────
+  describe("ViewProfessionalView → switchToBasicTemplate", () => {
+    let wrapper: ReturnType<typeof mount>;
+
+    beforeEach(() => {
+      wrapper = mount(ViewProfessionalView, { global: { stubs } });
+      postMessage.mockClear();
+    });
+
+    afterEach(() => {
+      wrapper.unmount();
+    });
+
+    it("includes a tags field in the switch payload", () => {
+      (wrapper.vm as any).tags = [TAG_BACKEND];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const payload = getSwitchPayload("switchViewingViewProfessionalToBasic");
+      expect(payload).toHaveProperty("tags");
+    });
+
+    it("sends all assigned tags in the payload", () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_BACKEND];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const { tags } = getSwitchPayload("switchViewingViewProfessionalToBasic") as { tags: Tag[] };
+      expect(tags).toEqual([TAG_FRONTEND, TAG_BACKEND]);
+    });
+
+    it("preserves each tag's color exactly", () => {
+      (wrapper.vm as any).tags = [TAG_BACKEND];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const { tags } = getSwitchPayload("switchViewingViewProfessionalToBasic") as { tags: Tag[] };
+      expect(tags[0].color).toBe(TAG_BACKEND.color);
+    });
+
+    it("sends an empty array when no tags are assigned", () => {
+      (wrapper.vm as any).tags = [];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const { tags } = getSwitchPayload("switchViewingViewProfessionalToBasic") as { tags: Tag[] };
+      expect(tags).toEqual([]);
+    });
+
+    it("round-trip: payload tags survive fetchAdrValues and restore on the vm", async () => {
+      (wrapper.vm as any).tags = [TAG_FRONTEND, TAG_INFRA];
+      (wrapper.vm as any).switchToBasicTemplate();
+      const payload = getSwitchPayload("switchViewingViewProfessionalToBasic");
+
+      dispatchExtensionMessage({ command: "fetchAdrValues", adr: JSON.stringify(payload) });
+      await wrapper.vm.$nextTick();
+
+      expect((wrapper.vm as any).tags).toEqual([TAG_FRONTEND, TAG_INFRA]);
+    });
+  });
 });

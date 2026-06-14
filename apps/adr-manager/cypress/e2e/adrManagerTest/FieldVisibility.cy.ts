@@ -179,10 +179,13 @@ context("Field Visibility", () => {
             cy.get("body").click(0, 0);
 
             // The store should have written to localStorage right away
-            cy.window().its("localStorage").invoke("getItem", "fieldVisibility").then((raw) => {
-                const saved = JSON.parse(raw!);
-                expect(saved.date).to.equal(false);
-            });
+            cy.window()
+                .its("localStorage")
+                .invoke("getItem", "fieldVisibility")
+                .then((raw) => {
+                    const saved = JSON.parse(raw!);
+                    expect(saved.date).to.equal(false);
+                });
         });
 
         it("loads persisted field-visibility from localStorage when a new ADR is opened", () => {

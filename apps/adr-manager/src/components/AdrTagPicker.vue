@@ -2,20 +2,8 @@
     <div ref="wrap" data-cy="tag-picker" class="tag-picker-wrap">
         <!-- Assigned chips + add button -->
         <div class="tag-row">
-            <AdrTagChip
-                v-for="tag in currentTags"
-                :key="tag.id"
-                :tag="tag"
-                removable
-                @remove="removeTag(tag)"
-            />
-            <button
-                type="button"
-                data-cy="tag-add-btn"
-                class="tag-add-btn"
-                :class="{ open }"
-                @click="open = !open"
-            >
+            <AdrTagChip v-for="tag in currentTags" :key="tag.id" :tag="tag" removable @remove="removeTag(tag)" />
+            <button type="button" data-cy="tag-add-btn" class="tag-add-btn" :class="{ open }" @click="open = !open">
                 <span class="mdi mdi-plus" aria-hidden="true"></span>
                 Add tag
             </button>
@@ -142,7 +130,10 @@ function addTag(tag: Tag): void {
 }
 
 function removeTag(tag: Tag): void {
-    emit("update:tags", currentTags.value.filter((t) => t.id !== tag.id));
+    emit(
+        "update:tags",
+        currentTags.value.filter((t) => t.id !== tag.id)
+    );
 }
 
 function createTag(): void {
@@ -191,7 +182,10 @@ watch(open, (isOpen) => {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: border-color 0.14s, color 0.14s, background 0.14s;
+    transition:
+        border-color 0.14s,
+        color 0.14s,
+        background 0.14s;
 }
 
 .tag-add-btn:hover,
@@ -269,7 +263,9 @@ watch(open, (isOpen) => {
     border-radius: 50%;
     border: 2px solid transparent;
     cursor: pointer;
-    transition: transform 0.1s, border-color 0.1s;
+    transition:
+        transform 0.1s,
+        border-color 0.1s;
     flex: 0 0 auto;
 }
 

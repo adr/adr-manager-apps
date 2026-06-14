@@ -144,12 +144,7 @@ const { refreshing, done, total } = useRepositoryRefresh();
 
 const repositories = computed(() => [...store.addedRepositories].sort((a, b) => a.fullName.localeCompare(b.fullName)));
 
-const {
-    active: searchActive,
-    filteredAdrs,
-    availableTags,
-    availableStatuses
-} = useAdrSearch();
+const { active: searchActive, filteredAdrs, availableTags, availableStatuses } = useAdrSearch();
 
 const allTags = computed(() => availableTags(store.addedRepositories));
 const allStatuses = computed(() => availableStatuses(store.addedRepositories));

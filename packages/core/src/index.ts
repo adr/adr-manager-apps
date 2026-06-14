@@ -22,17 +22,11 @@ export {
   matchOptionTitleMoreRelaxed
 } from "./utils";
 
-export{FIELD_KEYS, DEFAULT_FIELD_VISIBILITY, applyFieldVisibilityFilter} from "./fields";
+export { FIELD_KEYS, DEFAULT_FIELD_VISIBILITY, applyFieldVisibilityFilter } from "./fields";
 export type { FieldKey, FieldVisibility } from "./fields";
 
 export { parseTagsFromMd, stripTagComment, setTagsInMd, TAG_PALETTE } from "./tags";
 export type { TagPaletteColor } from "./tags";
 
-export {
-  matchesAdrSearch,
-  extractAdrTitle,
-  extractAdrStatus,
-  isEmptyQuery,
-  EMPTY_QUERY
-} from "./search";
+export { matchesAdrSearch, extractAdrTitle, extractAdrStatus, isEmptyQuery, EMPTY_QUERY } from "./search";
 export type { AdrSearchQuery, SearchableAdr } from "./search";

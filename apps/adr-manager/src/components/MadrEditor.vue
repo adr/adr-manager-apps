@@ -4,7 +4,10 @@
         <div class="tags-bar">
             <div class="tags-bar-label">
                 Tags
-                <HelpTooltip>Tags are personal labels you can attach to an ADR to help organize and filter your decisions.</HelpTooltip>
+                <HelpTooltip
+                    >Tags are personal labels you can attach to an ADR to help organize and filter your
+                    decisions.</HelpTooltip
+                >
             </div>
             <AdrTagPicker :tags="tags" @update:tags="emit('update:tags', $event)" />
         </div>

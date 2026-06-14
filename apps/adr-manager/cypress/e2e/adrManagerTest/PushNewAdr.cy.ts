@@ -57,7 +57,9 @@ context("Committing and pushing ADR changes", () => {
 
         cy.contains("OK").click();
         cy.wait("@createTreeRequest", { timeout: 20000 }).then((interception) => {
-            const createdEntry = treeEntries(interception).find((entry) => String(entry["path"]).endsWith(NEW_ADR_FILE));
+            const createdEntry = treeEntries(interception).find((entry) =>
+                String(entry["path"]).endsWith(NEW_ADR_FILE)
+            );
             expect(createdEntry?.["sha"]).to.be.a("string");
         });
         cy.wait("@commitRequest", { timeout: 20000 }).then((interception) => {

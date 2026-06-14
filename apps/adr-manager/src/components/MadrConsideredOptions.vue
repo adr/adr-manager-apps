@@ -84,7 +84,8 @@
                         <div class="subhead">
                             <h4>Description</h4>
                             <HelpTooltip>
-                                Describe the option in free form, e.g. by giving examples or a pointer to more information.
+                                Describe the option in free form, e.g. by giving examples or a pointer to more
+                                information.
                             </HelpTooltip>
                         </div>
                         <AutoGrowTextarea
@@ -172,7 +173,12 @@ import type { Option } from "@/types/adr";
 import type { Mode } from "@/types/store";
 
 const props = withDefaults(
-    defineProps<{ adr: ArchitecturalDecisionRecord; mode: Mode; templateVersion: MadrTemplateVersion; fieldVisibility?: FieldVisibility }>(),
+    defineProps<{
+        adr: ArchitecturalDecisionRecord;
+        mode: Mode;
+        templateVersion: MadrTemplateVersion;
+        fieldVisibility?: FieldVisibility;
+    }>(),
     { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
 );
 

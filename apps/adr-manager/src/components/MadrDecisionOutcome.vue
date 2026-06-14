@@ -41,7 +41,14 @@
             />
         </div>
 
-        <div v-if="mode === 'professional' && templateVersion === '2.1.2' && (fieldVisibility.positiveConsequences || fieldVisibility.negativeConsequences)" class="outcome-cols">
+        <div
+            v-if="
+                mode === 'professional' &&
+                templateVersion === '2.1.2' &&
+                (fieldVisibility.positiveConsequences || fieldVisibility.negativeConsequences)
+            "
+            class="outcome-cols"
+        >
             <div v-if="fieldVisibility.positiveConsequences">
                 <div class="subhead">
                     <h4>Positive Consequences</h4>
@@ -112,7 +119,12 @@ import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
 
 const props = withDefaults(
-    defineProps<{ adr: ArchitecturalDecisionRecord; mode: Mode; templateVersion: MadrTemplateVersion; fieldVisibility?: FieldVisibility }>(),
+    defineProps<{
+        adr: ArchitecturalDecisionRecord;
+        mode: Mode;
+        templateVersion: MadrTemplateVersion;
+        fieldVisibility?: FieldVisibility;
+    }>(),
     { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
 );
 

@@ -105,7 +105,9 @@ const paginated = computed(() => props.filteredAdrs !== undefined);
 const expanded = ref(false);
 
 // Collapse back to PAGE_SIZE whenever the underlying list changes (e.g. new search).
-watch(allAdrs, () => { expanded.value = false; });
+watch(allAdrs, () => {
+    expanded.value = false;
+});
 
 const visibleAdrs = computed(() =>
     paginated.value || expanded.value ? allAdrs.value : allAdrs.value.slice(0, PAGE_SIZE)

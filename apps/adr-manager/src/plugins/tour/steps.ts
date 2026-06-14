@@ -13,6 +13,7 @@ export interface TourStep {
 }
 
 let modeBeforeToggleStep: Mode | undefined;
+let modeBeforeFieldVisibilityStep: Mode | undefined;
 
 export const tourSteps: TourStep[] = [
     {
@@ -31,6 +32,15 @@ export const tourSteps: TourStep[] = [
         body:
             "Every repository you add is listed here together with the ADRs found inside it. " +
             "Use the Add repository button at the bottom to connect more repositories from your account."
+    },
+    {
+        id: "adr-search",
+        target: '[data-tour="adr-search"]',
+        placement: "right",
+        title: "Search and filter ADRs",
+        body:
+            "Type in the search bar to find ADRs by title across all your repositories. Use the filter button " +
+            "to narrow down decisions by status, tags, or other criteria."
     },
     {
         id: "switch-repository",
@@ -88,6 +98,24 @@ export const tourSteps: TourStep[] = [
             if (modeBeforeToggleStep !== undefined) {
                 store.mode = modeBeforeToggleStep;
                 modeBeforeToggleStep = undefined;
+            }
+        }
+    },
+    {
+        id: "field-visibility",
+        target: '[data-tour="field-visibility"]',
+        placement: "bottom",
+        title: "Customize visible fields",
+        body:
+            "The Fields button is a Professional mode feature that lets you toggle individual Professional mode sections on or off to match your personal preferences.",
+        onEnter: () => {
+            modeBeforeFieldVisibilityStep = store.mode;
+            store.mode = "professional";
+        },
+        onExit: () => {
+            if (modeBeforeFieldVisibilityStep !== undefined) {
+                store.mode = modeBeforeFieldVisibilityStep;
+                modeBeforeFieldVisibilityStep = undefined;
             }
         }
     },

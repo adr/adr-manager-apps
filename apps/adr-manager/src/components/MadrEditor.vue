@@ -2,6 +2,10 @@
     <div class="editor-inner">
         <!-- Tags are app-level metadata, always visible regardless of mode -->
         <div class="tags-bar">
+            <div class="tags-bar-label">
+                Tags
+                <HelpTooltip>Tags are personal labels you can attach to an ADR to help organize and filter your decisions.</HelpTooltip>
+            </div>
             <AdrTagPicker :tags="tags" @update:tags="emit('update:tags', $event)" />
         </div>
 
@@ -260,5 +264,14 @@ const isModeTooLow = computed(() => props.mode === "basic" && minimumRequiredMod
 
 .tags-bar {
     margin-bottom: 14px;
+}
+
+.tags-bar-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
 }
 </style>

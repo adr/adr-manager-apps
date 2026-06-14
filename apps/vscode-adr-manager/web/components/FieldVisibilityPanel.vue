@@ -1,5 +1,5 @@
 <template>
-  <div ref="wrap" class="fvp">
+  <div ref="wrap" class="fvp" data-tour="field-visibility">
     <button
       type="button"
       class="btn btn-ghost fvp-btn"

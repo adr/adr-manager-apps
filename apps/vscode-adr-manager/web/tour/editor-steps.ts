@@ -1,11 +1,25 @@
 import type { TourStep } from "./types";
 
+export interface EditorTourContext {
+  /** Called with `true` when the field-visibility step enters and `false` when it exits.
+   *  Professional views can pass a no-op; basic views use this to temporarily show the panel. */
+  revealFieldVisibilityPanel(on: boolean): void;
+}
+
+const noopContext: EditorTourContext = {
+  revealFieldVisibilityPanel: () => {}
+};
+
 /**
  * The mini-tour shown on first open of any editor page
  * (add-basic, add-professional, view-basic, view-professional).
  * The copy is neutral between creating and saving.
+ *
+ * Pass an EditorTourContext to control the field-visibility step's visibility.
+ * Basic views should reveal the FieldVisibilityPanel on enter and hide it on exit.
+ * Professional views can omit the context (the panel is always visible there).
  */
-export function buildEditorTourSteps(): TourStep[] {
+export function buildEditorTourSteps(context: EditorTourContext = noopContext): TourStep[] {
   return [
     {
       id: "template",
@@ -22,6 +36,16 @@ export function buildEditorTourSteps(): TourStep[] {
       body:
         "Basic shows only the required fields. Professional reveals every optional MADR field such as " +
         "deciders, decision drivers, pros and cons, and links. Switching keeps everything you have typed."
+    },
+    {
+      id: "field-visibility",
+      target: "[data-tour='field-visibility']",
+      placement: "bottom",
+      title: "Customize visible fields",
+      body:
+        "The Fields button is a Professional mode feature that lets you toggle individual Professional mode sections on or off to match your personal preferences.",
+      onEnter: () => context.revealFieldVisibilityPanel(true),
+      onExit: () => context.revealFieldVisibilityPanel(false)
     },
     {
       id: "primary",

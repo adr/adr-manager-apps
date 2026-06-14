@@ -33,6 +33,9 @@ context("First-time tour", () => {
         });
 
         cy.get("[data-cy=tourNext]").click();
+        cy.get("[data-cy=tourStepTitle]").should("contain", "Search and filter ADRs");
+
+        cy.get("[data-cy=tourNext]").click();
         cy.get("[data-cy=tourStepTitle]").should("contain", "Switch repositories");
 
         cy.get("[data-cy=tourNext]").click();
@@ -49,6 +52,10 @@ context("First-time tour", () => {
         cy.get("[data-cy=tourNext]").click();
         cy.get("[data-cy=tourStepTitle]").should("contain", "Toggle optional fields");
         cy.get("[data-cy=decisionDriversPro]").should("exist");
+
+        cy.get("[data-cy=tourNext]").click();
+        cy.get("[data-cy=tourStepTitle]").should("contain", "Customize visible fields");
+        cy.get("[data-cy=fieldsBtn]").should("be.visible");
 
         cy.get("[data-cy=tourNext]").click();
         cy.get("[data-cy=tourStepTitle]").should("contain", "Delete an ADR");

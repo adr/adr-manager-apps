@@ -1,5 +1,5 @@
 <template>
-    <div ref="wrap" class="fvp">
+    <div ref="wrap" class="fvp" data-tour="field-visibility">
         <button type="button" data-cy="fieldsBtn" class="btn btn-ghost fvp-btn" @click="open = !open">
             <span class="mdi mdi-tune-variant" aria-hidden="true"></span>
             Fields

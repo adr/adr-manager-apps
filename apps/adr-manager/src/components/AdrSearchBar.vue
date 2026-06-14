@@ -1,5 +1,5 @@
 <template>
-    <div class="search-bar" data-cy="adr-search-bar">
+    <div class="search-bar" data-cy="adr-search-bar" data-tour="adr-search">
         <!-- Text input + filter toggle row -->
         <div class="search-input-wrap">
             <span class="mdi mdi-magnify search-icon" aria-hidden="true"></span>

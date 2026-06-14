@@ -18,6 +18,12 @@
         <button type="button" class="on">Basic</button>
         <button type="button" @click="switchToProfessionalTemplate">Professional</button>
       </div>
+      <FieldVisibilityPanel
+        v-show="tourRevealFieldVisibility"
+        :template-version="templateVersion"
+        :field-visibility="fieldVisibility"
+        @set-field-visibility="setFieldVisibility"
+      ></FieldVisibilityPanel>
       <button
         type="button"
         class="btn btn-primary"
@@ -62,23 +68,34 @@ import MadrTemplateBasic from "../components/MadrTemplateBasic.vue";
 import AdrTagSection from "../components/AdrTagSection.vue";
 import TourOverlay from "../components/TourOverlay.vue";
 import VersionSelect from "../components/VersionSelect.vue";
+import FieldVisibilityPanel from "../components/FieldVisibilityPanel.vue";
 import vscode from "../mixins/vscode-api-mixin";
 import saveAdr from "../mixins/save-adr";
 import createTourMixin from "../mixins/tour";
 import { buildEditorTourSteps } from "../tour/editor-steps";
+import type { TourStep } from "../tour/types";
 
 export default defineComponent({
   components: {
     MadrTemplateBasic,
     AdrTagSection,
     TourOverlay,
-    VersionSelect
+    VersionSelect,
+    FieldVisibilityPanel
   },
   mixins: [vscode, saveAdr, createTourMixin("editor")],
   data() {
     return {
-      tourSteps: buildEditorTourSteps()
+      tourRevealFieldVisibility: false,
+      tourSteps: [] as TourStep[]
     };
+  },
+  created() {
+    this.tourSteps = buildEditorTourSteps({
+      revealFieldVisibilityPanel: (on) => {
+        this.tourRevealFieldVisibility = on;
+      }
+    });
   },
   methods: {
     /**

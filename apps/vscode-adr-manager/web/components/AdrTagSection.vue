@@ -1,5 +1,9 @@
 <template>
   <div class="tag-section">
+    <div class="tags-header">
+      <span class="tags-label">Tags</span>
+      <HelpTooltip>Tags are personal labels you can attach to an ADR to help organize and filter your decisions.</HelpTooltip>
+    </div>
     <!-- Assigned chips row -->
     <div class="tag-row">
       <span
@@ -87,11 +91,15 @@
 import { defineComponent, PropType, ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { TAG_PALETTE } from "@adr-manager/core";
 import type { Tag } from "@adr-manager/core";
+import HelpTooltip from "./HelpTooltip.vue";
 
 const MAX_RECENT = 4;
 
 export default defineComponent({
   name: "AdrTagSection",
+  components: {
+    HelpTooltip
+  },
   props: {
     tags: {
       type: Array as PropType<Tag[]>,
@@ -182,6 +190,21 @@ export default defineComponent({
 <style scoped>
 .tag-section {
   margin: 14px 0 4px;
+}
+
+.tags-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.tags-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
 }
 
 .tag-row {

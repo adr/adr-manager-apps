@@ -19,7 +19,7 @@
       </button>
     </header>
 
-    <div class="search-bar" data-cy="adr-search-bar">
+    <div class="search-bar" data-cy="adr-search-bar" data-tour="adr-search">
       <div class="search-input-wrap">
         <i class="codicon codicon-search search-icon" aria-hidden="true"></i>
         <input

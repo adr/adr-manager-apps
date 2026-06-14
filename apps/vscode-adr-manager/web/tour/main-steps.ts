@@ -31,6 +31,15 @@ export function buildMainTourSteps(context: MainTourContext): TourStep[] {
           : "")
     },
     {
+      id: "adr-search",
+      target: "[data-tour='adr-search']",
+      placement: "bottom",
+      title: "Search and filter ADRs",
+      body:
+        "Type in the search bar to find ADRs by title. Use the filter button to narrow down decisions " +
+        "by status, tags, or other criteria."
+    },
+    {
       id: "directory",
       target: "[data-tour='adr-directory']",
       placement: "bottom",

@@ -55,9 +55,10 @@ describe("tour step definitions", () => {
     expect(real.find((step) => step.id === "list")?.body).not.toContain("examples");
   });
 
-  test("editor steps have unique ids and data-tour targets", () => {
+  test("editor steps have unique ids, always include field-visibility, and have valid data-tour targets", () => {
     const steps = buildEditorTourSteps();
     expect(new Set(steps.map((step) => step.id)).size).toBe(steps.length);
+    expect(steps.some((s) => s.id === "field-visibility")).toBe(true);
     for (const step of steps) {
       if (step.target) {
         expect(step.target).toMatch(/^\[data-tour='[a-z-]+'\]$/);

@@ -81,7 +81,8 @@
                     <h4>Consequences</h4>
                     <span class="ver-tag">4.0</span>
                     <HelpTooltip>
-                        Good / Neutral / Bad consequences of the decision, one combined list in MADR 4.0.0.
+                        Good / Neutral / Bad consequences of the decision. Press the (Good) label to switch it to between
+                        states.
                     </HelpTooltip>
                 </div>
                 <MadrConsequenceEditor data-cy="consequencesPro" :list="adr.consequences" />

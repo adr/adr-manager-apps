@@ -151,7 +151,6 @@ const allStatuses = computed(() => availableStatuses(store.addedRepositories));
 
 const currentRepoFullName = computed(() => store.currentRepository?.fullName);
 
-// ---- Expansion state ----
 const openedRepos = ref<string[]>([]);
 watch(
     () => store.currentRepository,

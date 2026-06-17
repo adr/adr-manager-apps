@@ -40,7 +40,10 @@
         <div class="subhead">
           <h4>Consequences</h4>
           <span class="ver-tag">4.0</span>
-          <HelpTooltip>Good / Neutral / Bad consequences of the decision, one combined list in MADR 4.0.0.</HelpTooltip>
+          <HelpTooltip
+            >Good / Neutral / Bad consequences of the decision. Press the (Good) label to switch it to between
+            states.</HelpTooltip
+          >
         </div>
         <ConsequenceListEditor :list="consequences" @changed="$emit('updateArray')"></ConsequenceListEditor>
       </div>
@@ -77,20 +80,11 @@
           :list="decisionOutcome.positiveConsequences"
           :sort="true"
           handle=".positive-consequences-grabber"
-          @update="
-            updateHeight('positives');
-            checkMove('positiveConsequences', $event);
-          "
+          @update="onListReordered('positiveConsequences', 'positives')"
         >
-          <div v-for="(_, index) in positiveConsequencesWithBlank" :key="index" class="list-row">
-            <span
-              class="gutter"
-              :class="decisionOutcome.positiveConsequences[index] === '' ? 'dimmed' : 'positive-consequences-grabber'"
-            >
-              <i
-                class="codicon"
-                :class="decisionOutcome.positiveConsequences[index] === '' ? 'codicon-add' : 'codicon-gripper'"
-              ></i>
+          <div v-for="(_, index) in decisionOutcome.positiveConsequences" :key="index" class="list-row">
+            <span class="gutter positive-consequences-grabber">
+              <i class="codicon codicon-gripper"></i>
             </span>
             <textarea
               v-model="decisionOutcome.positiveConsequences[index]"
@@ -112,6 +106,18 @@
             </button>
           </div>
         </draggable>
+        <div class="list-row">
+          <span class="gutter dimmed">
+            <i class="codicon codicon-add"></i>
+          </span>
+          <textarea
+            :value="positiveDraft"
+            class="field auto-grow-positive-consequence"
+            placeholder="a positive consequence…"
+            spellcheck="true"
+            @input="commitDraft('positiveConsequences', ($event.target as HTMLTextAreaElement).value, 'positives')"
+          />
+        </div>
       </div>
       <div v-if="fieldVisibility.negativeConsequences">
         <div class="subhead">
@@ -123,20 +129,11 @@
           :list="decisionOutcome.negativeConsequences"
           :sort="true"
           handle=".negative-consequences-grabber"
-          @update="
-            updateHeight('negatives');
-            checkMove('negativeConsequences', $event);
-          "
+          @update="onListReordered('negativeConsequences', 'negatives')"
         >
-          <div v-for="(_, index) in negativeConsequencesWithBlank" :key="index" class="list-row">
-            <span
-              class="gutter"
-              :class="decisionOutcome.negativeConsequences[index] === '' ? 'dimmed' : 'negative-consequences-grabber'"
-            >
-              <i
-                class="codicon"
-                :class="decisionOutcome.negativeConsequences[index] === '' ? 'codicon-add' : 'codicon-gripper'"
-              ></i>
+          <div v-for="(_, index) in decisionOutcome.negativeConsequences" :key="index" class="list-row">
+            <span class="gutter negative-consequences-grabber">
+              <i class="codicon codicon-gripper"></i>
             </span>
             <textarea
               v-model="decisionOutcome.negativeConsequences[index]"
@@ -158,6 +155,18 @@
             </button>
           </div>
         </draggable>
+        <div class="list-row">
+          <span class="gutter dimmed">
+            <i class="codicon codicon-add"></i>
+          </span>
+          <textarea
+            :value="negativeDraft"
+            class="field auto-grow-negative-consequence"
+            placeholder="a negative consequence…"
+            spellcheck="true"
+            @input="commitDraft('negativeConsequences', ($event.target as HTMLTextAreaElement).value, 'negatives')"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -174,6 +183,9 @@ import TemplateHeader from "./TemplateHeader.vue";
 import { createShortTitle } from "../../src/plugins/utils";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { FieldVisibility } from "@adr-manager/core";
+
+type ConsequenceListKey = "positiveConsequences" | "negativeConsequences";
+type HeightKey = "explanation" | "confirmation" | "positives" | "negatives";
 
 export default defineComponent({
   name: "TemplateDecisionOutcomeProfessionalSection",
@@ -223,7 +235,9 @@ export default defineComponent({
   data() {
     return {
       decisionOutcome: this.decisionOutcomeProp,
-      consequences: this.consequencesProp
+      consequences: this.consequencesProp,
+      positiveDraft: "",
+      negativeDraft: ""
     };
   },
   computed: {
@@ -232,24 +246,6 @@ export default defineComponent({
      */
     chosenOptionText() {
       return this.decisionOutcome.chosenOption !== "" ? createShortTitle(this.decisionOutcome.chosenOption) : "none";
-    },
-    /**
-     * Computes a new positive consequences array with a blank entry at the end of the array such that
-     * a blank input field is rendered for the user to enter a new consequence in.
-     */
-    positiveConsequencesWithBlank() {
-      const positiveConsequencesWithBlank = this.decisionOutcome.positiveConsequences;
-      positiveConsequencesWithBlank.push("");
-      return positiveConsequencesWithBlank;
-    },
-    /**
-     * Computes a new negative consequences array with a blank entry at the end of the array such that
-     * a blank input field is rendered for the user to enter a new consequence in.
-     */
-    negativeConsequencesWithBlank() {
-      const negativeConsequencesWithBlank = this.decisionOutcome.negativeConsequences;
-      negativeConsequencesWithBlank.push("");
-      return negativeConsequencesWithBlank;
     }
   },
   /**
@@ -264,55 +260,57 @@ export default defineComponent({
     this.$emit("validate");
   },
   methods: {
-    /**
-     * Prevents the user to drag an item below an empty input field that is reserved for new inputs.
-     * @param evt The event fired upon causing an update with a drag
-     */
-    checkMove(array: string, evt: any) {
-      if (array === "positiveConsequences") {
-        if (this.decisionOutcome.positiveConsequences[evt.newIndex - 1] === "") {
-          this.decisionOutcome.positiveConsequences[evt.newIndex - 1] =
-            this.decisionOutcome.positiveConsequences[evt.newIndex];
-          this.decisionOutcome.positiveConsequences.splice(evt.newIndex, 1);
-          this.decisionOutcome.positiveConsequences = this.decisionOutcome.positiveConsequences.filter(
-            (positive) => positive !== ""
-          );
-        }
-      } else if (array === "negativeConsequences") {
-        if (this.decisionOutcome.negativeConsequences[evt.newIndex - 1] === "") {
-          this.decisionOutcome.negativeConsequences[evt.newIndex - 1] =
-            this.decisionOutcome.negativeConsequences[evt.newIndex];
-          this.decisionOutcome.negativeConsequences.splice(evt.newIndex, 1);
-          this.decisionOutcome.negativeConsequences = this.decisionOutcome.negativeConsequences.filter(
-            (negative) => negative !== ""
-          );
-        }
-      }
-    },
-    /**
-     * Updates the list of positive/negative consequences.
-     */
-    updateArray(name: string, text: string, index: number, heightKey: string) {
+    emitListUpdate(name: ConsequenceListKey) {
       if (name === "positiveConsequences") {
-        this.decisionOutcome.positiveConsequences.splice(index, 1, text);
-        this.decisionOutcome.positiveConsequences = this.decisionOutcome.positiveConsequences.filter(
-          (positive) => positive !== ""
-        );
         this.$emit("update:positiveConsequences", this.decisionOutcome.positiveConsequences);
-      } else if (name === "negativeConsequences") {
-        this.decisionOutcome.negativeConsequences.splice(index, 1, text);
-        this.decisionOutcome.negativeConsequences = this.decisionOutcome.negativeConsequences.filter(
-          (negative) => negative !== ""
-        );
+      } else {
         this.$emit("update:negativeConsequences", this.decisionOutcome.negativeConsequences);
       }
+    },
+    commitDraft(name: ConsequenceListKey, text: string, heightKey: HeightKey) {
+      if (name === "positiveConsequences") {
+        this.positiveDraft = text;
+      } else {
+        this.negativeDraft = text;
+      }
+      if (text === "") {
+        return;
+      }
+      this.decisionOutcome[name].push(text);
+      if (name === "positiveConsequences") {
+        this.positiveDraft = "";
+      } else {
+        this.negativeDraft = "";
+      }
+      this.emitListUpdate(name);
+      this.$emit("updateArray");
+      this.focusNewDraftRow(name);
+      this.updateHeight(heightKey);
+    },
+    updateArray(name: ConsequenceListKey, text: string, index: number, heightKey: HeightKey) {
+      this.decisionOutcome[name].splice(index, 1, text);
+      this.decisionOutcome[name] = this.decisionOutcome[name].filter((consequence) => consequence !== "");
+      this.emitListUpdate(name);
       this.$emit("updateArray");
       this.updateHeight(heightKey);
+    },
+    onListReordered(name: ConsequenceListKey, heightKey: HeightKey) {
+      this.emitListUpdate(name);
+      this.$emit("updateArray");
+      this.updateHeight(heightKey);
+    },
+    focusNewDraftRow(name: ConsequenceListKey) {
+      const selector =
+        name === "positiveConsequences" ? ".auto-grow-positive-consequence" : ".auto-grow-negative-consequence";
+      this.$nextTick(() => {
+        const rows = document.querySelectorAll(selector) as NodeListOf<HTMLTextAreaElement>;
+        rows[this.decisionOutcome[name].length - 1]?.focus();
+      });
     },
     /**
      * Updated the height of the textarea based on the input.
      */
-    updateHeight(key: string) {
+    updateHeight(key: HeightKey) {
       switch (key) {
         case "explanation": {
           this.$nextTick(() => {

@@ -153,8 +153,6 @@ async function exchangeCodeForTokens(code: string, verifier: string): Promise<Gi
     }
 }
 
-// --- token refresh (rotating: GitLab revokes the old refresh token on use) ---
-
 let refreshPromise: Promise<boolean> | null = null;
 
 /** Single-flight: concurrent requests share one refresh. */

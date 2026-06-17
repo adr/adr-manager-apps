@@ -1,7 +1,9 @@
 <template>
   <div class="list">
-    <div v-for="(consequence, index) in list" :key="index" class="list-row">
-      <span class="gutter"><i class="codicon codicon-gripper"></i></span>
+    <div v-for="(consequence, index) in list" :key="index" class="list-row" @dragover.prevent @drop="move(index)">
+      <span class="gutter" draggable="true" @dragstart="draggedIndex = index" @dragend="draggedIndex = null">
+        <i class="codicon codicon-gripper"></i>
+      </span>
       <button
         type="button"
         class="tone-label"
@@ -60,6 +62,7 @@ export default defineComponent({
   data() {
     return {
       draft: "",
+      draggedIndex: null as number | null,
       rowRefs: [] as HTMLTextAreaElement[]
     };
   },
@@ -100,6 +103,19 @@ export default defineComponent({
         this.remove(index);
       }
     },
+    move(targetIndex: number) {
+      const from = this.draggedIndex;
+      if (from === null || from === targetIndex) {
+        return;
+      }
+      const [moved] = this.list.splice(from, 1);
+      if (moved) {
+        this.list.splice(targetIndex, 0, moved);
+        this.$emit("changed");
+        this.updateHeights();
+      }
+      this.draggedIndex = null;
+    },
     onTextInput() {
       this.$emit("changed");
       this.updateHeights();
@@ -119,7 +135,7 @@ export default defineComponent({
 
 <style scoped>
 .gutter {
-  cursor: default;
+  cursor: grab;
 }
 
 button.tone-label {

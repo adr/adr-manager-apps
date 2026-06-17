@@ -4,7 +4,6 @@ import router from "./plugins/router";
 
 import "@mdi/font/css/materialdesignicons.css";
 import "roboto-fontface/css/roboto/roboto-fontface.css";
-// Self-hosted (P0004: the app must work offline against a private GitLab instance).
 import "@fontsource/geist/400.css";
 import "@fontsource/geist/500.css";
 import "@fontsource/geist/600.css";

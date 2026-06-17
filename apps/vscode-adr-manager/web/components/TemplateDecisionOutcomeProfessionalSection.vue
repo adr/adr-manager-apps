@@ -41,7 +41,7 @@
           <h4>Consequences</h4>
           <span class="ver-tag">4.0</span>
           <HelpTooltip
-            >Good / Neutral / Bad consequences of the decision. Press the (Good) label to switch it to between
+            >Good / Neutral / Bad consequences of the decision. Press the (Good) label to switch it between
             states.</HelpTooltip
           >
         </div>

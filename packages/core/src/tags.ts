@@ -3,12 +3,19 @@ import type { Tag } from "./types";
 // Matches the tag comment injected at the end of an ADR markdown file.
 const TAG_RE = /\n?<!-- adr-manager-tags: (.+?) -->/;
 
+function isTag(value: unknown): value is Tag {
+  if (typeof value !== "object" || value === null) return false;
+  const tag = value as Partial<Record<keyof Tag, unknown>>;
+  return typeof tag.id === "string" && typeof tag.label === "string" && typeof tag.color === "string";
+}
+
 /** Parse tags embedded in ADR markdown. Returns an empty array if none are found. */
 export function parseTagsFromMd(md: string): Tag[] {
   const match = TAG_RE.exec(md);
   if (!match?.[1]) return [];
   try {
-    return JSON.parse(match[1]) as Tag[];
+    const parsed = JSON.parse(match[1]) as unknown;
+    return Array.isArray(parsed) ? parsed.filter(isTag) : [];
   } catch {
     return [];
   }

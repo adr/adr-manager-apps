@@ -47,7 +47,6 @@
         "@adr-manager/eslint-config": "workspace:*",
         "@adr-manager/prettier-config": "workspace:*",
         "@adr-manager/tsconfig": "workspace:*",
-        "@cypress/code-coverage": "^4.0.3",
         "@types/node": "catalog:",
         "@vitejs/plugin-vue": "catalog:",
         "@vitest/coverage-v8": "^4.1.8",

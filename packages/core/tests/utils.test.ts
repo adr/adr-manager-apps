@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { cleanUpString, createShortTitle, naturalCase2snakeCase, snakeCase2naturalCase } from "../src/index";
+import {
+  cleanUpString,
+  createShortTitle,
+  matchOptionTitleMoreRelaxed,
+  matchesIgnoringFormatting,
+  naturalCase2snakeCase,
+  naturalCase2titleCase,
+  snakeCase2naturalCase
+} from "../src/index";
 
 describe("createShortTitle", () => {
   // The same four cases hold with and without stripBackticks (the extension's profile),
@@ -40,6 +48,12 @@ describe("case conversions", () => {
   test("Test naturalCase2snakeCase", () => {
     expect(naturalCase2snakeCase("0005 Use dashes in File names.md")).toBe("0005-use-dashes-in-file-names.md");
   });
+
+  test("naturalCase2titleCase keeps minor words and known initialisms readable", () => {
+    expect(naturalCase2titleCase("introduce adr ids for the madr parser")).toBe(
+      "Introduce ADR IDs for the MADR Parser"
+    );
+  });
 });
 
 describe("cleanUpString", () => {
@@ -50,5 +64,22 @@ describe("cleanUpString", () => {
   test("maps undefined and null to the empty string", () => {
     expect(cleanUpString(undefined)).toBe("");
     expect(cleanUpString(null)).toBe("");
+  });
+});
+
+describe("relaxed matching helpers", () => {
+  test("matchesIgnoringFormatting ignores whitespace and markdown bullet style", () => {
+    expect(matchesIgnoringFormatting("- One\n- Two\n", "* One * Two")).toBe(true);
+    expect(matchesIgnoringFormatting("- One", "- Different")).toBe(false);
+  });
+
+  test("matchOptionTitleMoreRelaxed accepts short titles and optional backtick stripping", () => {
+    expect(matchOptionTitleMoreRelaxed("Use PostgreSQL - durable relational store", "Use PostgreSQL")).toBe(true);
+    expect(matchOptionTitleMoreRelaxed("Use `PostgreSQL` - durable relational store", "Use PostgreSQL")).toBe(false);
+    expect(
+      matchOptionTitleMoreRelaxed("Use `PostgreSQL` - durable relational store", "Use PostgreSQL", {
+        stripBackticks: true
+      })
+    ).toBe(true);
   });
 });

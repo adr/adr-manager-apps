@@ -1,5 +1,4 @@
 import "./commands";
-import "@cypress/code-coverage/support";
 export {
     GITHUB_ADR_REPO_FULL_NAME,
     GITHUB_EMPTY_REPO_BRANCH,

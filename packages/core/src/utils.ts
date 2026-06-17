@@ -135,7 +135,7 @@ export function naturalCase2titleCase(natural: string): string {
  * written by hand still count as conforming to the template a writer produces.
  */
 export function matchesIgnoringFormatting(left: string, right: string): boolean {
-  const normalize = (md: string): string => md.replace(/[ \r\n]/g, "").replace(/- /g, "* ");
+  const normalize = (md: string): string => md.replace(/- /g, "* ").replace(/[ \r\n]/g, "");
   return normalize(left) === normalize(right);
 }
 

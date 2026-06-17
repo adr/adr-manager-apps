@@ -32,6 +32,12 @@ const STATUS_BULLET_RE = /^[*-]\s+[Ss]tatus:\s*(.+)$/m;
 // MADR 4.x front-matter block: "status: accepted"
 const STATUS_YAML_RE = /^---[\s\S]*?\nstatus:\s*(\S[^\n]*)[\s\S]*?---/;
 
+function normalizeStatus(value: string): string {
+  const trimmed = value.trim();
+  const quoted = /^(['"])(.*)\1$/.exec(trimmed);
+  return (quoted?.[2] ?? trimmed).toLowerCase();
+}
+
 /**
  * Returns the title extracted from the first H1 heading in the markdown,
  * or an empty string if none is found.
@@ -46,9 +52,10 @@ export function extractAdrTitle(md: string): string {
  * Returns an empty string if no status is found.
  */
 export function extractAdrStatus(md: string): string {
-  const yaml = STATUS_YAML_RE.exec(md)?.[1]?.trim();
-  if (yaml) return yaml.toLowerCase();
-  return STATUS_BULLET_RE.exec(md)?.[1]?.trim().toLowerCase() ?? "";
+  const yaml = STATUS_YAML_RE.exec(md)?.[1];
+  if (yaml) return normalizeStatus(yaml);
+  const bullet = STATUS_BULLET_RE.exec(md)?.[1];
+  return bullet ? normalizeStatus(bullet) : "";
 }
 
 // ── Searchable shape (minimal, serializable) ──────────────────────────────────

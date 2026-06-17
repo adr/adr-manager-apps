@@ -308,9 +308,8 @@ Docs can be found at https://vuex.vuejs.org/.
 ## Links
 
 * [This is a link](example.org)
-`,
-
-  ];
+`
+];
 
 /**
  * Pairs describing the expected behaviour of the md2adr parser. When given the markdown it should output the ADR.

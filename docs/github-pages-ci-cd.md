@@ -190,7 +190,6 @@ Use this as the setup checklist:
 - Allow GitHub Actions to write repository contents.
 - Run `Web · Build & Publish` once to create `gh-pages`.
 - Configure GitHub Pages to deploy from `gh-pages` and `/root`.
-- Protect `main` with `Repo · Checks` and `Web · Tests`.
 - Confirm Firebase allows `adr.github.io`.
 - Configure GitLab.com `VITE_GITLAB_CLIENT_ID` only if hosted GitLab.com sign-in is required.
 - Verify `https://adr.github.io/adr-manager-apps/#/manager` after the first deploy.

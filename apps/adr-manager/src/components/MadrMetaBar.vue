@@ -18,7 +18,7 @@
             <MadrStatusChip v-model="adr.status" />
         </div>
 
-        <div v-if="templateVersion === '2.1.2' && fieldVisibility.deciders" class="meta-field">
+        <div v-if="template.peopleFields === 'deciders' && fieldVisibility.deciders" class="meta-field">
             <label>
                 Deciders
                 <HelpTooltip>Everyone involved in the decision, e.g. separated with commas.</HelpTooltip>
@@ -35,7 +35,7 @@
             </span>
         </div>
 
-        <template v-else-if="templateVersion !== '2.1.2'">
+        <template v-else-if="template.peopleFields === 'decisionMakersConsultedInformed'">
             <div v-if="fieldVisibility.deciders" class="meta-field">
                 <label>
                     Decision-makers
@@ -92,7 +92,8 @@
 <script setup lang="ts">
 import HelpTooltip from "./HelpTooltip.vue";
 import MadrStatusChip from "./MadrStatusChip.vue";
-import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import { computed } from "vue";
+import { DEFAULT_FIELD_VISIBILITY, getMadrTemplateAdapter } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 
@@ -105,7 +106,8 @@ const props = withDefaults(
     { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
 );
 
-// Deciders and decision-makers name the same people, so editing either keeps both in sync.
+const template = computed(() => getMadrTemplateAdapter(props.templateVersion));
+
 function setDeciders(value: string): void {
     props.adr.deciders = value;
     props.adr.decisionMakers = value;

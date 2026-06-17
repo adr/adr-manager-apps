@@ -1,54 +1,60 @@
 import {
   md2adr as coreMd2adr,
   adr2md as coreAdr2md,
-  md2adr400,
-  adr2md400,
   detectMadrVersion,
   matchesIgnoringFormatting,
+  parseMadr,
+  roundTripsMadr,
+  serializeMadr,
   stripTagComment,
   type ArchitecturalDecisionRecord,
+  type Adr2MdOptions,
+  type Md2AdrOptions,
   type MadrTemplateVersion
 } from "@adr-manager/core";
 
 export { detectMadrVersion };
 export type { MadrTemplateVersion };
 
-// The extension passes core's behaviour flags; see core's md2adr/adr2md option docs.
+const PARSE_OPTIONS = {
+  titleCase: true,
+  stripBackticks: true,
+  aggressiveCleanup: true,
+  trackErrors: true
+} satisfies Md2AdrOptions;
+
+const SERIALIZE_OPTIONS = {
+  emitYaml: true,
+  titleCase: true,
+  sanitizeChosenOption: true,
+  stripBackticks: true,
+  aggressiveCleanup: true
+} satisfies Adr2MdOptions;
+
 export function md2adr(md: string): ArchitecturalDecisionRecord {
-  return coreMd2adr(md, { titleCase: true, stripBackticks: true, aggressiveCleanup: true, trackErrors: true });
+  return coreMd2adr(md, PARSE_OPTIONS);
 }
 
 export function adr2md(adr: ArchitecturalDecisionRecord): string {
-  return coreAdr2md(adr, {
-    emitYaml: true,
-    titleCase: true,
-    sanitizeChosenOption: true,
-    stripBackticks: true,
-    aggressiveCleanup: true
-  });
+  return coreAdr2md(adr, SERIALIZE_OPTIONS);
 }
 
-/**
- * Parses a markdown document with the parser of its (detected) template version.
- * The 4.0.0 reader has no error listener, so conformance is judged by whether the
- * document round-trips through the writer.
- */
 export function parseAdr(
   md: string,
   version: MadrTemplateVersion = detectMadrVersion(md)
 ): ArchitecturalDecisionRecord {
-  // Strip the tag HTML comment before the ANTLR parser sees the markdown.
-  // Without this, the comment text is captured as part of the last open-ended
-  // field (typically the "because" explanation) when no section heading follows it.
   const cleanMd = stripTagComment(md);
-  if (version === "4.0.0") {
-    const adr = md2adr400(cleanMd);
-    adr.conforming = matchesIgnoringFormatting(cleanMd, adr2md400(adr));
-    return adr;
+  const adr = parseMadr(cleanMd, version, PARSE_OPTIONS);
+  if (version !== "2.1.2") {
+    adr.conforming = roundTripsMadr(cleanMd, version, {
+      parse: PARSE_OPTIONS,
+      serialize: SERIALIZE_OPTIONS,
+      compare: matchesIgnoringFormatting
+    });
   }
-  return md2adr(cleanMd);
+  return adr;
 }
 
 export function serializeAdr(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {
-  return version === "4.0.0" ? adr2md400(adr) : adr2md(adr);
+  return serializeMadr(adr, version, SERIALIZE_OPTIONS);
 }

@@ -1,6 +1,6 @@
 import { ArchitecturalDecisionRecord } from "./classes";
 import { createShortTitle, matchOptionTitleMoreRelaxed } from "./utils";
-import type { Consequence, ConsequenceKind, MadrTemplateVersion, Option } from "./types";
+import type { Consequence, ConsequenceKind, Option } from "./types";
 
 /**
  * Reader and writer for the MADR 4.0.0 template. Unlike the 2.1.2 template, 4.0.0
@@ -14,25 +14,6 @@ const ARGUMENT_PATTERN = /^\* (Good|Neutral|Bad), because (.*)$/;
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-/**
- * Guesses which MADR template a markdown document follows. YAML front matter and the
- * sections or argument tones introduced by MADR 4.0.0 mark a document as 4.0.0,
- * everything else is treated as the classic 2.1.2 template.
- */
-export function detectMadrVersion(md: string): MadrTemplateVersion {
-  const normalized = md.replace(/\r\n/g, "\n");
-  if (
-    normalized.startsWith("---\n") ||
-    /^### Consequences$/m.test(normalized) ||
-    /^### Confirmation$/m.test(normalized) ||
-    /^## More Information$/m.test(normalized) ||
-    /^\* Neutral, because /m.test(normalized)
-  ) {
-    return "4.0.0";
-  }
-  return "2.1.2";
 }
 
 function optionHasDetails(option: Option): boolean {

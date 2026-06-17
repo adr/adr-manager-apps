@@ -8,20 +8,20 @@
         </button>
         <div v-if="open" class="menu">
             <div
-                v-for="version in VERSIONS"
-                :key="version.id"
+                v-for="version in MADR_TEMPLATE_ADAPTERS"
+                :key="version.version"
                 data-cy="versionOption"
                 class="menu-item"
-                :class="{ sel: modelValue === version.id }"
-                @click="select(version.id)"
+                :class="{ sel: modelValue === version.version }"
+                @click="select(version.version)"
             >
                 <span class="mi-radio"></span>
                 <div>
                     <div class="mi-title">
                         {{ version.label }}
-                        <small>{{ version.sub }}</small>
+                        <small>{{ version.subLabel }}</small>
                     </div>
-                    <div class="mi-desc">{{ version.desc }}</div>
+                    <div class="mi-desc">{{ version.description }}</div>
                 </div>
             </div>
         </div>
@@ -31,29 +31,8 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from "vue";
 import { useClickOutside } from "@/composables/useClickOutside";
+import { MADR_TEMPLATE_ADAPTERS } from "@adr-manager/core";
 import type { MadrTemplateVersion } from "@adr-manager/core";
-
-interface VersionEntry {
-    id: MadrTemplateVersion;
-    label: string;
-    sub: string;
-    desc: string;
-}
-
-const VERSIONS: VersionEntry[] = [
-    {
-        id: "4.0.0",
-        label: "MADR 4.0.0",
-        sub: "latest",
-        desc: "Decision-makers / consulted / informed, combined Consequences, Confirmation, neutral arguments and a More Information section."
-    },
-    {
-        id: "2.1.2",
-        label: "MADR 2.1.2",
-        sub: "classic",
-        desc: "The classic template: deciders, Technical Story, separate Positive / Negative Consequences and Links."
-    }
-];
 
 defineProps<{ modelValue: MadrTemplateVersion }>();
 const emit = defineEmits<{ "update:modelValue": [MadrTemplateVersion] }>();

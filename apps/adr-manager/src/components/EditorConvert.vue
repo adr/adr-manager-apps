@@ -30,7 +30,7 @@ import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { markdown } from "@codemirror/lang-markdown";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
-import { adr2md, adr2md400, md2adr, md2adr400 } from "@/plugins/parser";
+import { parseMadr, serializeMadr } from "@/plugins/parser";
 import { debounce } from "@/utils/debounce";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 
@@ -47,10 +47,7 @@ let mergeMd = props.raw;
 const baseExtensions = [markdown(), syntaxHighlighting(defaultHighlightStyle), EditorView.lineWrapping];
 
 function rightDoc(): string {
-    if (props.templateVersion === "4.0.0") {
-        return adr2md400(md2adr400(mergeMd));
-    }
-    return adr2md(md2adr(mergeMd));
+    return serializeMadr(parseMadr(mergeMd, props.templateVersion), props.templateVersion);
 }
 
 const scheduleRight = debounce(() => {

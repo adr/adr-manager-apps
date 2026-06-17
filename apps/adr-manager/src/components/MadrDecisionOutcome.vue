@@ -44,7 +44,7 @@
         <div
             v-if="
                 mode === 'professional' &&
-                templateVersion === '2.1.2' &&
+                !hasTemplateField('consequences') &&
                 (fieldVisibility.positiveConsequences || fieldVisibility.negativeConsequences)
             "
             class="outcome-cols"
@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <template v-if="mode === 'professional' && templateVersion === '4.0.0'">
+        <template v-if="mode === 'professional' && hasTemplateField('consequences')">
             <div v-if="fieldVisibility.consequences" class="v4-block">
                 <div class="subhead">
                     <h4>Consequences</h4>
@@ -86,7 +86,7 @@
                 </div>
                 <MadrConsequenceEditor data-cy="consequencesPro" :list="adr.consequences" />
             </div>
-            <div v-if="fieldVisibility.confirmation" class="v4-block">
+            <div v-if="hasTemplateField('confirmation') && fieldVisibility.confirmation" class="v4-block">
                 <div class="subhead">
                     <h4>Confirmation</h4>
                     <span class="ver-tag">4.0</span>
@@ -113,7 +113,7 @@ import MadrConsequenceEditor from "./MadrConsequenceEditor.vue";
 import MadrListEditor from "./MadrListEditor.vue";
 import { createShortTitle } from "@/plugins/classes";
 import { useClickOutside } from "@/composables/useClickOutside";
-import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import { DEFAULT_FIELD_VISIBILITY, getMadrTemplateAdapter, hasMadrTemplateField } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
@@ -135,6 +135,11 @@ useClickOutside(chosenWrap, () => (suggestionsOpen.value = false));
 const optionTitles = computed(() =>
     props.adr.consideredOptions.map((option) => createShortTitle(option.title)).filter((title) => title !== "")
 );
+const template = computed(() => getMadrTemplateAdapter(props.templateVersion));
+
+function hasTemplateField(key: keyof FieldVisibility): boolean {
+    return hasMadrTemplateField(template.value, key);
+}
 
 function selectOption(title: string): void {
     props.adr.decisionOutcome.chosenOption = title;

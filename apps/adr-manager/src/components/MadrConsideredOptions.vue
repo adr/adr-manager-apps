@@ -107,7 +107,7 @@
                                 :tone="{ kind: 'good', label: 'Good' }"
                             />
                         </div>
-                        <div v-if="templateVersion === '4.0.0'">
+                        <div v-if="template.optionArgumentKinds.includes('neutral')">
                             <div class="subhead">
                                 <h4>Neutral, because…</h4>
                                 <span class="ver-tag">4.0</span>
@@ -166,7 +166,7 @@ import MadrListEditor from "./MadrListEditor.vue";
 import ModeSwitchAlert from "./ModeSwitchAlert.vue";
 import { createShortTitle } from "@/plugins/classes";
 import { matchOptionTitleMoreRelaxed } from "@/plugins/parser";
-import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import { DEFAULT_FIELD_VISIBILITY, getMadrTemplateAdapter } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 import type { Option } from "@/types/adr";
@@ -188,6 +188,7 @@ const draggedIndex = ref<number | null>(null);
 const titleRefs = new Map<number, HTMLInputElement>();
 
 const professional = computed(() => props.mode === "professional");
+const template = computed(() => getMadrTemplateAdapter(props.templateVersion));
 
 const isModeTooLow = computed(
     () =>

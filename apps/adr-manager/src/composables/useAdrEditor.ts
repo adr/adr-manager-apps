@@ -1,6 +1,6 @@
 import { readonly, ref, watch } from "vue";
 import { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import { adr2md, adr2md400, detectMadrVersion, md2adr, md2adr400 } from "@/plugins/parser";
+import { detectMadrVersion, getMadrTemplateAdapter, parseMadr, serializeMadr } from "@/plugins/parser";
 import { store } from "@/plugins/store";
 import {
     matchesIgnoringFormatting,
@@ -14,7 +14,7 @@ import type { AdrFile, Tag } from "@/types/adr";
 
 function serializeAdr(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {
     const filtered = applyFieldVisibilityFilter(adr, store.fieldVisibility);
-    return version === "4.0.0" ? adr2md400(filtered) : adr2md(filtered);
+    return serializeMadr(filtered, version);
 }
 
 function serialize(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion, tags: Tag[]): string {
@@ -22,7 +22,7 @@ function serialize(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersio
 }
 
 function parse(markdown: string, version: MadrTemplateVersion): ArchitecturalDecisionRecord {
-    return version === "4.0.0" ? md2adr400(markdown) : md2adr(markdown);
+    return parseMadr(markdown, version);
 }
 
 // Strip the tag comment before comparing so tags never break the round-trip check.
@@ -120,17 +120,13 @@ export function useAdrEditor() {
         if (version === templateVersion.value) {
             return;
         }
+        const previousVersion = templateVersion.value;
         templateVersion.value = version;
         if (requiresConversion.value) {
             return;
         }
         const record = adr.value;
-        if (version === "4.0.0" && record.decisionMakers === "" && record.deciders !== "") {
-            record.decisionMakers = record.deciders;
-        }
-        if (version === "2.1.2" && record.deciders === "" && record.decisionMakers !== "") {
-            record.deciders = record.decisionMakers;
-        }
+        getMadrTemplateAdapter(version).carryOverOnSwitch(record, previousVersion);
         markdown.value = serialize(record, version, tags.value);
     }
 

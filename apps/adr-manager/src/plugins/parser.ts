@@ -4,6 +4,11 @@ export {
     md2adr400,
     adr2md400,
     detectMadrVersion,
+    getMadrTemplateAdapter,
+    MADR_TEMPLATE_ADAPTERS,
+    parseMadr,
+    roundTripsMadr,
+    serializeMadr,
     snakeCase2naturalCase,
     naturalCase2snakeCase,
     matchOptionTitleMoreRelaxed

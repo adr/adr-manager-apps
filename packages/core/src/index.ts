@@ -11,7 +11,22 @@ export type {
 export { ArchitecturalDecisionRecord } from "./classes";
 export { md2adr, adr2md } from "./parser";
 export type { Md2AdrOptions, Adr2MdOptions } from "./parser";
-export { md2adr400, adr2md400, detectMadrVersion } from "./madr400";
+export { md2adr400, adr2md400 } from "./madr400";
+export {
+  MADR_TEMPLATE_ADAPTERS,
+  detectMadrVersion,
+  getMadrTemplateAdapter,
+  hasMadrTemplateField,
+  parseMadr,
+  roundTripsMadr,
+  serializeMadr
+} from "./templates";
+export type {
+  MadrRoundTripOptions,
+  MadrTemplateAdapter,
+  MadrTemplateField,
+  MadrTemplatePeopleFields
+} from "./templates";
 export {
   cleanUpString,
   createShortTitle,

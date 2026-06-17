@@ -52,7 +52,7 @@
         />
 
         <div
-            v-if="mode === 'professional' && templateVersion === '2.1.2' && fieldVisibility.technicalStory"
+            v-if="mode === 'professional' && hasTemplateField('technicalStory') && fieldVisibility.technicalStory"
             class="tech-story"
         >
             <div class="subhead">
@@ -104,7 +104,7 @@
             :field-visibility="fieldVisibility"
         />
 
-        <template v-if="mode === 'professional' && templateVersion === '2.1.2' && fieldVisibility.links">
+        <template v-if="mode === 'professional' && hasTemplateField('links') && fieldVisibility.links">
             <hr class="divider" />
             <div class="section-head">
                 <h3>Links</h3>
@@ -118,7 +118,9 @@
             />
         </template>
 
-        <template v-if="mode === 'professional' && templateVersion === '4.0.0' && fieldVisibility.moreInformation">
+        <template
+            v-if="mode === 'professional' && hasTemplateField('moreInformation') && fieldVisibility.moreInformation"
+        >
             <hr class="divider" />
             <div class="section-head">
                 <h3>More Information</h3>
@@ -166,7 +168,7 @@ import ModeSwitchAlert from "./ModeSwitchAlert.vue";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
-import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
+import { DEFAULT_FIELD_VISIBILITY, getMadrTemplateAdapter, hasMadrTemplateField } from "@adr-manager/core";
 import type { FieldVisibility } from "@adr-manager/core";
 import type { Tag } from "@/types/adr";
 
@@ -188,6 +190,11 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{ "update:tags": [Tag[]] }>();
+const template = computed(() => getMadrTemplateAdapter(props.templateVersion));
+
+function hasTemplateField(key: keyof FieldVisibility): boolean {
+    return hasMadrTemplateField(template.value, key);
+}
 
 function minimumRequiredMode(adr: ArchitecturalDecisionRecord): Mode {
     const hasProfessionalData =

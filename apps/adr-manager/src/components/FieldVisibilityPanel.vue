@@ -25,41 +25,8 @@
 import { computed, ref, useTemplateRef } from "vue";
 import { useClickOutside } from "@/composables/useClickOutside";
 import { store } from "@/plugins/store";
-import type { FieldKey, MadrTemplateVersion } from "@adr-manager/core";
-
-interface FieldEntry {
-    key: FieldKey;
-    label: string;
-}
-
-const FIELDS_212: FieldEntry[] = [
-    { key: "date", label: "Date" },
-    { key: "status", label: "Status" },
-    { key: "deciders", label: "Deciders" },
-    { key: "technicalStory", label: "Technical Story" },
-    { key: "decisionDrivers", label: "Decision Drivers" },
-    { key: "optionDescription", label: "Option Description" },
-    { key: "optionProsAndCons", label: "Option Pros & Cons" },
-    { key: "positiveConsequences", label: "Positive Consequences" },
-    { key: "negativeConsequences", label: "Negative Consequences" },
-    { key: "links", label: "Links" },
-    { key: "relevantFiles", label: "Relevant Files" }
-];
-
-const FIELDS_400: FieldEntry[] = [
-    { key: "date", label: "Date" },
-    { key: "status", label: "Status" },
-    { key: "deciders", label: "Decision-makers" },
-    { key: "consulted", label: "Consulted" },
-    { key: "informed", label: "Informed" },
-    { key: "decisionDrivers", label: "Decision Drivers" },
-    { key: "optionDescription", label: "Option Description" },
-    { key: "optionProsAndCons", label: "Option Pros & Cons" },
-    { key: "consequences", label: "Consequences" },
-    { key: "confirmation", label: "Confirmation" },
-    { key: "moreInformation", label: "More Information" },
-    { key: "relevantFiles", label: "Relevant Files" }
-];
+import { getMadrTemplateAdapter } from "@adr-manager/core";
+import type { MadrTemplateVersion } from "@adr-manager/core";
 
 const props = defineProps<{ templateVersion: MadrTemplateVersion }>();
 
@@ -67,7 +34,7 @@ const open = ref(false);
 const wrap = useTemplateRef<HTMLElement>("wrap");
 useClickOutside(wrap, () => (open.value = false));
 
-const visibleFields = computed(() => (props.templateVersion === "4.0.0" ? FIELDS_400 : FIELDS_212));
+const visibleFields = computed(() => getMadrTemplateAdapter(props.templateVersion).fields);
 </script>
 
 <style scoped>

@@ -29,8 +29,12 @@ export default defineComponent({
     HelpTooltip
   },
   props: {
-    technicalStory: String
+    technicalStory: {
+      type: String,
+      default: ""
+    }
   },
+  emits: ["update:technicalStory", "validate"],
   mounted() {
     this.updateHeight();
   },

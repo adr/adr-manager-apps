@@ -203,12 +203,12 @@ export default defineComponent({
         positiveConsequences: string[];
         negativeConsequences: string[];
       }>,
-      default: {
+      default: () => ({
         chosenOption: "",
         explanation: "",
         positiveConsequences: [] as string[],
         negativeConsequences: [] as string[]
-      }
+      })
     },
     consequencesProp: {
       type: Array as PropType<{ kind: string; text: string }[]>,
@@ -227,6 +227,14 @@ export default defineComponent({
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
     }
   },
+  emits: [
+    "update:confirmation",
+    "update:explanation",
+    "update:negativeConsequences",
+    "update:positiveConsequences",
+    "updateArray",
+    "validate"
+  ],
   setup() {
     return {
       v$: useVuelidate()

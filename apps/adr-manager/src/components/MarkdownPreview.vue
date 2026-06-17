@@ -8,9 +8,39 @@ import { marked } from "marked";
 
 const props = withDefaults(defineProps<{ value?: string }>(), { value: "" });
 
+function isSafeUrl(url: string): boolean {
+    return !/^\s*(?:javascript|data|vbscript):/iu.test(url);
+}
+
+function sanitizeMarkdownHtml(html: string): string {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+
+    template.content
+        .querySelectorAll("script, style, iframe, object, embed, link, meta, base, form")
+        .forEach((node) => {
+            node.remove();
+        });
+
+    template.content.querySelectorAll("*").forEach((node) => {
+        for (const attribute of Array.from(node.attributes)) {
+            const name = attribute.name.toLowerCase();
+            if (name.startsWith("on") || name === "style") {
+                node.removeAttribute(attribute.name);
+                continue;
+            }
+            if ((name === "href" || name === "src") && !isSafeUrl(attribute.value)) {
+                node.removeAttribute(attribute.name);
+            }
+        }
+    });
+
+    return template.innerHTML;
+}
+
 const compiledMarkdown = computed<string>(() => {
     const html = marked.parse(props.value);
-    return typeof html === "string" ? html : "";
+    return typeof html === "string" ? sanitizeMarkdownHtml(html) : "";
 });
 </script>
 

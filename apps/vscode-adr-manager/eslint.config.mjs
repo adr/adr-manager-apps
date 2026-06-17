@@ -20,5 +20,13 @@ export default [
       "vue/no-use-v-if-with-v-for": "warn",
       "vue/no-side-effects-in-computed-properties": "warn"
     }
+  },
+  {
+    files: ["web/test/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "vue/one-component-per-file": "off",
+      "vue/order-in-components": "off"
+    }
   }
 ];

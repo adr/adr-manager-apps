@@ -24,7 +24,7 @@ export function getNonce(): string {
  * The characters '#' and '?' are prohibited to avoid URI parsing issues.
  */
 export function matchesMadrTitleFormat(name: string) {
-  return name.match(/^\d{4}((-|_)[^\s-_?*:\"<>|/\\]+)+\.md$/);
+  return name.match(/^\d{4}((-|_)[^\s-_?*:"<>|/\\]+)+\.md$/);
 }
 
 /**

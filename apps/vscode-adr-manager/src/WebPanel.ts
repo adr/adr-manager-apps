@@ -560,16 +560,10 @@ export class WebPanel {
     if (this._panel.title !== "ADR Manager") {
       return;
     }
-    let workspaceFolders = [] as string[];
-    if (
-      isSingleRootWorkspace() &&
-      treatAsMultiRoot() &&
-      (await containsOnlyRootFolders(getWorkspaceFolders()[0].uri))
-    ) {
-      workspaceFolders = await getAllChildRootFoldersAsStrings(getWorkspaceFolders()[0].uri);
-    } else {
-      workspaceFolders = getWorkspaceFolderNames();
-    }
+    const workspaceFolders =
+      isSingleRootWorkspace() && treatAsMultiRoot() && (await containsOnlyRootFolders(getWorkspaceFolders()[0].uri))
+        ? await getAllChildRootFoldersAsStrings(getWorkspaceFolders()[0].uri)
+        : getWorkspaceFolderNames();
     this._panel.webview.postMessage({
       command: "getWorkspaceFolders",
       workspaceFolders: JSON.stringify(workspaceFolders)

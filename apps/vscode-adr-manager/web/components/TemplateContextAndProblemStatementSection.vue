@@ -36,8 +36,12 @@ export default defineComponent({
     TemplateHeader
   },
   props: {
-    contextAndProblemStatementProp: String
+    contextAndProblemStatementProp: {
+      type: String,
+      default: ""
+    }
   },
+  emits: ["update:contextAndProblemStatement", "validate"],
   setup() {
     return {
       v$: useValidate()

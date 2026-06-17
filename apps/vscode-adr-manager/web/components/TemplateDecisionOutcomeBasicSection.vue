@@ -60,14 +60,15 @@ export default defineComponent({
         positiveConsequences: string[];
         negativeConsequences: string[];
       }>,
-      default: {
+      default: () => ({
         chosenOption: "",
         explanation: "",
         positiveConsequences: [] as string[],
         negativeConsequences: [] as string[]
-      }
+      })
     }
   },
+  emits: ["update:explanation", "validate"],
   setup() {
     return {
       v$: useValidate()

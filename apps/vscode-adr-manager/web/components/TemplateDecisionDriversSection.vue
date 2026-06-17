@@ -13,7 +13,7 @@
       handle=".drivers-grabber"
       @update="
         updateHeight();
-        checkMove;
+        checkMove($event);
       "
     >
       <div v-for="(_, index) in decisionDriversWithBlank" :key="index" class="list-row">
@@ -55,9 +55,10 @@ export default defineComponent({
   props: {
     decisionDriversProp: {
       type: Array as PropType<string[]>,
-      default: []
+      default: () => []
     }
   },
+  emits: ["update:decisionDrivers"],
   data() {
     return {
       decisionDrivers: this.decisionDriversProp
@@ -82,7 +83,7 @@ export default defineComponent({
      * Prevents the user to drag an item below an empty input field that is reserved for new inputs.
      * @param evt The event fired upon causing an update with a drag
      */
-    checkMove(evt: any) {
+    checkMove(evt: { newIndex: number }) {
       if (this.decisionDrivers[evt.newIndex - 1] === "") {
         this.decisionDrivers[evt.newIndex - 1] = this.decisionDrivers[evt.newIndex];
         this.decisionDrivers.splice(evt.newIndex, 1);

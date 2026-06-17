@@ -23,7 +23,7 @@ export default [
     rules: {
       "vue/multi-word-component-names": "off",
       // Deliberate patterns in these apps; keep advisory rather than blocking the lint gate.
-      "vue/no-mutating-props": "warn",
+      "vue/no-mutating-props": ["warn", { shallowOnly: true }],
       "vue/no-v-text-v-html-on-component": "warn"
     }
   },

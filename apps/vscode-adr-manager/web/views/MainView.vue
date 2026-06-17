@@ -213,7 +213,7 @@ export default defineComponent({
      * from all workspace folders is displayed at the top.
      */
     sortedAdrs() {
-      return this.allAdrs.sort((a, b) => {
+      return [...this.allAdrs].sort((a, b) => {
         return (
           a.relativePath.localeCompare(b.relativePath) ||
           a.fileName.localeCompare(b.fileName, undefined, { numeric: true })

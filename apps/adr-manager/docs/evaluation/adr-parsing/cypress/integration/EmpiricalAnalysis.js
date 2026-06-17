@@ -1,7 +1,4 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
-
-var REPO_NAMES = [
+const REPO_NAMES = [
     "adr-manager-anonymous/adr-j",
     "adr-manager-anonymous/adr-log",
     "adr-manager-anonymous/adr-tools",
@@ -49,10 +46,9 @@ context("Empirically test if ADRs can be opened by the ADR-Manager and count how
 
     });
 
-    for (var j = 0; j < REPO_NAMES.length; j++) {
-        let i = j
+    for (let i = 0; i < REPO_NAMES.length; i++) {
         function testDiff() {
-            if (i == 0) {
+            if (i === 0) {
                 cy.writeFile("cypress/fixtures/CounterDiffAllRepos.json", {
                     counter: 0
                 });
@@ -89,7 +85,7 @@ context("Empirically test if ADRs can be opened by the ADR-Manager and count how
             cy.wait("@showRepos", { timeout: 10000 });
 
             cy.get("[data-cy=adrList]")
-                .each(($adr, index, $adrs) => {
+                .each(($adr, _index, _$adrs) => {
                     cy.get($adr).click();
                     cy.get("header").then($a => {
                         cy.log("text", $a.text());

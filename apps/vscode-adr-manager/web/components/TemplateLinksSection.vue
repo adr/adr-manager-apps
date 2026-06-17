@@ -10,7 +10,7 @@
       handle=".links-grabber"
       @update="
         updateHeight();
-        checkMove;
+        checkMove($event);
       "
     >
       <div v-for="(_, index) in linksWithBlank" :key="index" class="list-row">
@@ -46,9 +46,10 @@ export default defineComponent({
   props: {
     linksProp: {
       type: Array as PropType<string[]>,
-      default: []
+      default: () => []
     }
   },
+  emits: ["update:links"],
   data() {
     return {
       links: this.linksProp
@@ -73,7 +74,7 @@ export default defineComponent({
      * Prevents the user to drag an item below an empty input field that is reserved for new inputs.
      * @param evt The event fired upon causing an update with a drag
      */
-    checkMove(evt: any) {
+    checkMove(evt: { newIndex: number }) {
       if (this.links[evt.newIndex - 1] === "") {
         this.links[evt.newIndex - 1] = this.links[evt.newIndex];
         this.links.splice(evt.newIndex, 1);

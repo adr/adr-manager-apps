@@ -147,12 +147,30 @@ export default defineComponent({
     HelpTooltip
   },
   props: {
-    date: String,
-    status: String,
-    deciders: String,
-    decisionMakers: String,
-    consulted: String,
-    informed: String,
+    date: {
+      type: String,
+      default: ""
+    },
+    status: {
+      type: String,
+      default: ""
+    },
+    deciders: {
+      type: String,
+      default: ""
+    },
+    decisionMakers: {
+      type: String,
+      default: ""
+    },
+    consulted: {
+      type: String,
+      default: ""
+    },
+    informed: {
+      type: String,
+      default: ""
+    },
     templateVersion: {
       type: String,
       default: "2.1.2"
@@ -162,6 +180,15 @@ export default defineComponent({
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
     }
   },
+  emits: [
+    "update:consulted",
+    "update:date",
+    "update:deciders",
+    "update:decisionMakers",
+    "update:informed",
+    "update:status",
+    "validate"
+  ],
   computed: {
     statusTone() {
       const status = (this.status ?? "").toLowerCase();

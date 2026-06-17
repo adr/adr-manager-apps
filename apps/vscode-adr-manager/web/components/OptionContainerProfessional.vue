@@ -191,23 +191,29 @@ export default defineComponent({
     draggable: VueDraggableNext
   },
   props: {
-    titleProp: String,
-    description: String,
+    titleProp: {
+      type: String,
+      default: ""
+    },
+    description: {
+      type: String,
+      default: ""
+    },
     chosen: {
       type: Boolean,
       default: false
     },
     prosProp: {
       type: Array as PropType<string[]>,
-      default: []
+      default: () => []
     },
     neutralsProp: {
       type: Array as PropType<string[]>,
-      default: []
+      default: () => []
     },
     consProp: {
       type: Array as PropType<string[]>,
-      default: []
+      default: () => []
     },
     templateVersion: {
       type: String,
@@ -218,6 +224,15 @@ export default defineComponent({
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
     }
   },
+  emits: [
+    "deleteOption",
+    "selectOption",
+    "update:cons",
+    "update:description",
+    "update:neutrals",
+    "update:pros",
+    "update:title"
+  ],
   setup() {
     return {
       v$: useValidate()

@@ -33,7 +33,7 @@ import { required, helpers } from "@vuelidate/validators";
 import HelpTooltip from "./HelpTooltip.vue";
 
 const noInvalidCharacters = (value: string) => {
-  return !value.match(/[?*:\"<>|/\\]/);
+  return !value.match(/[?*:"<>|/\\]/);
 };
 
 export default defineComponent({
@@ -42,9 +42,16 @@ export default defineComponent({
     HelpTooltip
   },
   props: {
-    titleProp: String,
-    fileName: String
+    titleProp: {
+      type: String,
+      default: ""
+    },
+    fileName: {
+      type: String,
+      default: ""
+    }
   },
+  emits: ["update:title", "validate"],
   setup() {
     return {
       v$: useValidate()

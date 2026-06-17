@@ -114,7 +114,7 @@ export function activate(context: vscode.ExtensionContext) {
         placeHolder: "docs/decisions"
       });
       if (newDirectory) {
-        if (cleanPathString(newDirectory).match(/^([^?*:\"<>|]+[\\/]?)+$/)) {
+        if (cleanPathString(newDirectory).match(/^([^?*:"<>|]+[\\/]?)+$/)) {
           await vscode.workspace.getConfiguration("adrManager").update("adrDirectory", cleanPathString(newDirectory));
           vscode.window.showInformationMessage("ADR Directory changed.");
         } else {

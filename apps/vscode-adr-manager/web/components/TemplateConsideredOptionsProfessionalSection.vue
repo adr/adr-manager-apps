@@ -59,11 +59,20 @@ export default defineComponent({
     draggable: VueDraggableNext
   },
   props: {
-    consideredOptionsProp: Array as PropType<
-      { title: string; description: string; pros: string[]; neutrals: string[]; cons: string[] }[]
-    >,
-    chosenOption: String,
-    selectedIndex: Number,
+    consideredOptionsProp: {
+      type: Array as PropType<
+        { title: string; description: string; pros: string[]; neutrals: string[]; cons: string[] }[]
+      >,
+      default: () => []
+    },
+    chosenOption: {
+      type: String,
+      default: ""
+    },
+    selectedIndex: {
+      type: Number,
+      default: -1
+    },
     templateVersion: {
       type: String,
       default: "2.1.2"
@@ -73,6 +82,7 @@ export default defineComponent({
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
     }
   },
+  emits: ["addOption", "checkSelection", "deleteOption", "selectOption", "validate"],
   setup() {
     return {
       v$: useValidate()

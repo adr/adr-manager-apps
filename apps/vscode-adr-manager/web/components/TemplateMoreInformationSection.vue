@@ -32,8 +32,12 @@ export default defineComponent({
     TemplateHeader
   },
   props: {
-    moreInformation: String
+    moreInformation: {
+      type: String,
+      default: ""
+    }
   },
+  emits: ["update:moreInformation", "validate"],
   mounted() {
     this.updateHeight();
   },

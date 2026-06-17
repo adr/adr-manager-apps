@@ -48,10 +48,20 @@ export default defineComponent({
     draggable: VueDraggableNext
   },
   props: {
-    consideredOptionsProp: Array as PropType<ConsideredOption[]>,
-    chosenOption: String,
-    selectedIndex: Number
+    consideredOptionsProp: {
+      type: Array as PropType<ConsideredOption[]>,
+      default: () => []
+    },
+    chosenOption: {
+      type: String,
+      default: ""
+    },
+    selectedIndex: {
+      type: Number,
+      default: -1
+    }
   },
+  emits: ["addOption", "checkSelection", "deleteOption", "editOption", "selectOption"],
   setup() {
     return {
       v$: useValidate()

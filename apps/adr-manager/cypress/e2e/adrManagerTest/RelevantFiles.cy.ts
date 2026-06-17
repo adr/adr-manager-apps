@@ -47,7 +47,7 @@ context("Relevant Files", () => {
         cy.get("[data-cy=relevantFileMissing]").should("not.exist");
 
         cy.get("[data-cy=previewTabRaw]").click();
-        cy.get("[data-cy=markdownText]").should("contain", "## Relevant Files");
+        cy.get("[data-cy=markdownText]").should("contain", "<!-- adr-manager-relevant-files:");
         cy.get("[data-cy=markdownText]").should("contain", "README.md");
     });
 
@@ -61,7 +61,7 @@ context("Relevant Files", () => {
         cy.get("[data-cy=relevantFileRemove]").click({ force: true });
         cy.get("[data-cy=relevantFileLink]").should("not.exist");
         cy.get("[data-cy=previewTabRaw]").click();
-        cy.get("[data-cy=markdownText]").should("not.contain", "## Relevant Files");
+        cy.get("[data-cy=markdownText]").should("not.contain", "<!-- adr-manager-relevant-files:");
     });
 
     it("warns for a linked file that does not exist in the repository", () => {
@@ -82,6 +82,6 @@ context("Relevant Files", () => {
         cy.get("body").click(0, 0);
 
         cy.get("[data-cy=previewTabRaw]").click();
-        cy.get("[data-cy=markdownText]").should("not.contain", "## Relevant Files");
+        cy.get("[data-cy=markdownText]").should("not.contain", "<!-- adr-manager-relevant-files:");
     });
 });

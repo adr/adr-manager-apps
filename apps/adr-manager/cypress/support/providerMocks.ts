@@ -444,9 +444,7 @@ Plain Markdown ADRs.
 * Good, because they are easy to review.
 * Bad, because they require discipline.
 
-## Relevant Files
-
-* ${relevantFile}
+<!-- adr-manager-relevant-files: ${JSON.stringify([relevantFile])} -->
 `;
 }
 

@@ -4,6 +4,7 @@ import { useAdrEditor } from "@/composables/useAdrEditor";
 import { ArchitecturalDecisionRecord, Repository } from "@/plugins/classes";
 import { adr2md, adr2md400, md2adr } from "@/plugins/parser";
 import { store } from "@/plugins/store";
+import { setRelevantFilesInMd } from "@adr-manager/core";
 import type { AdrFile } from "@/types/adr";
 
 let scope: EffectScope | undefined;
@@ -83,6 +84,18 @@ test("opens a conforming ADR into the form editor and normalizes the markdown", 
     expect(adrFile.editedMd).toBe(editor.markdown.value);
 });
 
+test("opens relevant files from the metadata comment", async () => {
+    const markdown = setRelevantFilesInMd(adr2md(sampleRecord()), ["src/main.ts", "docs/adr with spaces.md"]);
+    const adrFile = openInStore(markdown);
+    const editor = createEditor();
+    await nextTick();
+
+    expect(editor.requiresConversion.value).toBe(false);
+    expect(editor.adr.value.relevantFiles).toStrictEqual(["src/main.ts", "docs/adr with spaces.md"]);
+    expect(editor.markdown.value).toContain("<!-- adr-manager-relevant-files:");
+    expect(adrFile.editedMd).toBe(editor.markdown.value);
+});
+
 test("opens a non-conforming file in convert mode", async () => {
     openInStore(NON_CONFORMING_MD);
     const editor = createEditor();
@@ -116,6 +129,20 @@ test("raw edits that round-trip exactly update the form record", async () => {
 
     expect(editor.requiresConversion.value).toBe(false);
     expect(editor.adr.value.title).toBe("Use MariaDB");
+});
+
+test("raw edits can update relevant files without requiring conversion", async () => {
+    openInStore(adr2md(sampleRecord()));
+    const editor = createEditor();
+    await nextTick();
+
+    const replacement = setRelevantFilesInMd(adr2md(sampleRecord()), ["src/raw-edit.ts"]);
+    editor.updateFromRaw(replacement);
+    await nextTick();
+
+    expect(editor.requiresConversion.value).toBe(false);
+    expect(editor.adr.value.relevantFiles).toStrictEqual(["src/raw-edit.ts"]);
+    expect(editor.markdown.value).toContain("<!-- adr-manager-relevant-files:");
 });
 
 test("raw edits that would lose content switch to convert mode", async () => {

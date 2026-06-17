@@ -5,7 +5,10 @@ import { store } from "@/plugins/store";
 import {
     matchesIgnoringFormatting,
     applyFieldVisibilityFilter,
+    parseRelevantFilesFromMd,
     parseTagsFromMd,
+    setRelevantFilesInMd,
+    stripRelevantFilesComment,
     stripTagComment,
     setTagsInMd
 } from "@adr-manager/core";
@@ -18,16 +21,24 @@ function serializeAdr(adr: ArchitecturalDecisionRecord, version: MadrTemplateVer
 }
 
 function serialize(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion, tags: Tag[]): string {
-    return setTagsInMd(serializeAdr(adr, version), tags);
+    const filtered = applyFieldVisibilityFilter(adr, store.fieldVisibility);
+    const md = serializeMadr(filtered, version);
+    return setTagsInMd(setRelevantFilesInMd(md, filtered.relevantFiles), tags);
 }
 
 function parse(markdown: string, version: MadrTemplateVersion): ArchitecturalDecisionRecord {
-    return parseMadr(markdown, version);
+    const record = parseMadr(stripAdrManagerMetadata(markdown), version);
+    record.relevantFiles = parseRelevantFilesFromMd(markdown);
+    return record;
 }
 
-// Strip the tag comment before comparing so tags never break the round-trip check.
+function stripAdrManagerMetadata(markdown: string): string {
+    return stripRelevantFilesComment(stripTagComment(markdown));
+}
+
+// Strip metadata comments before comparing so app-level fields never break round-trip checks.
 function roundTripsExactly(markdown: string, version: MadrTemplateVersion): boolean {
-    const stripped = stripTagComment(markdown);
+    const stripped = stripAdrManagerMetadata(markdown);
     return serializeAdr(parse(stripped, version), version) === stripped;
 }
 
@@ -50,12 +61,12 @@ export function useAdrEditor() {
      * instead of falling back to the detector's default.
      */
     function resolveVersion(md: string): MadrTemplateVersion {
-        const detected = detectMadrVersion(md);
+        const stripped = stripAdrManagerMetadata(md);
+        const detected = detectMadrVersion(stripped);
         if (detected === templateVersion.value) {
             return detected;
         }
         const current = templateVersion.value;
-        const stripped = stripTagComment(md);
         if (matchesIgnoringFormatting(stripped, serializeAdr(parse(stripped, current), current))) {
             return current;
         }
@@ -71,10 +82,10 @@ export function useAdrEditor() {
             return;
         }
         tags.value = parseTagsFromMd(adrFile.editedMd);
-        const stripped = stripTagComment(adrFile.editedMd);
+        const stripped = stripAdrManagerMetadata(adrFile.editedMd);
         markdown.value = adrFile.editedMd;
-        templateVersion.value = resolveVersion(stripped);
-        const parsed = parse(stripped, templateVersion.value);
+        templateVersion.value = resolveVersion(adrFile.editedMd);
+        const parsed = parse(adrFile.editedMd, templateVersion.value);
         if (matchesIgnoringFormatting(stripped, serializeAdr(parsed, templateVersion.value))) {
             adr.value = parsed;
             requiresConversion.value = false;
@@ -91,7 +102,7 @@ export function useAdrEditor() {
         markdown.value = newMarkdown;
         templateVersion.value = resolveVersion(newMarkdown);
         if (roundTripsExactly(newMarkdown, templateVersion.value)) {
-            adr.value = parse(stripTagComment(newMarkdown), templateVersion.value);
+            adr.value = parse(newMarkdown, templateVersion.value);
             requiresConversion.value = false;
         } else {
             requiresConversion.value = true;
@@ -100,7 +111,7 @@ export function useAdrEditor() {
 
     function acceptConversion(convertedMarkdown: string): void {
         tags.value = parseTagsFromMd(convertedMarkdown);
-        adr.value = parse(stripTagComment(convertedMarkdown), templateVersion.value);
+        adr.value = parse(convertedMarkdown, templateVersion.value);
         markdown.value = convertedMarkdown;
         requiresConversion.value = false;
     }

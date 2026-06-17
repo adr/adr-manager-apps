@@ -58,6 +58,11 @@ const markdown = adr2md(adr);
 The lexer, parser, and listener under `src/parser` are generated from `MADR.g4` by ANTLR.
 See [`src/parser/README.md`](src/parser/README.md) for how to regenerate them.
 
+## MADR template versions
+
+Supported MADR template versions are coordinated through the shared adapter registry in `src/templates.ts`.
+When adding another supported template version, follow the [MADR template version upgrade guide](docs/madr-template-version-upgrades.md).
+
 ## Development
 
 See the [root README](../../README.md) for prerequisites and the monorepo development workflow.

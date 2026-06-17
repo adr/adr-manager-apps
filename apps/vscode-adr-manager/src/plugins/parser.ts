@@ -4,8 +4,10 @@ import {
   detectMadrVersion,
   matchesIgnoringFormatting,
   parseMadr,
+  parseRelevantFilesFromMd,
   roundTripsMadr,
   serializeMadr,
+  stripRelevantFilesComment,
   stripTagComment,
   type ArchitecturalDecisionRecord,
   type Adr2MdOptions,
@@ -43,8 +45,9 @@ export function parseAdr(
   md: string,
   version: MadrTemplateVersion = detectMadrVersion(md)
 ): ArchitecturalDecisionRecord {
-  const cleanMd = stripTagComment(md);
+  const cleanMd = stripAdrManagerMetadata(md);
   const adr = parseMadr(cleanMd, version, PARSE_OPTIONS);
+  adr.relevantFiles = parseRelevantFilesFromMd(md);
   if (version !== "2.1.2") {
     adr.conforming = roundTripsMadr(cleanMd, version, {
       parse: PARSE_OPTIONS,
@@ -57,4 +60,8 @@ export function parseAdr(
 
 export function serializeAdr(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {
   return serializeMadr(adr, version, SERIALIZE_OPTIONS);
+}
+
+function stripAdrManagerMetadata(md: string): string {
+  return stripRelevantFilesComment(stripTagComment(md));
 }

@@ -131,6 +131,8 @@ pnpm e2e:web
 
 Releases are coordinated with [Changesets](https://github.com/changesets/changesets):
 
+For the GitHub Pages setup checklist and deployment guide, see [GitHub Pages CI/CD Guide](docs/github-pages-ci-cd.md).
+
 1. Add a changeset alongside any change that should be released: `pnpm changeset`.
 2. On every push to `main`, the `Release` workflow opens or updates a **Version Packages (joint release)** PR that applies pending changesets (version bumps and changelogs, via `pnpm version-packages`).
 3. Merging that PR publishes the bumped versions to `main`. Neither package is published to npm. Instead:

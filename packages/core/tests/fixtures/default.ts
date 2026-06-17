@@ -310,53 +310,7 @@ Docs can be found at https://vuex.vuejs.org/.
 * [This is a link](example.org)
 `,
 
-  // An ADR with both Links and Relevant Files (Relevant Files is the last section)
-  `# Track relevant files
-
-## Context and Problem Statement
-
-Which files implement this decision?
-
-## Considered Options
-
-* Track them in the ADR
-* Do not track them
-
-## Decision Outcome
-
-Chosen option: "Track them in the ADR", because future readers see the affected code directly.
-
-## Links
-
-* [MADR](https://adr.github.io/madr/)
-
-## Relevant Files
-
-* src/plugins/store.ts
-* src/components/MadrEditor.vue
-`,
-
-  // An ADR with Relevant Files but without a Links section
-  `# Keep relevant files without links
-
-## Context and Problem Statement
-
-Does the section work without a links section?
-
-## Considered Options
-
-* Yes
-
-## Decision Outcome
-
-Chosen option: "Yes", because the section stands on its own.
-
-## Relevant Files
-
-* docs/decisions/file with spaces.md
-* src/ünïcode/päth.ts
-`
-];
+  ];
 
 /**
  * Pairs describing the expected behaviour of the md2adr parser. When given the markdown it should output the ADR.
@@ -893,48 +847,6 @@ D description
         positiveConsequences: ["positive consequence"],
         negativeConsequences: []
       }
-    })
-  },
-
-  // Relevant Files section with a plain path and a path containing spaces
-  {
-    md: `# Heading
-
-## Context and Problem Statement
-
-Context
-
-## Considered Options
-
-* A
-
-## Decision Outcome
-
-Chosen option: "A", because best.
-
-## Relevant Files
-
-* src/main.ts
-* src/utils/my file (v2).ts
-`,
-    adr: new ArchitecturalDecisionRecord({
-      title: "Heading",
-      contextAndProblemStatement: `Context`,
-      consideredOptions: [
-        {
-          title: "A",
-          description: "",
-          pros: [],
-          cons: []
-        }
-      ],
-      decisionOutcome: {
-        chosenOption: "A",
-        explanation: `best.`,
-        positiveConsequences: [],
-        negativeConsequences: []
-      },
-      relevantFiles: ["src/main.ts", "src/utils/my file (v2).ts"]
     })
   }
 ];

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ArchitecturalDecisionRecord, adr2md400, md2adr400, detectMadrVersion, adr2md } from "../src/index";
+import { ArchitecturalDecisionRecord, adr2md, adr2md400, md2adr400, detectMadrVersion } from "../src/index";
 
 function fullRecord(): ArchitecturalDecisionRecord {
   return new ArchitecturalDecisionRecord({
@@ -31,8 +31,7 @@ function fullRecord(): ArchitecturalDecisionRecord {
       { kind: "bad", text: "We must plan a sharding strategy" }
     ],
     confirmation: "An ArchUnit test asserts the module only depends on the Postgres adapter.",
-    moreInformation: "Revisit if write volume exceeds 5k TPS sustained.",
-    relevantFiles: ["src/billing/store.ts", "src/billing/migrations/0001 initial.sql"]
+    moreInformation: "Revisit if write volume exceeds 5k TPS sustained."
   });
 }
 
@@ -87,16 +86,16 @@ Self-managed Postgres on Kubernetes.
 ## More Information
 
 Revisit if write volume exceeds 5k TPS sustained.
-
-## Relevant Files
-
-* src/billing/store.ts
-* src/billing/migrations/0001 initial.sql
 `;
 
 describe("adr2md400", () => {
   test("writes the full 4.0.0 template", () => {
     expect(adr2md400(fullRecord())).toBe(FULL_MD);
+  });
+
+  test("does not write relevant files as a template section", () => {
+    const adr = new ArchitecturalDecisionRecord({ title: "T", relevantFiles: ["src/main.ts"] });
+    expect(adr2md400(adr)).not.toContain("## Relevant Files");
   });
 
   test("omits empty sections and front matter", () => {
@@ -192,13 +191,8 @@ describe("detectMadrVersion", () => {
     expect(detectMadrVersion(adr2md(adr))).toBe("2.1.2");
   });
 
-  test("a Relevant Files section does not mark a document as 4.0.0", () => {
-    const adr = new ArchitecturalDecisionRecord({
-      title: "T",
-      consideredOptions: [{ title: "A" }],
-      decisionOutcome: { chosenOption: "A", explanation: "it fits" },
-      relevantFiles: ["src/main.ts"]
-    });
-    expect(detectMadrVersion(adr2md(adr))).toBe("2.1.2");
+  test("a legacy Relevant Files section does not mark a document as 4.0.0", () => {
+    const md = '# T\n\n## Decision Outcome\n\nChosen option: "A"\n\n## Relevant Files\n\n* src/main.ts\n';
+    expect(detectMadrVersion(md)).toBe("2.1.2");
   });
 });

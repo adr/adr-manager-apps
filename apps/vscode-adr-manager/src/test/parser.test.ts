@@ -107,6 +107,13 @@ describe("parseAdr", () => {
     expect(serializeAdr(adr, "4.0.0")).toBe(MADR_400);
   });
 
+  test("hydrates relevant files from the metadata comment", () => {
+    const md = `${MADR_212}\n<!-- adr-manager-relevant-files: ["src/main.ts","docs/adr with spaces.md"] -->`;
+    const adr = parseAdr(md);
+    expect(adr.relevantFiles).toStrictEqual(["src/main.ts", "docs/adr with spaces.md"]);
+    expect(serializeAdr(adr, "2.1.2")).not.toContain("adr-manager-relevant-files");
+  });
+
   test("converts between template versions", () => {
     const adr = parseAdr(MADR_212);
     adr.decisionMakers = adr.deciders;

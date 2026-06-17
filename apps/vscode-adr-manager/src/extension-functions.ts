@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import type { AdrInit, Option, Tag } from "@adr-manager/core";
-import { setTagsInMd } from "@adr-manager/core";
+import { setRelevantFilesInMd, setTagsInMd } from "@adr-manager/core";
 
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { adrTemplatemarkdownContent, initialMarkdownContent, readmeMarkdownContent } from "./plugins/constants";
@@ -493,6 +493,7 @@ export function createBasicAdr(fields: {
   consideredOptions: ReadonlyArray<Partial<Option>>;
   chosenOption: string;
   explanation: string;
+  relevantFiles?: string[];
   templateVersion?: MadrTemplateVersion;
   tags?: Tag[];
 }) {
@@ -507,10 +508,10 @@ export function createBasicAdr(fields: {
     }
   });
 
-  let newMD = serializeAdr(newAdr, fields.templateVersion ?? "2.1.2");
-  if (fields.tags && fields.tags.length > 0) {
-    newMD = setTagsInMd(newMD, fields.tags);
-  }
+  const newMD = setAdrMetadataInMd(serializeAdr(newAdr, fields.templateVersion ?? "2.1.2"), {
+    relevantFiles: fields.relevantFiles,
+    tags: fields.tags
+  });
   saveMarkdownToAdrDirectory(newMD, newAdr.title);
 }
 
@@ -522,10 +523,10 @@ export function createBasicAdr(fields: {
 export function createProfessionalAdr(fields: AdrInit & { templateVersion?: MadrTemplateVersion; tags?: Tag[] }) {
   const newAdr = getAdrObjectFromFields(fields);
 
-  let newMD = serializeAdr(newAdr, fields.templateVersion ?? "2.1.2");
-  if (fields.tags && fields.tags.length > 0) {
-    newMD = setTagsInMd(newMD, fields.tags);
-  }
+  const newMD = setAdrMetadataInMd(serializeAdr(newAdr, fields.templateVersion ?? "2.1.2"), {
+    relevantFiles: newAdr.relevantFiles,
+    tags: fields.tags
+  });
   saveMarkdownToAdrDirectory(newMD, newAdr.title);
 }
 
@@ -562,12 +563,17 @@ export async function saveAdr(
   });
   const newUri = getRenamedUri(fileUri, adr.title);
   await vscode.workspace.fs.rename(fileUri, newUri);
-  let newMD = serializeAdr(adr, fields.templateVersion ?? "2.1.2");
-  if (fields.tags && fields.tags.length > 0) {
-    newMD = setTagsInMd(newMD, fields.tags);
-  }
+  const newMD = setAdrMetadataInMd(serializeAdr(adr, fields.templateVersion ?? "2.1.2"), {
+    relevantFiles: adr.relevantFiles,
+    tags: fields.tags
+  });
   await vscode.workspace.fs.writeFile(newUri, new TextEncoder().encode(newMD));
   return newUri;
+}
+
+function setAdrMetadataInMd(md: string, fields: { relevantFiles?: string[]; tags?: Tag[] }): string {
+  const withRelevantFiles = setRelevantFilesInMd(md, fields.relevantFiles ?? []);
+  return fields.tags ? setTagsInMd(withRelevantFiles, fields.tags) : withRelevantFiles;
 }
 
 /**

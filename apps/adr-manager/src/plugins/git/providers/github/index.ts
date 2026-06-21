@@ -12,7 +12,7 @@ import {
     searchRepositories,
     updateBranchRef
 } from "./api";
-import { applyAuthHeader, clearSession, signInWithGitHubPopup } from "./auth";
+import { clearSession, signInWithGitHubPopup } from "./auth";
 import { encodeFilePath } from "../../paths";
 import type { GitProvider } from "../../provider";
 import type { GitHubTreeInput } from "./types";
@@ -42,7 +42,7 @@ export const githubProvider: GitProvider = {
     },
 
     restoreSession() {
-        applyAuthHeader();
+        // Tokens are injected per request by the auth interceptor; nothing to apply globally.
     },
 
     getUser,

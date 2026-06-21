@@ -3,7 +3,17 @@ import type { AxiosResponse } from "axios";
 import { githubProvider } from "@/plugins/git/providers/github";
 import { searchTermRepoPairs, mockedValues, toExpectedSummaries } from "./constants";
 
-vi.mock("axios");
+vi.mock("axios", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("axios")>();
+    const get = vi.fn();
+    const instance = {
+        get,
+        post: vi.fn(),
+        request: vi.fn(),
+        interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } }
+    };
+    return { ...actual, default: { ...actual.default, get, create: () => instance } };
+});
 
 beforeEach(() => {
     vi.clearAllMocks();

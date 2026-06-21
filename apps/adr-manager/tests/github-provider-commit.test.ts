@@ -3,7 +3,18 @@ import type { AxiosResponse } from "axios";
 import { githubProvider } from "@/plugins/git/providers/github";
 import type { CommitInput } from "@/types/git";
 
-vi.mock("axios");
+vi.mock("axios", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("axios")>();
+    const get = vi.fn();
+    const post = vi.fn();
+    const instance = {
+        get,
+        post,
+        request: vi.fn(),
+        interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } }
+    };
+    return { ...actual, default: { ...actual.default, get, post, create: () => instance } };
+});
 
 const REPO = "adr/adr-manager";
 const BASE = `https://api.github.com/repos/${REPO}`;

@@ -11,9 +11,12 @@ export function describeGitError(error: unknown): string {
         }
         const status = error.response.status;
         if (status === 401) {
-            return "Your session has expired. Please sign out and sign in again.";
+            return "Your session has expired. Reconnect when prompted, or sign out and sign in again.";
         }
         if (status === 403) {
+            if (error.response.headers["x-github-sso"]) {
+                return "This organization requires SSO authorization for your GitHub token. Authorize it in your GitHub account settings, then retry.";
+            }
             return error.response.headers["x-ratelimit-remaining"] === "0"
                 ? "API rate limit reached. Please try again later."
                 : "You don't have permission to access this resource.";

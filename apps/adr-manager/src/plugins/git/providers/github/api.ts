@@ -1,5 +1,8 @@
 import axios from "axios";
+import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { lsGet } from "@/plugins/storage";
 import { request } from "../../request";
+import { requestReauth } from "./reauth";
 import type { Branch, CommitAuthor, RepoPage, RepoSummary, UserInfo } from "@/types/git";
 import type {
     GitHubBranch,
@@ -16,6 +19,39 @@ import type {
 const BASE_URL_USER = "https://api.github.com/user";
 const BASE_URL_REPO = "https://api.github.com/repos";
 
+let client: AxiosInstance | null = null;
+
+type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
+
+/** Injects the stored token per request and, after a 401, prompts for a fresh one and retries once. */
+export function attachGitHubInterceptors(http: AxiosInstance): void {
+    http.interceptors.request.use((config) => {
+        const token = lsGet("authId");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    });
+    http.interceptors.response.use(undefined, async (error: unknown) => {
+        if (axios.isAxiosError(error) && error.response?.status === 401 && error.config) {
+            const config = error.config as RetriableConfig;
+            if (!config._retried && (await requestReauth())) {
+                config._retried = true;
+                return http.request(config);
+            }
+        }
+        throw error;
+    });
+}
+
+function githubHttp(): AxiosInstance {
+    if (!client) {
+        client = axios.create();
+        attachGitHubInterceptors(client);
+    }
+    return client;
+}
+
 function toRepoSummary(repo: GitHubRepoSummary): RepoSummary {
     return {
         fullName: repo.full_name,
@@ -26,7 +62,7 @@ function toRepoSummary(repo: GitHubRepoSummary): RepoSummary {
 }
 
 export async function listRepositories(page: number, perPage: number): Promise<RepoPage> {
-    const response = await axios.get<GitHubRepoSummary[]>(
+    const response = await githubHttp().get<GitHubRepoSummary[]>(
         `${BASE_URL_USER}/repos?sort=updated&direction=desc&page=${page}&per_page=${perPage}`
     );
     return {
@@ -69,13 +105,13 @@ export async function searchRepositories(query: string, maxResults: number): Pro
 }
 
 export async function listBranches(repoFullName: string): Promise<Branch[]> {
-    const response = await axios.get<GitHubBranch[]>(`${BASE_URL_REPO}/${repoFullName}/branches?per_page=999`);
+    const response = await githubHttp().get<GitHubBranch[]>(`${BASE_URL_REPO}/${repoFullName}/branches?per_page=999`);
     return response.data;
 }
 
 export async function listFiles(repoFullName: string, branch: string): Promise<string[]> {
     try {
-        const response = await axios.get<GitHubFileTree>(
+        const response = await githubHttp().get<GitHubFileTree>(
             `${BASE_URL_REPO}/${repoFullName}/git/trees/${branch}?recursive=1`
         );
         return response.data.tree.filter((entry) => entry.type === "blob").map((entry) => entry.path);
@@ -90,7 +126,7 @@ export async function listFiles(repoFullName: string, branch: string): Promise<s
 
 export async function readFile(repoFullName: string, branch: string, filePath: string): Promise<string | undefined> {
     const content = await request(
-        axios.get<GitHubContent>(`${BASE_URL_REPO}/${repoFullName}/contents/${filePath}?ref=${branch}`)
+        githubHttp().get<GitHubContent>(`${BASE_URL_REPO}/${repoFullName}/contents/${filePath}?ref=${branch}`)
     );
     return content ? decodeUnicode(content.content) : undefined;
 }
@@ -106,23 +142,23 @@ function decodeUnicode(str: string): string {
 }
 
 export async function getUser(): Promise<UserInfo | undefined> {
-    const user = await request(axios.get<GitHubUser>(BASE_URL_USER));
+    const user = await request(githubHttp().get<GitHubUser>(BASE_URL_USER));
     if (!user) {
         return undefined;
     }
-    const emails = await request(axios.get<GitHubEmail[]>(`${BASE_URL_USER}/public_emails`));
+    const emails = await request(githubHttp().get<GitHubEmail[]>(`${BASE_URL_USER}/public_emails`));
     const publicEmail = (emails?.find((entry) => entry.primary) ?? emails?.[0])?.email;
     const email = publicEmail ?? user.email ?? `${user.id}+${user.login}@users.noreply.github.com`;
     return { username: user.login, displayName: user.name ?? user.login, email };
 }
 
 export async function getLastCommit(repoFullName: string, branch: string): Promise<GitHubBranch | undefined> {
-    return request(axios.get<GitHubBranch>(`${BASE_URL_REPO}/${repoFullName}/branches/${branch}`));
+    return request(githubHttp().get<GitHubBranch>(`${BASE_URL_REPO}/${repoFullName}/branches/${branch}`));
 }
 
 export async function createBlob(repoFullName: string, content: string): Promise<GitHubShaResponse | undefined> {
     return request(
-        axios.post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoFullName}/git/blobs`, {
+        githubHttp().post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoFullName}/git/blobs`, {
             content,
             encoding: "utf-8"
         })
@@ -135,7 +171,7 @@ export async function createTree(
     tree: GitHubTreeInput[]
 ): Promise<GitHubShaResponse | undefined> {
     return request(
-        axios.post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoFullName}/git/trees`, {
+        githubHttp().post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoFullName}/git/trees`, {
             base_tree: baseTreeSha,
             tree
         })
@@ -150,7 +186,7 @@ export async function createCommit(
     treeSha: string
 ): Promise<GitHubShaResponse | undefined> {
     return request(
-        axios.post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoFullName}/git/commits`, {
+        githubHttp().post<GitHubShaResponse>(`${BASE_URL_REPO}/${repoFullName}/git/commits`, {
             message,
             author,
             parents: [parentSha],
@@ -165,7 +201,7 @@ export async function updateBranchRef(
     commitSha: string
 ): Promise<GitHubRef | undefined> {
     return request(
-        axios.post<GitHubRef>(`${BASE_URL_REPO}/${repoFullName}/git/refs/heads/${branch}`, {
+        githubHttp().post<GitHubRef>(`${BASE_URL_REPO}/${repoFullName}/git/refs/heads/${branch}`, {
             ref: "refs/heads/" + branch,
             sha: commitSha
         })

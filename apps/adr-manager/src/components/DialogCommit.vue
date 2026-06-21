@@ -1,5 +1,5 @@
 <template>
-    <BaseDialog v-model="show" title="Commit &amp; Push" icon="publish" :width="700">
+    <BaseDialog v-model="show" title="Commit & Push" icon="publish" :width="700">
         <div class="step-head">
             <span class="mdi mdi-file" aria-hidden="true"></span>
             <span class="step-title">Select files</span>
@@ -73,7 +73,7 @@
                 :disabled="commitMessage === '' || !anyFileSelected"
                 @click="onCommit"
             >
-                Commit &amp; Push
+                Commit & Push
             </button>
             <button type="button" class="btn btn-text-error" @click="show = false">Cancel</button>
         </template>
@@ -88,7 +88,7 @@ import AutoGrowTextarea from "./AutoGrowTextarea.vue";
 import BaseDialog from "./BaseDialog.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { pushSelectedFiles } from "@/composables/useCommitPush";
-import { getActiveProvider } from "@/plugins/git";
+import { describeGitError, getActiveProvider } from "@/plugins/git";
 import { store } from "@/plugins/store";
 import { useAlert } from "@/composables/useAlert";
 import { useToast } from "@/composables/useToast";
@@ -218,12 +218,7 @@ async function push(): Promise<void> {
         alert("Successfully pushed", "Success", "success");
     } catch (error) {
         console.error(error);
-        alert(
-            "Error during pushing. Your changes were not pushed. Please try again later. \nError code: " +
-                String(error),
-            "Error",
-            "error"
-        );
+        alert(`Your changes were not pushed. ${describeGitError(error)}`, "Error", "error");
     } finally {
         loading.value = false;
     }

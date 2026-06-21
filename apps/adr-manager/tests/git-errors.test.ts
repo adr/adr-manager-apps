@@ -12,7 +12,9 @@ test("a network failure without response suggests checking the connection", () =
 });
 
 test("a 401 reads as an expired session", () => {
-    expect(describeGitError(axiosError(401))).toBe("Your session has expired. Please sign out and sign in again.");
+    expect(describeGitError(axiosError(401))).toBe(
+        "Your session has expired. Reconnect when prompted, or sign out and sign in again."
+    );
 });
 
 test("a 403 with exhausted rate limit reads as rate limiting", () => {
@@ -23,6 +25,12 @@ test("a 403 with exhausted rate limit reads as rate limiting", () => {
 
 test("a plain 403 reads as missing permission", () => {
     expect(describeGitError(axiosError(403))).toBe("You don't have permission to access this resource.");
+});
+
+test("a 403 from organization SSO explains the authorization step", () => {
+    expect(describeGitError(axiosError(403, { "x-github-sso": "required; organizations=12345" }))).toBe(
+        "This organization requires SSO authorization for your GitHub token. Authorize it in your GitHub account settings, then retry."
+    );
 });
 
 test("a 404 mentions a deleted or renamed repository or branch", () => {

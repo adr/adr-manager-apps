@@ -3,7 +3,14 @@ import { listRepositories } from "@/plugins/git/providers/github/api";
 
 vi.mock("axios", async (importOriginal) => {
     const actual = await importOriginal<typeof import("axios")>();
-    return { ...actual, default: { ...actual.default, get: vi.fn() } };
+    const get = vi.fn();
+    const instance = {
+        get,
+        post: vi.fn(),
+        request: vi.fn(),
+        interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } }
+    };
+    return { ...actual, default: { ...actual.default, get, create: () => instance } };
 });
 
 const get = vi.mocked(axios.get);

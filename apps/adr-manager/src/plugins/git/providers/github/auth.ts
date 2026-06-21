@@ -1,7 +1,8 @@
-import axios from "axios";
-import { lsGet, lsRemove, lsSet } from "@/plugins/storage";
+import { lsRemove, lsSet } from "@/plugins/storage";
 
 const OAUTH_SCOPES = "repo read:user gist workflow read:org";
+
+const loadFirebase = () => Promise.all([import("firebase/auth"), import("@/plugins/firebase/client")]);
 
 /**
  * Runs the Firebase GitHub popup flow and persists the resulting token.
@@ -9,7 +10,7 @@ const OAUTH_SCOPES = "repo read:user gist workflow read:org";
  */
 export async function signInWithGitHubPopup(): Promise<void> {
     const [{ signInWithPopup, GithubAuthProvider, getAdditionalUserInfo }, { auth, GithubProvider }] =
-        await Promise.all([import("firebase/auth"), import("@/plugins/firebase/client")]);
+        await loadFirebase();
     GithubProvider.addScope(OAUTH_SCOPES);
     const result = await signInWithPopup(auth, GithubProvider);
     const credential = GithubAuthProvider.credentialFromResult(result);
@@ -18,20 +19,16 @@ export async function signInWithGitHubPopup(): Promise<void> {
     }
     lsSet("authId", credential.accessToken);
     lsSet("user", getAdditionalUserInfo(result)?.username ?? "");
-    applyAuthHeader();
 }
 
-export function applyAuthHeader(): void {
-    const token = lsGet("authId");
-    if (token) {
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    }
+/** Loads Firebase ahead of a popup so the window opens within the user's click gesture. */
+export function prewarmGitHubAuth(): Promise<unknown> {
+    return loadFirebase();
 }
 
 export async function clearSession(): Promise<void> {
     lsRemove("authId");
     lsRemove("user");
-    delete axios.defaults.headers.common["Authorization"];
-    const [{ signOut }, { auth }] = await Promise.all([import("firebase/auth"), import("@/plugins/firebase/client")]);
+    const [{ signOut }, { auth }] = await loadFirebase();
     await signOut(auth);
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="more-information">
+  <div class="more-information" :class="{ 'field-highlight': highlightedFields.has('moreInformation') }">
     <TemplateHeader
       :info-text="'Additional evidence, team agreement, when to revisit, and links to related decisions. Replaces \'Links\' from MADR 2.1.2.'"
       optional
@@ -23,8 +23,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, PropType } from "vue";
 import TemplateHeader from "./TemplateHeader.vue";
+import type { FieldKey } from "@adr-manager/core";
 
 export default defineComponent({
   name: "TemplateMoreInformationSection",
@@ -35,6 +36,10 @@ export default defineComponent({
     moreInformation: {
       type: String,
       default: ""
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: ["update:moreInformation", "validate"],
@@ -60,5 +65,12 @@ export default defineComponent({
 #auto-grow-more-information {
   min-height: 68px;
   overflow-y: hidden;
+}
+
+.field-highlight {
+  border-left: 3px solid var(--adr-warning);
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-radius: 0 4px 4px 0;
+  padding-left: 8px;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="links">
+  <div class="links" :class="{ 'field-highlight': highlightedFields.has('links') }">
     <TemplateHeader :info-text="'Add references, e.g. to related ADRs.'" optional>
       <h2>Links</h2>
     </TemplateHeader>
@@ -36,6 +36,7 @@
 import { defineComponent, PropType } from "vue";
 import { VueDraggableNext } from "vue-draggable-next";
 import TemplateHeader from "./TemplateHeader.vue";
+import type { FieldKey } from "@adr-manager/core";
 
 export default defineComponent({
   name: "TemplateLinksSection",
@@ -47,6 +48,10 @@ export default defineComponent({
     linksProp: {
       type: Array as PropType<string[]>,
       default: () => []
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: ["update:links"],
@@ -109,5 +114,12 @@ export default defineComponent({
 <style scoped>
 .auto-grow-link {
   overflow-y: hidden;
+}
+
+.field-highlight {
+  border-left: 3px solid var(--adr-warning);
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-radius: 0 4px 4px 0;
+  padding-left: 8px;
 }
 </style>

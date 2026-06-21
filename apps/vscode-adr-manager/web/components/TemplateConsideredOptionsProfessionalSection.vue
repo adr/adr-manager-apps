@@ -21,6 +21,7 @@
           :cons-prop="option.cons"
           :template-version="templateVersion"
           :field-visibility="fieldVisibility"
+          :highlighted-fields="highlightedFields"
           :chosen="option.title === chosenOption && index === selectedIndex"
           @select-option="$emit('selectOption', index)"
           @delete-option="$emit('deleteOption', index)"
@@ -48,7 +49,7 @@ import TemplateHeader from "./TemplateHeader.vue";
 import AddOptionButton from "./AddOptionButton.vue";
 import OptionContainerProfessional from "./OptionContainerProfessional.vue";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
-import type { FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 
 export default defineComponent({
   name: "TemplateConsideredOptionsProfessionalSection",
@@ -80,6 +81,10 @@ export default defineComponent({
     fieldVisibility: {
       type: Object as PropType<FieldVisibility>,
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: ["addOption", "checkSelection", "deleteOption", "selectOption", "validate"],

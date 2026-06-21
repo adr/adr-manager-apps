@@ -3,7 +3,8 @@ import {
   ArchitecturalDecisionRecord,
   DEFAULT_FIELD_VISIBILITY,
   FIELD_KEYS,
-  applyFieldVisibilityFilter
+  applyFieldVisibilityFilter,
+  getHiddenFieldsWithData
 } from "../src/index";
 
 describe("relevantFiles field visibility", () => {
@@ -126,5 +127,87 @@ describe("applyFieldVisibilityFilter", () => {
       neutrals: ["Existing skill"],
       cons: ["Operational cost"]
     });
+  });
+});
+
+describe("getHiddenFieldsWithData", () => {
+  test("returns empty array when all fields are visible", () => {
+    const adr = new ArchitecturalDecisionRecord({
+      date: "2026-06-21",
+      status: "accepted",
+      deciders: "Alice"
+    });
+    expect(getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY })).toStrictEqual([]);
+  });
+
+  test("returns empty array when hidden fields are empty", () => {
+    const adr = new ArchitecturalDecisionRecord({ date: "" });
+    expect(getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY, date: false })).toStrictEqual([]);
+  });
+
+  test("detects a hidden string field that has data", () => {
+    const adr = new ArchitecturalDecisionRecord({ date: "2026-06-21" });
+    expect(getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY, date: false })).toStrictEqual(["date"]);
+  });
+
+  test("detects hidden deciders via the deciders property", () => {
+    const adr = new ArchitecturalDecisionRecord({ deciders: "Alice" });
+    expect(getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY, deciders: false })).toStrictEqual(["deciders"]);
+  });
+
+  test("detects hidden deciders via the decisionMakers property (MADR 4.0.0)", () => {
+    const adr = new ArchitecturalDecisionRecord({ decisionMakers: "Alice" });
+    expect(getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY, deciders: false })).toStrictEqual(["deciders"]);
+  });
+
+  test("detects hidden array fields that are non-empty", () => {
+    const adr = new ArchitecturalDecisionRecord({ decisionDrivers: ["consistency"] });
+    expect(getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY, decisionDrivers: false })).toStrictEqual([
+      "decisionDrivers"
+    ]);
+  });
+
+  test("detects hidden optionDescription when any option has a description", () => {
+    const adr = new ArchitecturalDecisionRecord({
+      consideredOptions: [{ title: "Postgres", description: "Relational DB" }]
+    });
+    expect(getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY, optionDescription: false })).toStrictEqual([
+      "optionDescription"
+    ]);
+  });
+
+  test("detects hidden optionProsAndCons when any option has pros", () => {
+    const adr = new ArchitecturalDecisionRecord({
+      consideredOptions: [{ title: "Postgres", pros: ["mature"] }]
+    });
+    expect(getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY, optionProsAndCons: false })).toStrictEqual([
+      "optionProsAndCons"
+    ]);
+  });
+
+  test("detects multiple hidden fields with data at once", () => {
+    const adr = new ArchitecturalDecisionRecord({
+      status: "accepted",
+      date: "2026-06-21",
+      links: ["Refines ADR-0001"]
+    });
+    const result = getHiddenFieldsWithData(adr, {
+      ...DEFAULT_FIELD_VISIBILITY,
+      status: false,
+      date: false,
+      links: false
+    });
+    expect(result).toContain("status");
+    expect(result).toContain("date");
+    expect(result).toContain("links");
+    expect(result).toHaveLength(3);
+  });
+
+  test("does not include visible fields even when they have data", () => {
+    const adr = new ArchitecturalDecisionRecord({ date: "2026-06-21", status: "accepted" });
+    // status is visible, date is hidden
+    const result = getHiddenFieldsWithData(adr, { ...DEFAULT_FIELD_VISIBILITY, date: false });
+    expect(result).toStrictEqual(["date"]);
+    expect(result).not.toContain("status");
   });
 });

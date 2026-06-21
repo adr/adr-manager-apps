@@ -1,13 +1,5 @@
 <template>
-    <span
-        ref="anchorEl"
-        class="help"
-        tabindex="0"
-        @pointerenter="show"
-        @pointerleave="hide"
-        @focus="show"
-        @blur="hide"
-    >
+    <span ref="anchorEl" class="help" tabindex="0" @pointerenter="show" @pointerleave="hide" @focus="show" @blur="hide">
         <span class="mdi mdi-help-circle-outline" aria-hidden="true"></span>
         <Teleport to="body">
             <span v-if="open" ref="bubbleEl" class="help-bubble" :style="pos"><slot /></span>

@@ -1,5 +1,5 @@
 <template>
-  <div class="decision-drivers">
+  <div class="decision-drivers" :class="{ 'field-highlight': highlightedFields.has('decisionDrivers') }">
     <TemplateHeader
       :info-text="'Decision Drivers are competing forces or facing concerns that influence the decision.'"
       optional
@@ -45,6 +45,7 @@
 import { defineComponent, PropType } from "vue";
 import { VueDraggableNext } from "vue-draggable-next";
 import TemplateHeader from "./TemplateHeader.vue";
+import type { FieldKey } from "@adr-manager/core";
 
 export default defineComponent({
   name: "TemplateDecisionDriversSection",
@@ -56,6 +57,10 @@ export default defineComponent({
     decisionDriversProp: {
       type: Array as PropType<string[]>,
       default: () => []
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: ["update:decisionDrivers"],
@@ -118,5 +123,12 @@ export default defineComponent({
 <style scoped>
 .auto-grow-decision-driver {
   overflow-y: hidden;
+}
+
+.field-highlight {
+  border-left: 3px solid var(--adr-warning);
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-radius: 0 4px 4px 0;
+  padding-left: 8px;
 }
 </style>

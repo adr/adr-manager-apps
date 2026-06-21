@@ -1,6 +1,10 @@
 <template>
     <div class="metabar">
-        <div v-if="fieldVisibility.date" class="meta-field">
+        <div
+            v-if="fieldVisibility.date"
+            class="meta-field"
+            :class="{ 'field-highlight': highlightedFields.has('date') }"
+        >
             <label>
                 Last update
                 <HelpTooltip>The date the decision was last updated (YYYY-MM-DD).</HelpTooltip>
@@ -10,7 +14,11 @@
                 <input v-model="adr.date" data-cy="dateAdr" type="date" class="chip-input date-input" />
             </span>
         </div>
-        <div v-if="fieldVisibility.status" class="meta-field">
+        <div
+            v-if="fieldVisibility.status"
+            class="meta-field"
+            :class="{ 'field-highlight': highlightedFields.has('status') }"
+        >
             <label>
                 Status
                 <HelpTooltip>The current status of the ADR.</HelpTooltip>
@@ -18,7 +26,11 @@
             <MadrStatusChip v-model="adr.status" />
         </div>
 
-        <div v-if="template.peopleFields === 'deciders' && fieldVisibility.deciders" class="meta-field">
+        <div
+            v-if="template.peopleFields === 'deciders' && fieldVisibility.deciders"
+            class="meta-field"
+            :class="{ 'field-highlight': highlightedFields.has('deciders') }"
+        >
             <label>
                 Deciders
                 <HelpTooltip>Everyone involved in the decision, e.g. separated with commas.</HelpTooltip>
@@ -36,7 +48,11 @@
         </div>
 
         <template v-else-if="template.peopleFields === 'decisionMakersConsultedInformed'">
-            <div v-if="fieldVisibility.deciders" class="meta-field">
+            <div
+                v-if="fieldVisibility.deciders"
+                class="meta-field"
+                :class="{ 'field-highlight': highlightedFields.has('deciders') }"
+            >
                 <label>
                     Decision-makers
                     <span class="ver-tag">4.0</span>
@@ -53,7 +69,11 @@
                     />
                 </span>
             </div>
-            <div v-if="fieldVisibility.consulted" class="meta-field">
+            <div
+                v-if="fieldVisibility.consulted"
+                class="meta-field"
+                :class="{ 'field-highlight': highlightedFields.has('consulted') }"
+            >
                 <label>
                     Consulted
                     <span class="ver-tag">4.0</span>
@@ -69,7 +89,11 @@
                     />
                 </span>
             </div>
-            <div v-if="fieldVisibility.informed" class="meta-field">
+            <div
+                v-if="fieldVisibility.informed"
+                class="meta-field"
+                :class="{ 'field-highlight': highlightedFields.has('informed') }"
+            >
                 <label>
                     Informed
                     <span class="ver-tag">4.0</span>
@@ -95,15 +119,19 @@ import MadrStatusChip from "./MadrStatusChip.vue";
 import { computed } from "vue";
 import { DEFAULT_FIELD_VISIBILITY, getMadrTemplateAdapter } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 
 const props = withDefaults(
     defineProps<{
         adr: ArchitecturalDecisionRecord;
         templateVersion: MadrTemplateVersion;
         fieldVisibility?: FieldVisibility;
+        highlightedFields?: ReadonlySet<FieldKey>;
     }>(),
-    { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
+    {
+        fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }),
+        highlightedFields: () => new Set<FieldKey>()
+    }
 );
 
 const template = computed(() => getMadrTemplateAdapter(props.templateVersion));
@@ -131,6 +159,13 @@ function setDecisionMakers(value: string): void {
     display: flex;
     flex-direction: column;
     gap: 5px;
+}
+
+.meta-field.field-highlight {
+    border-left: 3px solid var(--adr-warning);
+    background: var(--adr-warning-050);
+    border-radius: 0 8px 8px 0;
+    padding: 6px 10px 6px 7px;
 }
 
 .meta-field > label {

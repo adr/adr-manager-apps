@@ -29,6 +29,7 @@
             :adr="adr"
             :template-version="templateVersion"
             :field-visibility="fieldVisibility"
+            :highlighted-fields="highlightedFields"
         />
 
         <ModeSwitchAlert v-if="isModeTooLow">
@@ -54,6 +55,7 @@
         <div
             v-if="mode === 'professional' && hasTemplateField('technicalStory') && fieldVisibility.technicalStory"
             class="tech-story"
+            :class="{ 'field-highlight': highlightedFields.has('technicalStory') }"
         >
             <div class="subhead">
                 <h4>Technical Story</h4>
@@ -72,18 +74,20 @@
 
         <template v-if="mode === 'professional' && fieldVisibility.decisionDrivers">
             <hr class="divider" />
-            <div class="section-head">
-                <h3>Decision Drivers</h3>
-                <span class="opt">optional</span>
-                <HelpTooltip>
-                    Decision Drivers are competing forces or facing concerns that influence the decision.
-                </HelpTooltip>
+            <div :class="['section-wrap', { 'field-highlight': highlightedFields.has('decisionDrivers') }]">
+                <div class="section-head">
+                    <h3>Decision Drivers</h3>
+                    <span class="opt">optional</span>
+                    <HelpTooltip>
+                        Decision Drivers are competing forces or facing concerns that influence the decision.
+                    </HelpTooltip>
+                </div>
+                <MadrListEditor
+                    data-cy="decisionDriversPro"
+                    :list="adr.decisionDrivers"
+                    placeholder="a decision driver, e.g. a force or concern…"
+                />
             </div>
-            <MadrListEditor
-                data-cy="decisionDriversPro"
-                :list="adr.decisionDrivers"
-                placeholder="a decision driver, e.g. a force or concern…"
-            />
         </template>
 
         <hr class="divider" />
@@ -93,6 +97,7 @@
             :mode="mode"
             :template-version="templateVersion"
             :field-visibility="fieldVisibility"
+            :highlighted-fields="highlightedFields"
         />
 
         <hr class="divider" />
@@ -102,54 +107,61 @@
             :mode="mode"
             :template-version="templateVersion"
             :field-visibility="fieldVisibility"
+            :highlighted-fields="highlightedFields"
         />
 
         <template v-if="mode === 'professional' && hasTemplateField('links') && fieldVisibility.links">
             <hr class="divider" />
-            <div class="section-head">
-                <h3>Links</h3>
-                <span class="opt">optional</span>
-                <HelpTooltip>Add references, e.g. to related ADRs.</HelpTooltip>
+            <div :class="['section-wrap', { 'field-highlight': highlightedFields.has('links') }]">
+                <div class="section-head">
+                    <h3>Links</h3>
+                    <span class="opt">optional</span>
+                    <HelpTooltip>Add references, e.g. to related ADRs.</HelpTooltip>
+                </div>
+                <MadrListEditor
+                    data-cy="linkPro"
+                    :list="adr.links"
+                    placeholder="a link or reference, e.g. Refined by ADR-0005…"
+                />
             </div>
-            <MadrListEditor
-                data-cy="linkPro"
-                :list="adr.links"
-                placeholder="a link or reference, e.g. Refined by ADR-0005…"
-            />
         </template>
 
         <template
             v-if="mode === 'professional' && hasTemplateField('moreInformation') && fieldVisibility.moreInformation"
         >
             <hr class="divider" />
-            <div class="section-head">
-                <h3>More Information</h3>
-                <span class="opt">optional</span>
-                <span class="ver-tag">4.0</span>
-                <HelpTooltip>
-                    Additional evidence, team agreement, when to revisit, and links to related decisions. Replaces
-                    "Links" from MADR 2.1.2.
-                </HelpTooltip>
+            <div :class="['section-wrap', { 'field-highlight': highlightedFields.has('moreInformation') }]">
+                <div class="section-head">
+                    <h3>More Information</h3>
+                    <span class="opt">optional</span>
+                    <span class="ver-tag">4.0</span>
+                    <HelpTooltip>
+                        Additional evidence, team agreement, when to revisit, and links to related decisions. Replaces
+                        "Links" from MADR 2.1.2.
+                    </HelpTooltip>
+                </div>
+                <AutoGrowTextarea
+                    v-model="adr.moreInformation"
+                    data-cy="moreInformationPro"
+                    :min-rows="2"
+                    placeholder="Related decisions, team agreement, when/how to revisit…"
+                />
             </div>
-            <AutoGrowTextarea
-                v-model="adr.moreInformation"
-                data-cy="moreInformationPro"
-                :min-rows="2"
-                placeholder="Related decisions, team agreement, when/how to revisit…"
-            />
         </template>
 
         <template v-if="mode === 'professional' && fieldVisibility.relevantFiles">
             <hr class="divider" />
-            <div class="section-head" data-cy="relevantFilesSection">
-                <h3>Relevant Files</h3>
-                <span class="opt">optional</span>
-                <HelpTooltip>
-                    Link the repository files this decision affects, so future readers can jump from the ADR straight to
-                    the implementation.
-                </HelpTooltip>
+            <div :class="['section-wrap', { 'field-highlight': highlightedFields.has('relevantFiles') }]">
+                <div class="section-head" data-cy="relevantFilesSection">
+                    <h3>Relevant Files</h3>
+                    <span class="opt">optional</span>
+                    <HelpTooltip>
+                        Link the repository files this decision affects, so future readers can jump from the ADR
+                        straight to the implementation.
+                    </HelpTooltip>
+                </div>
+                <MadrRelevantFiles :adr="adr" />
             </div>
-            <MadrRelevantFiles :adr="adr" />
         </template>
     </div>
 </template>
@@ -169,7 +181,7 @@ import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
 import { DEFAULT_FIELD_VISIBILITY, getMadrTemplateAdapter, hasMadrTemplateField } from "@adr-manager/core";
-import type { FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 import type { Tag } from "@/types/adr";
 
 const props = withDefaults(
@@ -179,12 +191,14 @@ const props = withDefaults(
         templateVersion?: MadrTemplateVersion;
         fileName?: string;
         fieldVisibility?: FieldVisibility;
+        highlightedFields?: ReadonlySet<FieldKey>;
         tags?: readonly Tag[];
     }>(),
     {
         templateVersion: "2.1.2",
         fileName: "",
         fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }),
+        highlightedFields: () => new Set<FieldKey>(),
         tags: () => []
     }
 );
@@ -270,6 +284,14 @@ const isModeTooLow = computed(() => props.mode === "basic" && minimumRequiredMod
 
 .tech-story {
     margin-top: 16px;
+}
+
+.field-highlight {
+    border-left: 3px solid var(--adr-warning);
+    background: var(--adr-warning-050);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 14px 8px 11px;
+    margin-left: -14px;
 }
 
 .tags-bar {

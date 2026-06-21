@@ -1,13 +1,5 @@
 <template>
-  <span
-    ref="anchorEl"
-    class="help"
-    tabindex="0"
-    @pointerenter="show"
-    @pointerleave="hide"
-    @focus="show"
-    @blur="hide"
-  >
+  <span ref="anchorEl" class="help" tabindex="0" @pointerenter="show" @pointerleave="hide" @focus="show" @blur="hide">
     <i class="codicon codicon-question"></i>
     <Teleport to="body">
       <span v-if="open" ref="bubbleEl" class="help-bubble" :style="pos"><slot></slot></span>

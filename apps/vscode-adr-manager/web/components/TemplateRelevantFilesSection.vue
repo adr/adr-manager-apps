@@ -1,5 +1,5 @@
 <template>
-  <div class="relevant-files">
+  <div class="relevant-files" :class="{ 'field-highlight': highlightedFields.has('relevantFiles') }">
     <TemplateHeader
       :info-text="'Link the files this decision affects, so future readers can jump from the ADR straight to the implementation.'"
       optional
@@ -49,6 +49,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from "vue";
 import TemplateHeader from "./TemplateHeader.vue";
+import type { FieldKey } from "@adr-manager/core";
 
 export default defineComponent({
   name: "TemplateRelevantFilesSection",
@@ -64,6 +65,10 @@ export default defineComponent({
     statusProp: {
       type: Object as PropType<Record<string, boolean>>,
       default: () => ({})
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: ["pick", "open", "remove"]
@@ -151,5 +156,12 @@ export default defineComponent({
   margin: 0 0 8px;
   color: var(--adr-ink-3);
   font-size: var(--adr-text-sm);
+}
+
+.field-highlight {
+  border-left: 3px solid var(--adr-warning);
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-radius: 0 4px 4px 0;
+  padding-left: 8px;
 }
 </style>

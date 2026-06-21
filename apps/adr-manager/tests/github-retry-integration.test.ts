@@ -9,7 +9,13 @@ beforeEach(() => {
 });
 
 function unauthorized(config: InternalAxiosRequestConfig): AxiosError {
-    const response = { data: { message: "Bad credentials" }, status: 401, statusText: "Unauthorized", headers: {}, config };
+    const response = {
+        data: { message: "Bad credentials" },
+        status: 401,
+        statusText: "Unauthorized",
+        headers: {},
+        config
+    };
     return new AxiosError("Request failed with status code 401", "ERR_BAD_REQUEST", config, null, response as never);
 }
 

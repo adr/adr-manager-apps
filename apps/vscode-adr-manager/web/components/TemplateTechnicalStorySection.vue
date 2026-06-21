@@ -1,5 +1,5 @@
 <template>
-  <div class="tech-story">
+  <div class="tech-story" :class="{ 'field-highlight': highlightedFields.has('technicalStory') }">
     <div class="subhead">
       <h4>Technical Story</h4>
       <HelpTooltip>Technical context of the ADR, e.g. a ticket or issue URL.</HelpTooltip>
@@ -20,8 +20,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, PropType } from "vue";
 import HelpTooltip from "./HelpTooltip.vue";
+import type { FieldKey } from "@adr-manager/core";
 
 export default defineComponent({
   name: "TemplateTechnicalStorySection",
@@ -32,6 +33,10 @@ export default defineComponent({
     technicalStory: {
       type: String,
       default: ""
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: ["update:technicalStory", "validate"],
@@ -56,6 +61,13 @@ export default defineComponent({
 <style scoped>
 .tech-story {
   margin-top: 16px;
+}
+
+.field-highlight {
+  border-left: 3px solid var(--adr-warning);
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-radius: 0 4px 4px 0;
+  padding-left: 8px;
 }
 
 #auto-grow-technical-story {

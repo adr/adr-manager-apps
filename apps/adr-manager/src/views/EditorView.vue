@@ -28,13 +28,19 @@
 
             <main class="pane-editor" data-tour="editor">
                 <template v-if="showEditor">
+                    <HiddenFieldsConvertDialog
+                        v-if="hiddenFieldsCauseConversion"
+                        @open-with-fields-visible="openWithFieldsVisible"
+                        @open-with-fields-hidden="openWithFieldsHidden"
+                    />
                     <MadrEditor
-                        v-if="!requiresConversion"
+                        v-else-if="!requiresConversion"
                         :adr="adrRecord"
                         :mode="store.mode"
                         :template-version="templateVersion"
                         :file-name="currentFileName"
-                        :field-visibility="store.fieldVisibility"
+                        :field-visibility="effectiveFieldVisibility"
+                        :highlighted-fields="highlightedFields"
                         :tags="adrTags"
                         @update:tags="setTags"
                     />
@@ -135,6 +141,7 @@ import DialogAddRepositories from "@/components/DialogAddRepositories.vue";
 import DialogCommit from "@/components/DialogCommit.vue";
 import DialogTourWelcome from "@/components/DialogTourWelcome.vue";
 import EditorConvert from "@/components/EditorConvert.vue";
+import HiddenFieldsConvertDialog from "@/components/HiddenFieldsConvertDialog.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import MadrEditor from "@/components/MadrEditor.vue";
 import MarkdownPreviewPane from "@/components/MarkdownPreviewPane.vue";
@@ -190,11 +197,16 @@ const {
     tags: adrTags,
     markdown,
     requiresConversion,
+    hiddenFieldsCauseConversion,
+    effectiveFieldVisibility,
+    highlightedFields,
     templateVersion,
     setTags,
     setTemplateVersion,
     updateFromRaw,
-    acceptConversion
+    acceptConversion,
+    openWithFieldsVisible,
+    openWithFieldsHidden
 } = useAdrEditor();
 const { routeDataFromStore } = useEditorRouteSync(props);
 const {

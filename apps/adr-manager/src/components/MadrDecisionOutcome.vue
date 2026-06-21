@@ -49,7 +49,10 @@
             "
             class="outcome-cols"
         >
-            <div v-if="fieldVisibility.positiveConsequences">
+            <div
+                v-if="fieldVisibility.positiveConsequences"
+                :class="{ 'field-highlight': highlightedFields.has('positiveConsequences') }"
+            >
                 <div class="subhead">
                     <h4>Positive Consequences</h4>
                     <HelpTooltip>
@@ -62,7 +65,10 @@
                     placeholder="a positive consequence…"
                 />
             </div>
-            <div v-if="fieldVisibility.negativeConsequences">
+            <div
+                v-if="fieldVisibility.negativeConsequences"
+                :class="{ 'field-highlight': highlightedFields.has('negativeConsequences') }"
+            >
                 <div class="subhead">
                     <h4>Negative Consequences</h4>
                     <HelpTooltip> e.g. afflicted quality attributes, follow-up decisions required, … </HelpTooltip>
@@ -76,18 +82,26 @@
         </div>
 
         <template v-if="mode === 'professional' && hasTemplateField('consequences')">
-            <div v-if="fieldVisibility.consequences" class="v4-block">
+            <div
+                v-if="fieldVisibility.consequences"
+                class="v4-block"
+                :class="{ 'field-highlight': highlightedFields.has('consequences') }"
+            >
                 <div class="subhead">
                     <h4>Consequences</h4>
                     <span class="ver-tag">4.0</span>
                     <HelpTooltip>
-                        Good / Neutral / Bad consequences of the decision. Press the (Good) label to switch it
-                        between states.
+                        Good / Neutral / Bad consequences of the decision. Press the (Good) label to switch it between
+                        states.
                     </HelpTooltip>
                 </div>
                 <MadrConsequenceEditor data-cy="consequencesPro" :list="adr.consequences" />
             </div>
-            <div v-if="hasTemplateField('confirmation') && fieldVisibility.confirmation" class="v4-block">
+            <div
+                v-if="hasTemplateField('confirmation') && fieldVisibility.confirmation"
+                class="v4-block"
+                :class="{ 'field-highlight': highlightedFields.has('confirmation') }"
+            >
                 <div class="subhead">
                     <h4>Confirmation</h4>
                     <span class="ver-tag">4.0</span>
@@ -116,7 +130,7 @@ import { createShortTitle } from "@/plugins/classes";
 import { useClickOutside } from "@/composables/useClickOutside";
 import { DEFAULT_FIELD_VISIBILITY, getMadrTemplateAdapter, hasMadrTemplateField } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
 
 const props = withDefaults(
@@ -125,8 +139,12 @@ const props = withDefaults(
         mode: Mode;
         templateVersion: MadrTemplateVersion;
         fieldVisibility?: FieldVisibility;
+        highlightedFields?: ReadonlySet<FieldKey>;
     }>(),
-    { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
+    {
+        fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }),
+        highlightedFields: () => new Set<FieldKey>()
+    }
 );
 
 const suggestionsOpen = ref(false);
@@ -156,6 +174,14 @@ function selectOption(title: string): void {
 
 .v4-block {
     margin-top: 18px;
+}
+
+.field-highlight {
+    border-left: 3px solid var(--adr-warning);
+    background: var(--adr-warning-050);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 14px 8px 11px;
+    margin-left: -14px;
 }
 
 .because-row {

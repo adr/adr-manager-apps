@@ -1,6 +1,6 @@
 <template>
   <div class="metabar">
-    <div v-if="fieldVisibility.date" class="meta-field">
+    <div v-if="fieldVisibility.date" class="meta-field" :class="{ 'field-highlight': highlightedFields.has('date') }">
       <label>
         Last update
         <HelpTooltip>The date the decision was last updated (YYYY-MM-DD).</HelpTooltip>
@@ -18,7 +18,11 @@
         />
       </span>
     </div>
-    <div v-if="fieldVisibility.status" class="meta-field">
+    <div
+      v-if="fieldVisibility.status"
+      class="meta-field"
+      :class="{ 'field-highlight': highlightedFields.has('status') }"
+    >
       <label>
         Status
         <HelpTooltip>The current status of the ADR.</HelpTooltip>
@@ -43,7 +47,11 @@
       </span>
     </div>
     <!-- Deciders and decision-makers name the same people, so editing either keeps both in sync. -->
-    <div v-if="templateVersion === '2.1.2' && fieldVisibility.deciders" class="meta-field">
+    <div
+      v-if="templateVersion === '2.1.2' && fieldVisibility.deciders"
+      class="meta-field"
+      :class="{ 'field-highlight': highlightedFields.has('deciders') }"
+    >
       <label>
         Deciders
         <HelpTooltip>Everyone involved in the decision, e.g. separated with commas.</HelpTooltip>
@@ -65,7 +73,11 @@
       </span>
     </div>
     <template v-else-if="templateVersion !== '2.1.2'">
-      <div v-if="fieldVisibility.deciders" class="meta-field">
+      <div
+        v-if="fieldVisibility.deciders"
+        class="meta-field"
+        :class="{ 'field-highlight': highlightedFields.has('deciders') }"
+      >
         <label>
           Decision-makers
           <span class="ver-tag">4.0</span>
@@ -87,7 +99,11 @@
           />
         </span>
       </div>
-      <div v-if="fieldVisibility.consulted" class="meta-field">
+      <div
+        v-if="fieldVisibility.consulted"
+        class="meta-field"
+        :class="{ 'field-highlight': highlightedFields.has('consulted') }"
+      >
         <label>
           Consulted
           <span class="ver-tag">4.0</span>
@@ -108,7 +124,11 @@
           />
         </span>
       </div>
-      <div v-if="fieldVisibility.informed" class="meta-field">
+      <div
+        v-if="fieldVisibility.informed"
+        class="meta-field"
+        :class="{ 'field-highlight': highlightedFields.has('informed') }"
+      >
         <label>
           Informed
           <span class="ver-tag">4.0</span>
@@ -137,7 +157,7 @@
 import { defineComponent, PropType } from "vue";
 import HelpTooltip from "./HelpTooltip.vue";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
-import type { FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 
 const STATUS_TONES = ["proposed", "rejected", "accepted", "deprecated", "superseded"];
 
@@ -178,6 +198,10 @@ export default defineComponent({
     fieldVisibility: {
       type: Object as PropType<FieldVisibility>,
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: [
@@ -210,6 +234,13 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+.meta-field.field-highlight {
+  border-left: 3px solid var(--adr-warning);
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-radius: 0 4px 4px 0;
+  padding-left: 8px;
 }
 
 .meta-field > label {

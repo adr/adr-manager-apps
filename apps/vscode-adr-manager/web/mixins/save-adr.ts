@@ -2,8 +2,9 @@
 import { defineComponent } from "vue";
 import { naturalCase2titleCase } from "../../src/plugins/utils";
 import vscodeApiMixin from "./vscode-api-mixin";
-import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
-import type { FieldVisibility, Tag } from "@adr-manager/core";
+import { DEFAULT_FIELD_VISIBILITY, getHiddenFieldsWithData } from "@adr-manager/core";
+import type { ArchitecturalDecisionRecord } from "@adr-manager/core";
+import type { FieldKey, FieldVisibility, Tag } from "@adr-manager/core";
 
 declare global {
   interface Window {
@@ -50,7 +51,10 @@ export default defineComponent({
       oldTitle: "",
       fieldVisibility: { ...DEFAULT_FIELD_VISIBILITY },
       tags: [] as Tag[],
-      recentTags: [] as Tag[]
+      recentTags: [] as Tag[],
+      hiddenFieldsCauseConversion: false as boolean,
+      temporarilyShowAllFields: false as boolean,
+      highlightedFields: new Set<FieldKey>() as Set<FieldKey>
     };
   },
   computed: {
@@ -144,6 +148,9 @@ export default defineComponent({
         return "";
       }
       return `The fields ${fields.join(", ")} of this ADR have values, but are not shown in the basic editor mode.`;
+    },
+    effectiveFieldVisibility(): FieldVisibility {
+      return this.temporarilyShowAllFields ? { ...DEFAULT_FIELD_VISIBILITY } : this.fieldVisibility;
     }
   },
   mounted() {
@@ -247,12 +254,60 @@ export default defineComponent({
     },
     /**
      * Toggles a single field's visibility, then persists the full map to globalState via the extension host.
+     * Also exits temporary full-visibility mode so the user's new setting takes effect immediately.
      */
     setFieldVisibility(key: string, value: boolean) {
       (this.fieldVisibility as Record<string, boolean>)[key] = value;
+      this.temporarilyShowAllFields = false;
+      this.highlightedFields = new Set<FieldKey>();
       // Spread into a plain object. Vue 3's reactive proxy fails to serialize
       // when passed directly to vscode.postMessage (structured-clone can't handle it).
       this.sendMessage("updateFieldVisibility", { ...this.fieldVisibility });
+    },
+    /**
+     * Shows all hidden fields for this viewing session without permanently changing
+     * the persisted field-visibility toggles. Records which fields had hidden data
+     * so they can be highlighted in the editor.
+     */
+    openWithFieldsVisible() {
+      this.highlightedFields = new Set(getHiddenFieldsWithData(this._adrLikeData(), this.fieldVisibility));
+      this.temporarilyShowAllFields = true;
+      this.hiddenFieldsCauseConversion = false;
+    },
+    /**
+     * Dismisses the hidden-fields prompt and opens the ADR with the current
+     * field-visibility settings. Hidden fields remain hidden but their data is
+     * preserved in the component state and will be written to the file on save.
+     */
+    openWithFieldsHidden() {
+      this.hiddenFieldsCauseConversion = false;
+    },
+    /** Assembles the mixin's individual field properties into the shape expected by getHiddenFieldsWithData. */
+    _adrLikeData(): ArchitecturalDecisionRecord {
+      return {
+        date: this.date,
+        status: this.status,
+        deciders: this.deciders,
+        decisionMakers: this.decisionMakers,
+        consulted: this.consulted,
+        informed: this.informed,
+        technicalStory: this.technicalStory,
+        decisionDrivers: this.decisionDrivers,
+        consideredOptions: this.consideredOptions,
+        decisionOutcome: this.decisionOutcome,
+        consequences: this.consequences,
+        confirmation: this.confirmation,
+        links: this.links,
+        moreInformation: this.moreInformation,
+        relevantFiles: this.relevantFiles ?? []
+      } as unknown as ArchitecturalDecisionRecord;
+    },
+    /** Detects whether any hidden fields have data and sets hiddenFieldsCauseConversion accordingly. */
+    _checkHiddenFields() {
+      const hidden = getHiddenFieldsWithData(this._adrLikeData(), this.fieldVisibility);
+      this.hiddenFieldsCauseConversion = hidden.length > 0;
+      this.temporarilyShowAllFields = false;
+      this.highlightedFields = new Set<FieldKey>();
     },
     /**
      * Builds a field payload with hidden fields cleared, mirroring applyFieldVisibilityFilter from core.
@@ -335,15 +390,33 @@ export default defineComponent({
     },
     /**
      * Sends a message to the extension to save an existing ADR as a Markdown file.
+     * Always sends the full field data (not filtered by visibility) so that hidden
+     * fields are preserved in the file and can be recovered by re-enabling them later.
      */
     saveAdr() {
-      const payload = this._filteredProfessionalPayload();
       this.sendMessage(
         "saveAdr",
         JSON.stringify({
           adr: {
-            ...payload,
-            status: this.templateVersion === "4.0.0" ? payload.status : naturalCase2titleCase(payload.status),
+            yaml: this.yaml,
+            title: this.title,
+            date: this.date,
+            status: this.templateVersion === "4.0.0" ? this.status : naturalCase2titleCase(this.status),
+            deciders: this.deciders,
+            technicalStory: this.technicalStory,
+            contextAndProblemStatement: this.contextAndProblemStatement,
+            decisionDrivers: this.decisionDrivers,
+            consideredOptions: this.consideredOptions,
+            decisionOutcome: this.decisionOutcome,
+            links: this.links.filter((link: string) => link),
+            relevantFiles: (this.relevantFiles ?? []).filter((file: string) => file),
+            decisionMakers: this.decisionMakers,
+            consulted: this.consulted,
+            informed: this.informed,
+            consequences: this.consequences,
+            confirmation: this.confirmation,
+            moreInformation: this.moreInformation,
+            templateVersion: this.templateVersion,
             oldTitle: this.oldTitle,
             fullPath: this.fullPath,
             tags: this.tags.map((t: Tag) => ({ ...t }))
@@ -374,6 +447,14 @@ export default defineComponent({
         }
         case "fieldVisibility": {
           this.fieldVisibility = message.fieldVisibility;
+          // Check for hidden fields with data after the visibility is known. This fires
+          // both on mount (getFieldVisibility response) and after fetchAdrValues when
+          // viewing an ADR (_pushFieldVisibility). Manual toggles send updateFieldVisibility
+          // and never receive a fieldVisibility message back, so the dialog won't reappear
+          // spuriously. Only check when an ADR is actually loaded.
+          if (this.fullPath) {
+            this._checkHiddenFields();
+          }
           break;
         }
         case "recentTags": {

@@ -36,7 +36,11 @@
       </div>
     </div>
     <template v-if="templateVersion === '4.0.0'">
-      <div v-if="fieldVisibility.consequences" class="v4-block">
+      <div
+        v-if="fieldVisibility.consequences"
+        class="v4-block"
+        :class="{ 'field-highlight': highlightedFields.has('consequences') }"
+      >
         <div class="subhead">
           <h4>Consequences</h4>
           <span class="ver-tag">4.0</span>
@@ -47,7 +51,11 @@
         </div>
         <ConsequenceListEditor :list="consequences" @changed="$emit('updateArray')"></ConsequenceListEditor>
       </div>
-      <div v-if="fieldVisibility.confirmation" class="v4-block">
+      <div
+        v-if="fieldVisibility.confirmation"
+        class="v4-block"
+        :class="{ 'field-highlight': highlightedFields.has('confirmation') }"
+      >
         <div class="subhead">
           <h4>Confirmation</h4>
           <span class="ver-tag">4.0</span>
@@ -70,7 +78,10 @@
       </div>
     </template>
     <div v-else-if="fieldVisibility.positiveConsequences || fieldVisibility.negativeConsequences" class="outcome-cols">
-      <div v-if="fieldVisibility.positiveConsequences">
+      <div
+        v-if="fieldVisibility.positiveConsequences"
+        :class="{ 'field-highlight': highlightedFields.has('positiveConsequences') }"
+      >
         <div class="subhead">
           <h4>Positive Consequences</h4>
           <HelpTooltip>e.g. improvement of a quality attribute, follow-up decisions required, …</HelpTooltip>
@@ -119,7 +130,10 @@
           />
         </div>
       </div>
-      <div v-if="fieldVisibility.negativeConsequences">
+      <div
+        v-if="fieldVisibility.negativeConsequences"
+        :class="{ 'field-highlight': highlightedFields.has('negativeConsequences') }"
+      >
         <div class="subhead">
           <h4>Negative Consequences</h4>
           <HelpTooltip>e.g. afflicted quality attributes, follow-up decisions required, …</HelpTooltip>
@@ -182,7 +196,7 @@ import HelpTooltip from "./HelpTooltip.vue";
 import TemplateHeader from "./TemplateHeader.vue";
 import { createShortTitle } from "../../src/plugins/utils";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
-import type { FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 
 type ConsequenceListKey = "positiveConsequences" | "negativeConsequences";
 type HeightKey = "explanation" | "confirmation" | "positives" | "negatives";
@@ -225,6 +239,10 @@ export default defineComponent({
     fieldVisibility: {
       type: Object as PropType<FieldVisibility>,
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: [
@@ -442,6 +460,13 @@ export default defineComponent({
 
 .v4-block {
   margin-top: 18px;
+}
+
+.field-highlight {
+  border-left: 3px solid var(--adr-warning);
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-radius: 0 4px 4px 0;
+  padding-left: 8px;
 }
 
 .outcome-cols {

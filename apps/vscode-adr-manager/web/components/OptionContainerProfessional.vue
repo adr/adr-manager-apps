@@ -30,7 +30,10 @@
     </div>
     <p v-for="error of v$['title'].$errors" :key="error.$uid" class="error-message title-error">{{ error.$message }}</p>
     <div v-if="isExpanded" class="opt-body">
-      <template v-if="fieldVisibility.optionDescription">
+      <div
+        v-if="fieldVisibility.optionDescription"
+        :class="{ 'field-highlight': highlightedFields.has('optionDescription') }"
+      >
         <div class="subhead">
           <h4>Description</h4>
           <HelpTooltip>
@@ -47,8 +50,12 @@
             $emit('update:description', ($event.target as HTMLTextAreaElement).value);
           "
         />
-      </template>
-      <div v-if="fieldVisibility.optionProsAndCons" class="opt-proscons">
+      </div>
+      <div
+        v-if="fieldVisibility.optionProsAndCons"
+        class="opt-proscons"
+        :class="{ 'field-highlight': highlightedFields.has('optionProsAndCons') }"
+      >
         <div>
           <div class="subhead">
             <h4>Good, because…</h4>
@@ -179,7 +186,7 @@ import { helpers, required } from "@vuelidate/validators";
 import { VueDraggableNext } from "vue-draggable-next";
 import HelpTooltip from "./HelpTooltip.vue";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
-import type { FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 
 type ArgumentListKey = "pros" | "neutrals" | "cons";
 type AutoGrowKey = ArgumentListKey | "description";
@@ -222,6 +229,10 @@ export default defineComponent({
     fieldVisibility: {
       type: Object as PropType<FieldVisibility>,
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   },
   emits: [
@@ -345,6 +356,13 @@ export default defineComponent({
 .auto-grow-neutral,
 .auto-grow-con {
   overflow-y: hidden;
+}
+
+.field-highlight {
+  border-left: 3px solid var(--adr-warning);
+  background: color-mix(in srgb, var(--adr-warning) 10%, var(--adr-surface));
+  border-radius: 0 4px 4px 0;
+  padding-left: 8px;
 }
 
 .opt-proscons {

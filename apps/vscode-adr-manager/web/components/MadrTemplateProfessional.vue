@@ -18,6 +18,7 @@
       v-model:informed="informed"
       :template-version="templateVersion"
       :field-visibility="fieldVisibility"
+      :highlighted-fields="highlightedFields"
       @validate="validateAll"
     ></TemplateDateStatusDecidersSection>
     <hr class="divider" />
@@ -32,6 +33,7 @@
       v-if="templateVersion === '2.1.2' && fieldVisibility.technicalStory"
       :key="Number(dataFetched)"
       v-model:technical-story="technicalStory"
+      :highlighted-fields="highlightedFields"
       @validate="validateAll"
     ></TemplateTechnicalStorySection>
     <hr class="divider" />
@@ -40,6 +42,7 @@
       :key="Number(dataFetched)"
       v-model:decision-drivers="decisionDrivers"
       :decision-drivers-prop="decisionDrivers"
+      :highlighted-fields="highlightedFields"
       @update:decision-drivers="validateAll"
     ></TemplateDecisionDriversSection>
     <hr v-if="fieldVisibility.decisionDrivers" class="divider" />
@@ -52,6 +55,7 @@
       :considered-options-prop="consideredOptions"
       :template-version="templateVersion"
       :field-visibility="fieldVisibility"
+      :highlighted-fields="highlightedFields"
       @add-option="addOption"
       @select-option="selectOption"
       @delete-option="deleteOption"
@@ -73,6 +77,7 @@
       :consequences-prop="consequences"
       :template-version="templateVersion"
       :field-visibility="fieldVisibility"
+      :highlighted-fields="highlightedFields"
       @validate="validate('explanation')"
       @update-array="validateAll"
     ></TemplateDecisionOutcomeProfessionalSection>
@@ -82,12 +87,14 @@
       :key="Number(dataFetched)"
       v-model:links="links"
       :links-prop="links"
+      :highlighted-fields="highlightedFields"
       @update:links="validateAll"
     ></TemplateLinksSection>
     <TemplateMoreInformationSection
       v-else-if="templateVersion !== '2.1.2' && fieldVisibility.moreInformation"
       :key="Number(dataFetched)"
       v-model:more-information="moreInformation"
+      :highlighted-fields="highlightedFields"
       @validate="validateAll"
     ></TemplateMoreInformationSection>
     <hr v-if="fieldVisibility.relevantFiles" class="divider" />
@@ -96,6 +103,7 @@
       :key="Number(dataFetched)"
       :relevant-files-prop="relevantFiles"
       :status-prop="relevantFilesStatus"
+      :highlighted-fields="highlightedFields"
       @pick="pickRelevantFiles"
       @open="openRelevantFile"
       @remove="removeRelevantFile"
@@ -119,7 +127,7 @@ import TemplateLinksSection from "./TemplateLinksSection.vue";
 import TemplateMoreInformationSection from "./TemplateMoreInformationSection.vue";
 import TemplateRelevantFilesSection from "./TemplateRelevantFilesSection.vue";
 import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
-import type { FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 
 export default defineComponent({
   name: "MadrTemplateProfessional",
@@ -140,6 +148,10 @@ export default defineComponent({
     fieldVisibility: {
       type: Object as PropType<FieldVisibility>,
       default: () => ({ ...DEFAULT_FIELD_VISIBILITY })
+    },
+    highlightedFields: {
+      type: Object as PropType<Set<FieldKey>>,
+      default: () => new Set<FieldKey>()
     }
   }
 });

@@ -80,7 +80,10 @@
                 </div>
 
                 <div v-if="professional && isExpanded(option)" class="opt-body">
-                    <template v-if="fieldVisibility.optionDescription">
+                    <div
+                        v-if="fieldVisibility.optionDescription"
+                        :class="{ 'field-highlight': highlightedFields.has('optionDescription') }"
+                    >
                         <div class="subhead">
                             <h4>Description</h4>
                             <HelpTooltip>
@@ -93,8 +96,12 @@
                             data-cy="descriptionConsOpt"
                             placeholder="Describe this option…"
                         />
-                    </template>
-                    <div v-if="fieldVisibility.optionProsAndCons" class="opt-proscons">
+                    </div>
+                    <div
+                        v-if="fieldVisibility.optionProsAndCons"
+                        class="opt-proscons"
+                        :class="{ 'field-highlight': highlightedFields.has('optionProsAndCons') }"
+                    >
                         <div>
                             <div class="subhead">
                                 <h4>Good, because…</h4>
@@ -168,7 +175,7 @@ import { createShortTitle } from "@/plugins/classes";
 import { matchOptionTitleMoreRelaxed } from "@/plugins/parser";
 import { DEFAULT_FIELD_VISIBILITY, getMadrTemplateAdapter } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import type { MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
+import type { FieldKey, MadrTemplateVersion, FieldVisibility } from "@adr-manager/core";
 import type { Option } from "@/types/adr";
 import type { Mode } from "@/types/store";
 
@@ -178,8 +185,12 @@ const props = withDefaults(
         mode: Mode;
         templateVersion: MadrTemplateVersion;
         fieldVisibility?: FieldVisibility;
+        highlightedFields?: ReadonlySet<FieldKey>;
     }>(),
-    { fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }) }
+    {
+        fieldVisibility: () => ({ ...DEFAULT_FIELD_VISIBILITY }),
+        highlightedFields: () => new Set<FieldKey>()
+    }
 );
 
 const draft = ref("");
@@ -401,5 +412,13 @@ function choose(option: Option): void {
     .opt-proscons {
         grid-template-columns: 1fr;
     }
+}
+
+.field-highlight {
+    border-left: 3px solid var(--adr-warning);
+    background: var(--adr-warning-050);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 14px 8px 11px;
+    margin-left: -11px;
 }
 </style>

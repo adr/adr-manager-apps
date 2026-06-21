@@ -83,7 +83,13 @@ test("dismissing mid-tour restores mode and removes the demo", () => {
 });
 
 test("a replay over real state does not inject the demo", () => {
-    const adr = { path: "docs/decisions/0001-real.md", originalMd: "# Real\n", editedMd: "# Real\n", id: 1 };
+    const adr = {
+        path: "docs/decisions/0001-real.md",
+        originalPath: "docs/decisions/0001-real.md",
+        originalMd: "# Real\n",
+        editedMd: "# Real\n",
+        id: 1
+    };
     const repo = new Repository({
         fullName: "acme/decisions",
         activeBranch: "main",

@@ -19,7 +19,7 @@ function openNewProfessionalAdr() {
 function openNewProfessionalAdrKeepFieldVisibility() {
     // The repo was already added by the preceding openNewProfessionalAdr() call,
     // so addedRepositories is still in localStorage. Reload the app and use the
-    // existing repo directly — no need to go through the Add Repositories dialog.
+    // existing repo directly. No need to go through the Add Repositories dialog.
     cy.visitAuthenticatedManager(TEST_BASE_URL, { clearStorage: false });
     cy.get("[data-cy=newADR]").click({ force: true });
     cy.get("[data-cy=modeProfessional]").click();
@@ -50,7 +50,7 @@ context("Field Visibility", () => {
         });
     });
 
-    context("MADR 2.1.2 — field toggles", () => {
+    context("MADR 2.1.2 field toggles", () => {
         beforeEach(openNewProfessionalAdr);
 
         it("shows all 2.1.2 fields by default and never shows 4.0.0-only fields", () => {
@@ -117,7 +117,7 @@ context("Field Visibility", () => {
         });
     });
 
-    context("MADR 4.0.0 — field toggles", () => {
+    context("MADR 4.0.0 field toggles", () => {
         beforeEach(() => {
             openNewProfessionalAdr();
             cy.get("[data-cy=versionSelect]").click();

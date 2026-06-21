@@ -62,7 +62,7 @@ export async function loadRepositoryContent(repoFullName: string, branchName: st
     adrList.forEach((filePath) => {
         const parsedId = Number(filePath.split("/").pop()?.split("-")[0]);
         const id = Number.isNaN(parsedId) ? -1 : parsedId;
-        const adrObject: AdrFile = { path: filePath, id, originalMd: "", editedMd: "" };
+        const adrObject: AdrFile = { path: filePath, originalPath: filePath, id, originalMd: "", editedMd: "" };
         repoObject.adrs.push(adrObject);
         adrPromises.push(
             provider.readFile(repoFullName, branchName, filePath).then((rawMd) => {

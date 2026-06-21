@@ -8,7 +8,7 @@ function addRepo(): void {
     cy.get("[data-cy=listRepo]").contains("ADR-Manager").click();
     cy.get("[data-cy=addRepoDialog]").click();
     // The repo auto-expands when added (store.currentRepository watch fires).
-    // Do NOT click repoHead — that would toggle it closed again.
+    // Do NOT click repoHead. That would toggle it closed again.
     // Wait for at least one ADR item to confirm the repo is open and loaded.
     cy.get("[data-cy=adrList]", { timeout: 20000 }).should("have.length.greaterThan", 0);
 }
@@ -159,7 +159,7 @@ context("ADR Search", () => {
             cy.get("[data-cy=adr-filter-panel]").find(".status-chip").first().click();
             cy.get("[data-cy=adr-search-input]").type("triggerclear");
             cy.get("[data-cy=adr-search-clear]").click();
-            // The filter panel stays open after clearing — check chips directly.
+            // The filter panel stays open after clearing. Check chips directly.
             // (Clicking the toggle here would close the panel, making the assertion fail.)
             cy.get("[data-cy=adr-filter-panel]").find(".status-chip.active").should("not.exist");
         });

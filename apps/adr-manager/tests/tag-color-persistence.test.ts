@@ -28,8 +28,10 @@ const TAG_C: Tag = { id: "c3", label: "infra", color: "#f59e0b" };
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makeAdrFile(md: string, id = 1): AdrFile {
+    const path = `docs/decisions/${String(id).padStart(4, "0")}-example.md`;
     return {
-        path: `docs/decisions/${String(id).padStart(4, "0")}-example.md`,
+        path,
+        originalPath: path,
         originalMd: md,
         editedMd: md,
         id

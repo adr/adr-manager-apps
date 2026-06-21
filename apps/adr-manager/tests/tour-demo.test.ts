@@ -46,7 +46,13 @@ test("editing the demo ADR never persists it to localStorage", () => {
 });
 
 test("teardown removes the demo and restores the previous editor state", () => {
-    const realAdr = { path: "docs/decisions/0001-real.md", originalMd: "# Real\n", editedMd: "# Real\n", id: 1 };
+    const realAdr = {
+        path: "docs/decisions/0001-real.md",
+        originalPath: "docs/decisions/0001-real.md",
+        originalMd: "# Real\n",
+        editedMd: "# Real\n",
+        id: 1
+    };
     const realRepo = new Repository({
         fullName: "acme/decisions",
         activeBranch: "main",

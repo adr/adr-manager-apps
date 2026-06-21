@@ -172,16 +172,14 @@ export const store = reactive({
         }
         current.editedMd = md;
 
-        if (this.currentRepository && this.currentRepository.addedAdrs.includes(current)) {
-            const path = current.path.split("/");
-            // The title heading is not necessarily the first line (4.0.0 starts with front matter).
-            const titleLine = md.split("\n").find((line) => /^# /.test(line)) ?? "";
-            const title = titleLine.replace(/^#+/, "").trim();
-            path[path.length - 1] = sanitize(
-                current.id.toString().padStart(4, "0") + "-" + naturalCase2snakeCase(title) + ".md"
-            );
-            current.path = path.join("/");
-        }
+        const path = current.path.split("/");
+        // The title heading is not necessarily the first line (4.0.0 starts with front matter).
+        const titleLine = md.split("\n").find((line) => /^# /.test(line)) ?? "";
+        const title = titleLine.replace(/^#+/, "").trim();
+        path[path.length - 1] = sanitize(
+            current.id.toString().padStart(4, "0") + "-" + naturalCase2snakeCase(title) + ".md"
+        );
+        current.path = path.join("/");
 
         this.updateLocalStorageRepositories();
     },
@@ -192,11 +190,13 @@ export const store = reactive({
             const adr = new ArchitecturalDecisionRecord();
             const md = adr2md(adr);
             const id = Math.max(...repo.adrs.map((a) => a.id), 0) + 1;
+            const path = repo.adrPath + id.toString().padStart(4, "0") + "-" + adr.title + ".md";
             const newAdr: AdrFile = {
                 originalMd: "",
                 editedMd: md,
                 id,
-                path: repo.adrPath + id.toString().padStart(4, "0") + "-" + adr.title + ".md",
+                path,
+                originalPath: path,
                 newAdr: true
             };
             repo.addAdr(newAdr);
@@ -317,6 +317,7 @@ export const store = reactive({
             title: splitPath[splitPath.length - 1] ?? "",
             value: file.editedMd,
             path: file.path,
+            originalPath: file.originalPath,
             fileSelected: false,
             fileStatus: fileType
         };
@@ -354,6 +355,7 @@ export const store = reactive({
             if (file.path === repoEntry.path) {
                 delete repoEntry.newAdr;
                 repoEntry.originalMd = repoEntry.editedMd;
+                repoEntry.originalPath = repoEntry.path;
             }
         }
     },
@@ -366,6 +368,7 @@ export const store = reactive({
         for (const repoEntry of repo.adrs) {
             if (file.path === repoEntry.path) {
                 repoEntry.originalMd = repoEntry.editedMd;
+                repoEntry.originalPath = repoEntry.path;
             }
         }
     },

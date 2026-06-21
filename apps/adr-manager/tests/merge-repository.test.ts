@@ -4,7 +4,7 @@ import type { AdrFile } from "@/types/adr";
 
 function adr(path: string, originalMd: string, editedMd = originalMd): AdrFile {
     const parsedId = Number(path.split("/").pop()?.split("-")[0]);
-    return { path, id: Number.isNaN(parsedId) ? -1 : parsedId, originalMd, editedMd };
+    return { path, originalPath: path, id: Number.isNaN(parsedId) ? -1 : parsedId, originalMd, editedMd };
 }
 
 function repo(adrs: AdrFile[], adrPath = "docs/decisions/"): Repository {
@@ -156,4 +156,34 @@ test("a new remote ADR appears in the merged repository", () => {
     const merged = mergeRefreshedRepository(cached, fresh, []);
 
     expect(merged?.adrs.map((file) => file.path)).toEqual(["docs/decisions/0001-a.md", "docs/decisions/0002-b.md"]);
+});
+
+// A locally renamed ADR whose new name is `path` and committed name is `originalPath`.
+function renamed(newPath: string, oldPath: string, originalMd: string, editedMd: string): AdrFile {
+    const parsedId = Number(newPath.split("/").pop()?.split("-")[0]);
+    return { path: newPath, originalPath: oldPath, id: Number.isNaN(parsedId) ? -1 : parsedId, originalMd, editedMd };
+}
+
+test("a pending rename matches its remote file by committed path instead of duplicating it", () => {
+    const cached = repo([renamed("docs/decisions/0001-new.md", "docs/decisions/0001-old.md", "# Old\n", "# New\n")]);
+    // Remote still has the file at its old path, with an upstream edit so the merge is not a no-op.
+    const fresh = repo([adr("docs/decisions/0001-old.md", "# Old\n\nupstream.\n")]);
+
+    const merged = mergeRefreshedRepository(cached, fresh, []);
+
+    expect(merged?.adrs).toHaveLength(1);
+    expect(merged?.addedAdrs).toHaveLength(0);
+    const file = merged?.adrs[0];
+    expect(file?.path).toBe("docs/decisions/0001-new.md");
+    expect(file?.originalPath).toBe("docs/decisions/0001-old.md");
+    expect(file?.editedMd).toBe("# New\n");
+    expect(file?.originalMd).toBe("# Old\n\nupstream.\n");
+});
+
+test("a pending rename against unchanged remote content is a no-op (no orphan, no duplicate)", () => {
+    const cached = repo([renamed("docs/decisions/0001-new.md", "docs/decisions/0001-old.md", "# Old\n", "# New\n")]);
+    const fresh = repo([adr("docs/decisions/0001-old.md", "# Old\n")]);
+
+    // The cached repo already represents the rename correctly, so nothing changes.
+    expect(mergeRefreshedRepository(cached, fresh, [])).toBeNull();
 });

@@ -61,6 +61,38 @@ test("pushSelectedFiles commits selected changed, new, and deleted files", async
     ]);
 });
 
+test("pushSelectedFiles renames by writing the new path and deleting the old one", async () => {
+    const renamedFile: CommitFile = {
+        ...commitFile("docs/adr/0001-new-title.md", "changed"),
+        originalPath: "docs/adr/0001-old-title.md"
+    };
+
+    commitFilesMock.mockResolvedValue(undefined);
+
+    const pushedFiles = await pushSelectedFiles({
+        repoFullName: "adr/adr-manager",
+        branch: "main",
+        changedFiles: [renamedFile],
+        newFiles: [],
+        deletedFiles: [],
+        commitMessage: "Rename ADR",
+        author: { name: "Jane", email: "jane@example.com" }
+    });
+
+    expect(commitFilesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+            changes: [
+                { action: "create", path: renamedFile.path, content: renamedFile.value },
+                { action: "delete", path: "docs/adr/0001-old-title.md", content: "" }
+            ]
+        })
+    );
+    expect(pushedFiles).toEqual([
+        { path: renamedFile.path, type: "changed" },
+        { path: "docs/adr/0001-old-title.md", type: "deleted" }
+    ]);
+});
+
 test("pushSelectedFiles rejects when the provider cannot push", async () => {
     commitFilesMock.mockRejectedValue(new Error("Could not push the commit."));
 

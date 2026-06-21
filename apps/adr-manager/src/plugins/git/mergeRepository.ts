@@ -5,8 +5,10 @@ import type { AdrFile } from "@/types/adr";
  * Merges freshly fetched repository content into the cached repository without
  * losing pending local work: local edits are rebased onto the new remote base,
  * locally added ADRs and pending deletions are carried over, and conflicts are
- * left for commit time. Returns null when nothing changed, so callers can skip
- * the store update (and the editor rebind it causes).
+ * left for commit time. A pending rename is matched to its remote file by the
+ * committed path (`originalPath`), so the new name survives the refresh instead
+ * of splitting into an orphan plus a duplicate. Returns null when nothing
+ * changed, so callers can skip the store update (and the editor rebind it causes).
  *
  * `cached` must be read from the store at merge time, not before the fetch
  * started, because the user may have edited ADRs while the fetch was in flight.
@@ -29,6 +31,11 @@ export function mergeRefreshedRepository(
     const cachedByPath = new Map(cached.adrs.map((adr) => [adr.path, adr]));
     const addedPaths = new Set(cached.addedAdrs.map((adr) => adr.path));
     const freshPaths = new Set(fresh.adrs.map((adr) => adr.path));
+    // Pending renames keyed by their committed (remote) path. Added files have path === originalPath,
+    // so they never enter this map.
+    const renamedByCommittedPath = new Map(
+        cached.adrs.filter((adr) => adr.path !== adr.originalPath).map((adr) => [adr.originalPath, adr])
+    );
 
     // A pending deletion stays pending while the file still exists remotely.
     // When the file is gone upstream, the deletion already happened and is dropped.
@@ -46,6 +53,23 @@ export function mergeRefreshedRepository(
         }
         const cachedAdr = cachedByPath.get(freshAdr.path);
         if (!cachedAdr) {
+            const renamed = renamedByCommittedPath.get(freshAdr.path);
+            if (renamed) {
+                // This remote file was renamed locally: rebase the edit onto the latest remote content,
+                // keeping originalPath at the remote path so the commit still deletes it.
+                merged.adrs.push(
+                    failedPaths.has(freshAdr.path)
+                        ? cloneAdr(renamed)
+                        : {
+                              path: renamed.path,
+                              originalPath: freshAdr.path,
+                              id: freshAdr.id,
+                              originalMd: freshAdr.originalMd,
+                              editedMd: renamed.editedMd
+                          }
+                );
+                continue;
+            }
             merged.adrs.push(cloneAdr(freshAdr));
             continue;
         }
@@ -64,6 +88,7 @@ export function mergeRefreshedRepository(
             // The file exists remotely now, so it is no longer "added" regardless of its history.
             merged.adrs.push({
                 path: freshAdr.path,
+                originalPath: freshAdr.path,
                 id: freshAdr.id,
                 originalMd: freshAdr.originalMd,
                 editedMd: cachedAdr.editedMd
@@ -81,13 +106,15 @@ export function mergeRefreshedRepository(
 
     // Cached files that disappeared remotely: clean ones were stale and are dropped,
     // dirty ones are preserved as new additions so the local work can be re-committed.
+    // A pending rename is judged by its committed path, which the fresh loop already handled.
     for (const cachedAdr of cached.adrs) {
-        if (freshPaths.has(cachedAdr.path) || addedPaths.has(cachedAdr.path)) {
+        if (freshPaths.has(cachedAdr.originalPath) || addedPaths.has(cachedAdr.path)) {
             continue;
         }
         if (cachedAdr.editedMd !== cachedAdr.originalMd) {
             const resurrected: AdrFile = {
                 path: cachedAdr.path,
+                originalPath: cachedAdr.path,
                 id: cachedAdr.id,
                 originalMd: "",
                 editedMd: cachedAdr.editedMd,
@@ -104,6 +131,7 @@ export function mergeRefreshedRepository(
 function cloneAdr(adr: AdrFile): AdrFile {
     return {
         path: adr.path,
+        originalPath: adr.originalPath,
         id: adr.id,
         originalMd: adr.originalMd,
         editedMd: adr.editedMd,

@@ -55,11 +55,13 @@ export function buildDemoRepository(): Repository {
         links: []
     });
     const md = adr2md(record);
+    const path = "docs/decisions/0001-use-markdown-architectural-decision-records.md";
     const adrFile: AdrFile = {
         originalMd: md,
         editedMd: md,
         id: 1,
-        path: "docs/decisions/0001-use-markdown-architectural-decision-records.md"
+        path,
+        originalPath: path
     };
     const repo = new Repository({
         fullName: DEMO_REPO_FULL_NAME,

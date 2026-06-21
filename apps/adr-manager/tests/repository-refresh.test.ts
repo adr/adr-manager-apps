@@ -17,7 +17,7 @@ function repo(fullName: string, md: string, transient = false): Repository {
         fullName,
         activeBranch: "main",
         branches: [],
-        adrs: [{ path: "docs/decisions/0001-a.md", id: 1, originalMd: md, editedMd: md }],
+        adrs: [{ path: "docs/decisions/0001-a.md", originalPath: "docs/decisions/0001-a.md", id: 1, originalMd: md, editedMd: md }],
         adrPath: "docs/decisions/"
     });
     repository.transient = transient;

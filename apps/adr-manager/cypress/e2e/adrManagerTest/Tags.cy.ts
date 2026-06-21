@@ -257,7 +257,7 @@ context("ADR Tags", () => {
         });
     });
 
-    // ── 6. Suggestions — recently used tags ───────────────────────────────────
+    // ── 6. Suggestions recently used tags ───────────────────────────────────
     context("Suggestions (recently used tags)", () => {
         it("shows no suggestions on a completely fresh session", () => {
             openFreshAdr();
@@ -314,7 +314,7 @@ context("ADR Tags", () => {
             cy.get("[data-cy=tag-add-btn]").click();
             // Assign the first suggestion
             cy.get("[data-cy=tag-suggestion]").first().click();
-            // Reopen picker — assigned tag must not appear
+            // Reopen picker assigned tag must not appear
             cy.get("[data-cy=tag-add-btn]").click();
             cy.get("[data-cy=tag-suggestion]").should("have.length", 3);
         });

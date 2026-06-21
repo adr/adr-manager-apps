@@ -39,7 +39,10 @@
                 @click="emit('open-file', file)"
             >
                 <span class="mdi mdi-file-document-outline fico" aria-hidden="true"></span>
-                <span class="fname"> {{ fileLabel(file) }}<span v-if="isDirty(file)" class="fstar">*</span> </span>
+                <span class="fname">
+                    <span class="fname-text">{{ fileLabel(file) }}</span>
+                    <span v-if="isDirty(file)" class="fstar">*</span>
+                </span>
                 <button
                     type="button"
                     class="icon-btn danger file-del"
@@ -96,7 +99,7 @@ const props = defineProps<{
     filteredAdrs?: AdrFile[];
 }>();
 
-// Full candidate list — filtered when search is active, sorted full list otherwise.
+// Full candidate list. Filtered when search is active, sorted full list otherwise.
 const allAdrs = computed(() => props.filteredAdrs ?? sortedAdrs(props.repo));
 
 // When a search is active we show every match; pagination only applies to the full list.
@@ -259,15 +262,23 @@ const shortName = computed(() => props.repo.fullName.split("/").slice(1).join("/
 .adr-file .fname {
     flex: 1 1 auto;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
     font-size: 12.5px;
     font-family: var(--adr-font-mono);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     letter-spacing: -0.01em;
 }
 
+.adr-file .fname-text {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .adr-file .fstar {
+    flex: 0 0 auto;
     color: var(--adr-warning);
     font-weight: 700;
 }

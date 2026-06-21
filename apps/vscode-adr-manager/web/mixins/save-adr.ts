@@ -250,7 +250,7 @@ export default defineComponent({
      */
     setFieldVisibility(key: string, value: boolean) {
       (this.fieldVisibility as Record<string, boolean>)[key] = value;
-      // Spread into a plain object — Vue 3's reactive proxy fails to serialize
+      // Spread into a plain object. Vue 3's reactive proxy fails to serialize
       // when passed directly to vscode.postMessage (structured-clone can't handle it).
       this.sendMessage("updateFieldVisibility", { ...this.fieldVisibility });
     },

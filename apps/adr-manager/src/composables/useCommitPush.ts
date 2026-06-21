@@ -20,6 +20,12 @@ function pushedFile(file: CommitFile): PushedFile {
     return { path: file.path, type: file.fileStatus };
 }
 
+// Git has no rename op, so a rename commits as a create at the new path plus a delete of the old
+// path this returns.
+function renamedFrom(file: CommitFile): string | undefined {
+    return file.fileStatus === "changed" && file.originalPath !== file.path ? file.originalPath : undefined;
+}
+
 export async function pushSelectedFiles({
     repoFullName,
     branch,
@@ -29,18 +35,29 @@ export async function pushSelectedFiles({
     commitMessage,
     author
 }: CommitPushInput): Promise<PushedFile[]> {
-    const selectedChangedAndNewFiles = [...selectedFiles(changedFiles), ...selectedFiles(newFiles)];
+    const writes = [...selectedFiles(changedFiles), ...selectedFiles(newFiles)].map((file) => ({
+        file,
+        oldPath: renamedFrom(file)
+    }));
     const selectedDeletedFiles = selectedFiles(deletedFiles);
-    const pushedFiles = [...selectedChangedAndNewFiles, ...selectedDeletedFiles].map(pushedFile);
+
+    const pushedFiles: PushedFile[] = [
+        ...writes.flatMap(({ file, oldPath }): PushedFile[] =>
+            oldPath === undefined ? [pushedFile(file)] : [pushedFile(file), { path: oldPath, type: "deleted" }]
+        ),
+        ...selectedDeletedFiles.map(pushedFile)
+    ];
 
     const changes: FileChange[] = [
-        ...selectedChangedAndNewFiles.map(
-            (file): FileChange => ({
-                action: file.fileStatus === "new" ? "create" : "update",
+        ...writes.flatMap(({ file, oldPath }): FileChange[] => {
+            // A new path does not exist upstream yet, so a rename writes with "create", not "update".
+            const write: FileChange = {
+                action: file.fileStatus === "new" || oldPath !== undefined ? "create" : "update",
                 path: file.path,
                 content: file.value
-            })
-        ),
+            };
+            return oldPath === undefined ? [write] : [write, { action: "delete", path: oldPath, content: "" }];
+        }),
         ...selectedDeletedFiles.map((file): FileChange => ({ action: "delete", path: file.path, content: "" }))
     ];
 

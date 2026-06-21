@@ -12,6 +12,8 @@ export type { Option, DecisionOutcome, AdrInit, Tag } from "@adr-manager/core";
  */
 export interface AdrFile {
     path: string;
+    /** The committed path. `path` diverges from it on a rename until the next commit. */
+    originalPath: string;
     originalMd: string;
     editedMd: string;
     id: number;

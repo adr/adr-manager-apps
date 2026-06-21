@@ -614,7 +614,7 @@ export default defineComponent({
   opacity: 1;
 }
 
-/* Status chip colors — mirrors .chip.status[data-tone] palette from adr-design.css */
+/* Status chip colors. Mirrors .chip.status[data-tone] palette from adr-design.css */
 .status-chip[data-tone="accepted"] {
   color: var(--adr-success);
   border-color: var(--adr-success);

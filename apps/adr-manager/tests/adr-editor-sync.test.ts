@@ -19,7 +19,13 @@ function createEditor(): ReturnType<typeof useAdrEditor> {
 }
 
 function openInStore(editedMd: string): AdrFile {
-    const adrFile: AdrFile = { path: "docs/decisions/0001-test.md", originalMd: editedMd, editedMd, id: 1 };
+    const adrFile: AdrFile = {
+        path: "docs/decisions/0001-test.md",
+        originalPath: "docs/decisions/0001-test.md",
+        originalMd: editedMd,
+        editedMd,
+        id: 1
+    };
     const repo = new Repository({
         fullName: "acme/decisions",
         activeBranch: "main",
@@ -197,8 +203,20 @@ test("a template-agnostic document keeps the selected version", async () => {
     const v4Record = sampleRecord();
     v4Record.decisionMakers = "Jane Doe";
 
-    const v4File: AdrFile = { path: "docs/decisions/0001-v4.md", originalMd: "", editedMd: adr2md400(v4Record), id: 1 };
-    const emptyFile: AdrFile = { path: "docs/decisions/0002-new.md", originalMd: "", editedMd: emptyMd, id: 2 };
+    const v4File: AdrFile = {
+        path: "docs/decisions/0001-v4.md",
+        originalPath: "docs/decisions/0001-v4.md",
+        originalMd: "",
+        editedMd: adr2md400(v4Record),
+        id: 1
+    };
+    const emptyFile: AdrFile = {
+        path: "docs/decisions/0002-new.md",
+        originalPath: "docs/decisions/0002-new.md",
+        originalMd: "",
+        editedMd: emptyMd,
+        id: 2
+    };
     const repo = new Repository({
         fullName: "acme/decisions",
         activeBranch: "main",

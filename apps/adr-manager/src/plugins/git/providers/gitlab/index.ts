@@ -7,9 +7,6 @@ import type { GitProvider } from "../../provider";
 export const gitlabProvider: GitProvider = {
     id: "gitlab",
 
-    // GitLab commits through one atomic API call, so no consistency cooldown is needed.
-    commitCooldownMs: 0,
-
     async signIn() {
         await beginAuthorizeRedirect();
     },

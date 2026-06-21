@@ -88,7 +88,7 @@ import AutoGrowTextarea from "./AutoGrowTextarea.vue";
 import BaseDialog from "./BaseDialog.vue";
 import LoadingOverlay from "./LoadingOverlay.vue";
 import { pushSelectedFiles } from "@/composables/useCommitPush";
-import { describeGitError, getActiveProvider } from "@/plugins/git";
+import { describeGitError } from "@/plugins/git";
 import { store } from "@/plugins/store";
 import { useAlert } from "@/composables/useAlert";
 import { useToast } from "@/composables/useToast";
@@ -118,7 +118,6 @@ const branch = ref("");
 const commitMessage = ref("");
 const loading = ref(false);
 const openGroups = ref<string[]>([]);
-const commitCooldown = ref(false);
 
 const fileGroups = computed<FileGroup[]>(() =>
     [
@@ -149,12 +148,6 @@ const anyFileSelected = computed(() =>
 
 watch(show, (visible) => {
     if (!visible) {
-        return;
-    }
-    if (commitCooldown.value) {
-        alert("Latency problem with the git provider API. Please wait ~60 seconds!", "Warning", "warning").then(
-            () => (show.value = false)
-        );
         return;
     }
     commitMessage.value = "";
@@ -190,17 +183,6 @@ function onCommit(): void {
     push();
 }
 
-function startCommitCooldown(): void {
-    const cooldownMs = getActiveProvider().commitCooldownMs;
-    if (cooldownMs === 0) {
-        return;
-    }
-    commitCooldown.value = true;
-    setTimeout(() => {
-        commitCooldown.value = false;
-    }, cooldownMs);
-}
-
 async function push(): Promise<void> {
     loading.value = true;
     try {
@@ -213,7 +195,6 @@ async function push(): Promise<void> {
             commitMessage: commitMessage.value,
             author: { name: store.getUserName(), email: store.getUserEmail() }
         });
-        startCommitCooldown();
         store.updateLocalStorageAfterCommit(pushedFiles);
         alert("Successfully pushed", "Success", "success");
     } catch (error) {

@@ -17,12 +17,14 @@ import { encodeFilePath } from "../../paths";
 import type { GitProvider } from "../../provider";
 import type { GitHubTreeInput } from "./types";
 
+const lastPushByBranch = new Map<string, { parent: string; head: string }>();
+
+function pushKey(repoFullName: string, branch: string): string {
+    return `${repoFullName}#${branch}`;
+}
+
 export const githubProvider: GitProvider = {
     id: "github",
-
-    // GitHub needs ~a minute before the new commit sha is consistently readable, so a push
-    // within that window risks overwriting the previous one with an outdated parent sha.
-    commitCooldownMs: 60000,
 
     async signIn() {
         await signInWithGitHubPopup();
@@ -62,6 +64,11 @@ export const githubProvider: GitProvider = {
             throw new Error("Could not load the latest commit.");
         }
 
+        const tipSha = lastCommit.commit.sha;
+        const cached = lastPushByBranch.get(pushKey(repoFullName, branch));
+        // A reported tip equal to our previous parent means GitHub's replica lags, so build on the commit we pushed.
+        const parentSha = cached && tipSha === cached.parent ? cached.head : tipSha;
+
         const tree: GitHubTreeInput[] = await Promise.all(
             changes
                 .filter((change) => change.action !== "delete")
@@ -79,12 +86,12 @@ export const githubProvider: GitProvider = {
             }
         }
 
-        const newTree = await createTree(repoFullName, lastCommit.commit.sha, tree);
+        const newTree = await createTree(repoFullName, parentSha, tree);
         if (!newTree) {
             throw new Error("Could not create the file tree.");
         }
 
-        const commit = await createCommit(repoFullName, message, author, lastCommit.commit.sha, newTree.sha);
+        const commit = await createCommit(repoFullName, message, author, parentSha, newTree.sha);
         if (!commit) {
             throw new Error("Could not create the commit.");
         }
@@ -93,5 +100,7 @@ export const githubProvider: GitProvider = {
         if (!pushedRef) {
             throw new Error("Could not push the commit.");
         }
+
+        lastPushByBranch.set(pushKey(repoFullName, branch), { parent: parentSha, head: commit.sha });
     }
 };

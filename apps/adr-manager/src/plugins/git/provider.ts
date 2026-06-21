@@ -7,9 +7,6 @@ import type { Branch, CommitInput, GitProviderId, RepoPage, RepoSummary, UserInf
 export interface GitProvider {
     readonly id: GitProviderId;
 
-    /** How long the UI should block a follow-up push after a commit. */
-    readonly commitCooldownMs: number;
-
     /**
      * Starts interactive sign-in. May resolve after a popup (GitHub) or navigate
      * away for a redirect flow and never resolve (GitLab).

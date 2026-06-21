@@ -88,9 +88,5 @@ cases.forEach(({ provider, authenticate }) => {
         test("restoreSession is safe without a session", () => {
             expect(() => provider.restoreSession()).not.toThrow();
         });
-
-        test("declares a non-negative commit cooldown", () => {
-            expect(provider.commitCooldownMs).toBeGreaterThanOrEqual(0);
-        });
     });
 });

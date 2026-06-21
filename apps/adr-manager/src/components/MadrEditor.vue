@@ -14,7 +14,7 @@
 
         <div class="title-wrap">
             <input v-model="adr.title" data-cy="titleAdr" class="title-input" placeholder="Decision title" autofocus />
-            <HelpTooltip class="align-end">
+            <HelpTooltip>
                 Describe the solved problem and the solution concisely. The title is also used as the file name, so keep
                 it short and avoid special characters.
             </HelpTooltip>

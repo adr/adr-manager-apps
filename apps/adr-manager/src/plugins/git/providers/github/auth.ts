@@ -28,8 +28,10 @@ export function applyAuthHeader(): void {
     }
 }
 
-export function clearSession(): void {
+export async function clearSession(): Promise<void> {
     lsRemove("authId");
     lsRemove("user");
     delete axios.defaults.headers.common["Authorization"];
+    const [{ signOut }, { auth }] = await Promise.all([import("firebase/auth"), import("@/plugins/firebase/client")]);
+    await signOut(auth);
 }

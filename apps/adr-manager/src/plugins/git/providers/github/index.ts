@@ -33,8 +33,8 @@ export const githubProvider: GitProvider = {
         return false;
     },
 
-    signOut() {
-        clearSession();
+    async signOut() {
+        await clearSession();
     },
 
     isAuthenticated() {

@@ -19,7 +19,7 @@ export interface GitProvider {
     /** Completes a redirect-based sign-in on app boot. Returns true if a session was established. */
     completeSignIn(): Promise<boolean>;
 
-    signOut(): void;
+    signOut(): Promise<void>;
 
     /** Synchronous token presence check, used by the router guard. */
     isAuthenticated(): boolean;

@@ -246,8 +246,8 @@ function copyMarkdown(): void {
         .catch(() => showErrorToast("Could not copy the markdown"));
 }
 
-function logOut(): void {
-    getActiveProvider().signOut();
+async function logOut(): Promise<void> {
+    await getActiveProvider().signOut();
     localStorage.clear();
     store.setMode("basic");
     resetSessionGuard();

@@ -16,7 +16,7 @@ export const gitlabProvider: GitProvider = {
 
     completeSignIn: completeOAuthCallback,
 
-    signOut() {
+    async signOut() {
         signOutGitLab();
     },
 

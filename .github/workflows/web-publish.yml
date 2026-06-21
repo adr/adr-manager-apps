@@ -30,6 +30,8 @@ jobs:
           cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter adr-manager build
+        env:
+          VITE_GITLAB_CLIENT_ID: ${{ vars.VITE_GITLAB_CLIENT_ID }}
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

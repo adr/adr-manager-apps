@@ -111,7 +111,8 @@ export async function getUser(): Promise<UserInfo | undefined> {
         return undefined;
     }
     const emails = await request(axios.get<GitHubEmail[]>(`${BASE_URL_USER}/public_emails`));
-    const email = (emails?.find((entry) => entry.primary) ?? emails?.[0])?.email ?? "";
+    const publicEmail = (emails?.find((entry) => entry.primary) ?? emails?.[0])?.email;
+    const email = publicEmail ?? user.email ?? `${user.id}+${user.login}@users.noreply.github.com`;
     return { username: user.login, displayName: user.name ?? user.login, email };
 }
 

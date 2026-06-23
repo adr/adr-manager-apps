@@ -84,6 +84,7 @@ context("First-time tour", () => {
     it("can be replayed from the topbar help button and dismissed with Escape", () => {
         visitFreshManager();
         cy.get("[data-cy=tourDecline]").click();
+        cy.get("[data-cy=tourDecline]").should("not.exist");
 
         cy.get("[data-cy=startTour]").click();
         cy.get("[data-cy=tourPopover]").should("be.visible");

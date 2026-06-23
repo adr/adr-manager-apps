@@ -261,6 +261,8 @@ function copyMarkdown(): void {
 async function logOut(): Promise<void> {
     await getActiveProvider().signOut();
     localStorage.clear();
+    // Don't show the tour screen again after signing-out and signing back in.
+    lsSet("tourSeen", "1");
     store.setMode("basic");
     resetSessionGuard();
     router.push("/");

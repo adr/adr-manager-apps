@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import type { AdrInit, Option, Tag } from "@adr-manager/core";
-import { setRelevantFilesInMd, setTagsInMd } from "@adr-manager/core";
+import { setMadrVersionInMd, setRelevantFilesInMd, setTagsInMd } from "@adr-manager/core";
 
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { adrTemplatemarkdownContent, initialMarkdownContent, readmeMarkdownContent } from "./plugins/constants";
-import { parseAdr, serializeAdr, type MadrTemplateVersion } from "./plugins/parser";
+import { DEFAULT_MADR_VERSION, parseAdr, serializeAdr, type MadrTemplateVersion } from "./plugins/parser";
 import { cleanPathString, matchesMadrTitleFormat, naturalCase2snakeCase } from "./plugins/utils";
 
 /**
@@ -508,7 +508,8 @@ export function createBasicAdr(fields: {
     }
   });
 
-  const newMD = setAdrMetadataInMd(serializeAdr(newAdr, fields.templateVersion ?? "2.1.2"), {
+  const version = fields.templateVersion ?? DEFAULT_MADR_VERSION;
+  const newMD = setAdrMetadataInMd(serializeAdr(newAdr, version), version, {
     relevantFiles: fields.relevantFiles,
     tags: fields.tags
   });
@@ -523,7 +524,8 @@ export function createBasicAdr(fields: {
 export function createProfessionalAdr(fields: AdrInit & { templateVersion?: MadrTemplateVersion; tags?: Tag[] }) {
   const newAdr = getAdrObjectFromFields(fields);
 
-  const newMD = setAdrMetadataInMd(serializeAdr(newAdr, fields.templateVersion ?? "2.1.2"), {
+  const version = fields.templateVersion ?? DEFAULT_MADR_VERSION;
+  const newMD = setAdrMetadataInMd(serializeAdr(newAdr, version), version, {
     relevantFiles: newAdr.relevantFiles,
     tags: fields.tags
   });
@@ -563,7 +565,8 @@ export async function saveAdr(
   });
   const newUri = getRenamedUri(fileUri, adr.title);
   await vscode.workspace.fs.rename(fileUri, newUri);
-  const newMD = setAdrMetadataInMd(serializeAdr(adr, fields.templateVersion ?? "2.1.2"), {
+  const version = fields.templateVersion ?? DEFAULT_MADR_VERSION;
+  const newMD = setAdrMetadataInMd(serializeAdr(adr, version), version, {
     relevantFiles: adr.relevantFiles,
     tags: fields.tags
   });
@@ -571,9 +574,15 @@ export async function saveAdr(
   return newUri;
 }
 
-function setAdrMetadataInMd(md: string, fields: { relevantFiles?: string[]; tags?: Tag[] }): string {
+function setAdrMetadataInMd(
+  md: string,
+  version: MadrTemplateVersion,
+  fields: { relevantFiles?: string[]; tags?: Tag[] }
+): string {
   const withRelevantFiles = setRelevantFilesInMd(md, fields.relevantFiles ?? []);
-  return fields.tags ? setTagsInMd(withRelevantFiles, fields.tags) : withRelevantFiles;
+  const withTags = fields.tags ? setTagsInMd(withRelevantFiles, fields.tags) : withRelevantFiles;
+  // A basic ADR is indistinguishable between versions, so pin the chosen one (read back on load).
+  return setMadrVersionInMd(withTags, version);
 }
 
 /**

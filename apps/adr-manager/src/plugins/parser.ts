@@ -6,10 +6,12 @@ export {
     detectMadrVersion,
     getMadrTemplateAdapter,
     MADR_TEMPLATE_ADAPTERS,
+    DEFAULT_MADR_VERSION,
     parseMadr,
     roundTripsMadr,
     serializeMadr,
     snakeCase2naturalCase,
     naturalCase2snakeCase,
-    matchOptionTitleMoreRelaxed
+    matchOptionTitleMoreRelaxed,
+    setMadrVersionInMd
 } from "@adr-manager/core";

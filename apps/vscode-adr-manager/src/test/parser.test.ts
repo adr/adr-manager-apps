@@ -1,7 +1,8 @@
 // Tests for the extension's version-aware parse/serialize dispatch. The parsers
 // and writers themselves are tested in @adr-manager/core (packages/core/tests).
 import { describe, expect, test } from "vitest";
-import { detectMadrVersion, parseAdr, serializeAdr } from "../plugins/parser";
+import { setMadrVersionInMd } from "@adr-manager/core";
+import { detectMadrVersion, parseAdr, resolveMadrVersion, serializeAdr } from "../plugins/parser";
 
 const MADR_212 = `# Use Markdown Any Decision Records
 
@@ -121,5 +122,39 @@ describe("parseAdr", () => {
     expect(detectMadrVersion(converted)).toBe("4.0.0");
     expect(converted).toContain("decision-makers: Ezra");
     expect(converted).not.toContain("* Deciders:");
+  });
+
+  test("resolveMadrVersion classifies markers, real templates and ambiguous ADRs", () => {
+    const basic = `# Use MADR
+
+## Context and Problem Statement
+
+We need to record decisions.
+
+## Considered Options
+
+* MADR
+* Formless
+
+## Decision Outcome
+
+Chosen option: "MADR", because it is lean.
+`;
+    // Detection alone cannot classify a basic ADR (both templates share these sections)...
+    expect(detectMadrVersion(basic)).toBe("2.1.2");
+    // ...so an unclassifiable ADR resolves to the default (latest) version.
+    expect(resolveMadrVersion(basic)).toBe("4.0.0");
+    // An explicit marker always wins, even against the default.
+    expect(resolveMadrVersion(setMadrVersionInMd(basic, "2.1.2"))).toBe("2.1.2");
+    // A document that genuinely only fits 2.1.2 keeps that version.
+    expect(resolveMadrVersion(MADR_212)).toBe("2.1.2");
+    // A real 4.0.0 document is detected as such.
+    expect(resolveMadrVersion(MADR_400)).toBe("4.0.0");
+  });
+
+  test("strips a pinned version marker before parsing so it never leaks into a field", () => {
+    const adr = parseAdr(setMadrVersionInMd(MADR_400, "4.0.0"));
+    expect(adr.moreInformation).toBe("Supersedes ADR-0001.");
+    expect(adr.confirmation).toBe("A design review.");
   });
 });

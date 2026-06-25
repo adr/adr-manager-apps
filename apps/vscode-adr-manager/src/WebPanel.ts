@@ -18,7 +18,7 @@ import {
   treatAsMultiRoot
 } from "./extension-functions";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
-import { detectMadrVersion, parseAdr } from "./plugins/parser";
+import { resolveMadrVersion, parseAdr } from "./plugins/parser";
 import { DEFAULT_FIELD_VISIBILITY, parseTagsFromMd } from "@adr-manager/core";
 import type { FieldVisibility, Tag } from "@adr-manager/core";
 
@@ -302,7 +302,7 @@ export class WebPanel {
   async viewAdr(fileUri: vscode.Uri) {
     const mdString = new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri));
 
-    const templateVersion = detectMadrVersion(mdString);
+    const templateVersion = resolveMadrVersion(mdString);
     const adr = parseAdr(mdString, templateVersion);
     await vscode.commands.executeCommand("vscode-adr-manager.openViewAdrWebView", mdString);
 

@@ -40,6 +40,20 @@ test("transient repositories are never written to localStorage", () => {
     expect(stored).not.toContain(DEMO_REPO_FULL_NAME);
 });
 
+test("a newly created ADR defaults to the latest MADR template (4.0.0)", () => {
+    const repo = new Repository({
+        fullName: "acme/decisions",
+        activeBranch: "main",
+        branches: [],
+        adrPath: "docs/decisions/"
+    });
+    store.addedRepositories = [repo];
+
+    const created = store.createNewAdr(repo);
+
+    expect(created?.editedMd).toContain('<!-- adr-manager-madr-version: "4.0.0" -->');
+});
+
 test("editing an existing ADR's title renames its path but keeps the committed baseline", () => {
     const adr = {
         path: "docs/decisions/0000-old-title.md",

@@ -85,7 +85,7 @@ const MADR_400_ADAPTER: MadrTemplateAdapter = {
   parse: (markdown) => md2adr400(markdown),
   serialize: (adr) => adr2md400(adr),
   carryOverOnSwitch: (record, from) => {
-    if (from === "2.1.2" && record.decisionMakers === "" && record.deciders !== "") {
+    if (from === MADR_212_ADAPTER.version && record.decisionMakers === "" && record.deciders !== "") {
       record.decisionMakers = record.deciders;
     }
   }
@@ -103,13 +103,16 @@ const MADR_212_ADAPTER: MadrTemplateAdapter = {
   parse: (markdown, options) => md2adr(markdown, options),
   serialize: (adr, options) => adr2md(adr, options),
   carryOverOnSwitch: (record, from) => {
-    if (from !== "2.1.2" && record.deciders === "" && record.decisionMakers !== "") {
+    if (from !== MADR_212_ADAPTER.version && record.deciders === "" && record.decisionMakers !== "") {
       record.deciders = record.decisionMakers;
     }
   }
 };
 
 export const MADR_TEMPLATE_ADAPTERS = [MADR_400_ADAPTER, MADR_212_ADAPTER] as const;
+
+/** The version new ADRs and undetectable documents default to (the newest template). */
+export const DEFAULT_MADR_VERSION: MadrTemplateVersion = MADR_400_ADAPTER.version;
 
 export function getMadrTemplateAdapter(version: MadrTemplateVersion): MadrTemplateAdapter {
   const adapter = MADR_TEMPLATE_ADAPTERS.find((candidate) => candidate.version === version);
@@ -124,7 +127,7 @@ export function hasMadrTemplateField(adapter: MadrTemplateAdapter, key: FieldKey
 }
 
 export function detectMadrVersion(markdown: string): MadrTemplateVersion {
-  return MADR_TEMPLATE_ADAPTERS.find((adapter) => adapter.detect(markdown))?.version ?? "2.1.2";
+  return MADR_TEMPLATE_ADAPTERS.find((adapter) => adapter.detect(markdown))?.version ?? DEFAULT_MADR_VERSION;
 }
 
 export function parseMadr(

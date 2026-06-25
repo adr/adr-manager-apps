@@ -6,7 +6,7 @@
 import { reactive } from "vue";
 import sanitize from "sanitize-filename";
 import { ArchitecturalDecisionRecord, Repository, isValidAdr, isValidRepoList } from "@/plugins/classes";
-import { adr2md, naturalCase2snakeCase } from "@/plugins/parser";
+import { serializeMadr, naturalCase2snakeCase, setMadrVersionInMd, DEFAULT_MADR_VERSION } from "@/plugins/parser";
 import { getActiveProvider } from "@/plugins/git";
 import { lsGet, lsSet } from "@/plugins/storage";
 import { DEMO_REPO_FULL_NAME } from "@/plugins/tour/constants";
@@ -187,8 +187,10 @@ export const store = reactive({
     createNewAdr(repo: Repository): AdrFile | undefined {
         if (this.addedRepositories.includes(repo)) {
             // Per the MADR template every field is a placeholder, so a new ADR starts empty.
+            // An empty doc is ambiguous between versions, so the default is pinned with the
+            // version marker.
             const adr = new ArchitecturalDecisionRecord();
-            const md = adr2md(adr);
+            const md = setMadrVersionInMd(serializeMadr(adr, DEFAULT_MADR_VERSION), DEFAULT_MADR_VERSION);
             const id = Math.max(...repo.adrs.map((a) => a.id), 0) + 1;
             const path = repo.adrPath + id.toString().padStart(4, "0") + "-" + adr.title + ".md";
             const newAdr: AdrFile = {

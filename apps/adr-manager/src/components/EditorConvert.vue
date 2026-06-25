@@ -30,13 +30,13 @@ import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { markdown } from "@codemirror/lang-markdown";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
-import { parseMadr, serializeMadr } from "@/plugins/parser";
+import { parseMadr, serializeMadr, DEFAULT_MADR_VERSION } from "@/plugins/parser";
 import { debounce } from "@/utils/debounce";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 
 const props = withDefaults(defineProps<{ raw?: string; templateVersion?: MadrTemplateVersion }>(), {
     raw: "",
-    templateVersion: "2.1.2"
+    templateVersion: DEFAULT_MADR_VERSION
 });
 const emit = defineEmits<{ accept: [string] }>();
 

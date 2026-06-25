@@ -1,6 +1,6 @@
 import { computed, readonly, ref, watch } from "vue";
 import { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import { detectMadrVersion, getMadrTemplateAdapter, parseMadr, serializeMadr } from "@/plugins/parser";
+import { detectMadrVersion, getMadrTemplateAdapter, parseMadr, serializeMadr, DEFAULT_MADR_VERSION } from "@/plugins/parser";
 import { store } from "@/plugins/store";
 import {
     matchesIgnoringFormatting,
@@ -12,7 +12,10 @@ import {
     setRelevantFilesInMd,
     stripRelevantFilesComment,
     stripTagComment,
-    setTagsInMd
+    setTagsInMd,
+    parseMadrVersionFromMd,
+    stripMadrVersionComment,
+    setMadrVersionInMd
 } from "@adr-manager/core";
 import type { FieldKey, FieldVisibility, MadrTemplateVersion } from "@adr-manager/core";
 import type { AdrFile, Tag } from "@/types/adr";
@@ -24,7 +27,7 @@ function parse(markdown: string, version: MadrTemplateVersion): ArchitecturalDec
 }
 
 function stripAdrManagerMetadata(markdown: string): string {
-    return stripRelevantFilesComment(stripTagComment(markdown));
+    return stripMadrVersionComment(stripRelevantFilesComment(stripTagComment(markdown)));
 }
 
 /**
@@ -50,7 +53,7 @@ export function useAdrEditor() {
      * when temporary mode ends so highlights disappear with it.
      */
     const highlightedFields = ref(new Set<FieldKey>());
-    const templateVersion = ref<MadrTemplateVersion>("2.1.2");
+    const templateVersion = ref<MadrTemplateVersion>(DEFAULT_MADR_VERSION);
 
     function effectiveVisibility(): FieldVisibility {
         return temporarilyShowAllFields.value ? { ...DEFAULT_FIELD_VISIBILITY } : store.fieldVisibility;
@@ -69,14 +72,14 @@ export function useAdrEditor() {
     function serialize(adrRecord: ArchitecturalDecisionRecord, version: MadrTemplateVersion, t: Tag[]): string {
         const filtered = applyFieldVisibilityFilter(adrRecord, effectiveVisibility());
         const md = serializeMadr(filtered, version);
-        return setTagsInMd(setRelevantFilesInMd(md, filtered.relevantFiles), t);
+        return setMadrVersionInMd(setTagsInMd(setRelevantFilesInMd(md, filtered.relevantFiles), t), version);
     }
 
     // Serializes ALL field data regardless of visibility. Used when persisting to
     // editedMd so that hiding a field never silently deletes its content from the file.
     function serializeFull(adrRecord: ArchitecturalDecisionRecord, version: MadrTemplateVersion, t: Tag[]): string {
         const md = serializeMadr(adrRecord, version);
-        return setTagsInMd(setRelevantFilesInMd(md, adrRecord.relevantFiles), t);
+        return setMadrVersionInMd(setTagsInMd(setRelevantFilesInMd(md, adrRecord.relevantFiles), t), version);
     }
 
     // Strip metadata comments before comparing so app-level fields never break round-trip checks.
@@ -91,6 +94,10 @@ export function useAdrEditor() {
      * instead of falling back to the detector's default.
      */
     function resolveVersion(md: string): MadrTemplateVersion {
+        const explicit = parseMadrVersionFromMd(md);
+        if (explicit) {
+            return explicit;
+        }
         const stripped = stripAdrManagerMetadata(md);
         const detected = detectMadrVersion(stripped);
         if (detected === templateVersion.value) {

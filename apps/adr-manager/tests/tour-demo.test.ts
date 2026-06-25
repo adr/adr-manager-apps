@@ -1,4 +1,4 @@
-import { matchesIgnoringFormatting } from "@adr-manager/core";
+import { matchesIgnoringFormatting, parseTagsFromMd, stripTagComment } from "@adr-manager/core";
 import { Repository } from "@/plugins/classes";
 import { adr2md, md2adr } from "@/plugins/parser";
 import { store } from "@/plugins/store";
@@ -17,7 +17,8 @@ test("the demo ADR round-trips through the MADR parser", () => {
     const repo = buildDemoRepository();
     const md = repo.adrs[0]?.editedMd ?? "";
     // A failed round-trip would open the demo in the convert view and break the tour anchors.
-    expect(matchesIgnoringFormatting(md, adr2md(md2adr(md)))).toBe(true);
+    expect(matchesIgnoringFormatting(stripTagComment(md), adr2md(md2adr(md)))).toBe(true);
+    expect(parseTagsFromMd(md).length).toBeGreaterThan(0);
 });
 
 test("the demo repository is transient and opens its sample ADR", () => {

@@ -4,12 +4,13 @@
  * step can point at real UI. It is removed on teardown and (via the `transient`
  * filter in the store) never written to localStorage.
  */
-import { ArchitecturalDecisionRecord, Repository } from "@/plugins/classes";
-import { adr2md } from "@/plugins/parser";
+import { Repository } from "@/plugins/classes";
+import { serializeMadr } from "@/plugins/parser";
 import { store } from "@/plugins/store";
 import { DEMO_REPO_FULL_NAME } from "@/plugins/tour/constants";
 import type { AdrFile } from "@/types/adr";
 import type { Mode } from "@/types/store";
+import { buildPrimaryDemoAdrFixture, setTagsInMd } from "@adr-manager/core";
 
 export interface TourSnapshot {
     currentRepository: Repository | undefined;
@@ -18,44 +19,15 @@ export interface TourSnapshot {
 }
 
 /**
- * The markdown is generated with adr2md from a constructed record (never hand-written)
+ * The markdown is serialized from the shared demo fixture (never hand-written)
  * so it survives the round-trip check in useAdrEditor and opens in the form editor
  * instead of the convert view. Professional-only fields (drivers, consequences) are
  * populated so the Basic/Professional tour step visibly reveals content.
  */
 export function buildDemoRepository(): Repository {
-    const record = new ArchitecturalDecisionRecord({
-        title: "Use Markdown Architectural Decision Records",
-        status: "accepted",
-        date: "2024-03-18",
-        deciders: "Ada Lovelace, Grace Hopper",
-        contextAndProblemStatement:
-            "We want to record the architectural decisions made in this project, " +
-            "so that new team members can understand why the system looks the way it does.",
-        decisionDrivers: [
-            "Decisions should live next to the code they affect",
-            "The format should be reviewable in pull requests"
-        ],
-        consideredOptions: [
-            {
-                title: "MADR",
-                description: "Markdown Architectural Decision Records.",
-                pros: ["Plain Markdown, works with any Git host", "Lightweight template"],
-                cons: ["Needs discipline to keep up to date"]
-            },
-            { title: "A wiki", pros: ["Easy to edit"], cons: ["Drifts away from the code"] },
-            { title: "No documentation" }
-        ],
-        decisionOutcome: {
-            chosenOption: "MADR",
-            explanation: "it keeps the decision history versioned together with the code",
-            positiveConsequences: ["Every decision is reviewable and traceable"],
-            negativeConsequences: ["Writing a record takes a little time"]
-        },
-        links: []
-    });
-    const md = adr2md(record);
-    const path = "docs/decisions/0001-use-markdown-architectural-decision-records.md";
+    const fixture = buildPrimaryDemoAdrFixture();
+    const md = setTagsInMd(serializeMadr(fixture.record, fixture.templateVersion), fixture.tags);
+    const path = `docs/decisions/${fixture.fileName}`;
     const adrFile: AdrFile = {
         originalMd: md,
         editedMd: md,

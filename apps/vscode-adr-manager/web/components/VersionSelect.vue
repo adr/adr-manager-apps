@@ -1,6 +1,6 @@
 <template>
-  <div ref="wrap" class="verselect">
-    <button type="button" class="verselect-btn" @click="open = !open">
+  <div ref="wrap" class="verselect" data-tour="template-version" @tour-version-menu="setTourMenuOpen">
+    <button type="button" class="verselect-btn" :aria-expanded="open" @click="open = !open">
       <i class="codicon codicon-list-tree"></i>
       <span class="vlabel">MADR {{ modelValue }}</span>
       <span class="ver-pill">TEMPLATE</span>
@@ -68,6 +68,9 @@ export default defineComponent({
     select(version: string) {
       this.$emit("update:modelValue", version);
       this.open = false;
+    },
+    setTourMenuOpen(event: CustomEvent<boolean>) {
+      this.open = event.detail;
     },
     onDocumentClick(event: MouseEvent) {
       if (!(this.$refs["wrap"] as HTMLElement).contains(event.target as Node)) {

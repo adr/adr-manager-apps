@@ -36,6 +36,7 @@
           class="filter-toggle"
           :class="{ open: filtersOpen, 'has-active': hasActiveFilters }"
           data-cy="adr-filter-toggle"
+          data-tour="adr-filter"
           :aria-expanded="filtersOpen"
           aria-label="Toggle ADR filters"
           title="Toggle filters"
@@ -152,7 +153,7 @@
       v-model:active="tourActive"
       :steps="tourSteps"
       :offer="tourOffer"
-      done-label="Finish"
+      :done-label="demoMode ? 'Open the editor' : 'Finish'"
       @offer-answered="onTourOfferAnswered"
       @closed="onTourClosed"
     ></TourOverlay>
@@ -169,6 +170,7 @@ import { buildDemoAdrEntries, DEMO_FOLDER_NAME, type AdrListEntry } from "../tou
 import { buildMainTourSteps } from "../tour/main-steps";
 import type { TourStep } from "../tour/types";
 import { ArchitecturalDecisionRecord } from "../../src/plugins/classes";
+import type { TourCloseReason } from "../../src/tour";
 import { cleanPathString } from "../../src/plugins/utils";
 import { matchesAdrSearch, isEmptyQuery } from "@adr-manager/core";
 import type { Tag } from "@adr-manager/core";
@@ -193,6 +195,7 @@ export default defineComponent({
       searchText: "",
       filterStatuses: [] as string[],
       filterTagIds: [] as string[],
+      tourExampleFilter: null as { kind: "status" | "tag"; value: string } | null,
       filtersOpen: false,
       tagsExpanded: false,
       // Display-only example entries while the tour runs over an empty workspace.
@@ -270,7 +273,7 @@ export default defineComponent({
     },
     availableStatuses() {
       const seen = new Set<string>();
-      for (const entry of this.allAdrs) {
+      for (const entry of this.displayedAdrs) {
         const s = (entry.adr.status ?? "").toLowerCase().trim();
         if (s) seen.add(s);
       }
@@ -278,7 +281,7 @@ export default defineComponent({
     },
     availableTags(): Tag[] {
       const seen = new Map<string, Tag>();
-      for (const entry of this.allAdrs) {
+      for (const entry of this.displayedAdrs) {
         for (const tag of entry.tags ?? []) {
           if (!seen.has(tag.id)) seen.set(tag.id, tag);
         }
@@ -299,12 +302,7 @@ export default defineComponent({
     },
     filteredDisplayedAdrs() {
       if (!this.searchActive) return this.displayedAdrs;
-      if (this.showingDemoEntries) {
-        return this.demoAdrs.filter((entry) =>
-          (entry.adr.title ?? "").toLowerCase().includes(this.searchText.toLowerCase())
-        );
-      }
-      return this.sortedAdrs.filter((entry) =>
+      return this.displayedAdrs.filter((entry) =>
         matchesAdrSearch(
           {
             title: entry.adr.title ?? "",
@@ -390,8 +388,37 @@ export default defineComponent({
       }
       this.tourSteps = buildMainTourSteps({
         demoMode: this.demoMode,
-        revealCardActions: this.revealCardActions
+        hasFilters: this.hasFilters,
+        revealCardActions: this.revealCardActions,
+        setFiltersOpen: (open) => {
+          this.filtersOpen = open;
+        },
+        setExampleFilterActive: this.setExampleFilterActive
       });
+    },
+    setExampleFilterActive(active: boolean) {
+      if (!active) {
+        if (this.tourExampleFilter?.kind === "status") {
+          this.filterStatuses = this.filterStatuses.filter((status) => status !== this.tourExampleFilter?.value);
+        } else if (this.tourExampleFilter?.kind === "tag") {
+          this.filterTagIds = this.filterTagIds.filter((id) => id !== this.tourExampleFilter?.value);
+        }
+        this.tourExampleFilter = null;
+        return;
+      }
+
+      const status = this.availableStatuses.find((candidate) => !this.filterStatuses.includes(candidate));
+      if (status) {
+        this.filterStatuses = [...this.filterStatuses, status];
+        this.tourExampleFilter = { kind: "status", value: status };
+        return;
+      }
+
+      const tag = this.availableTags.find((candidate) => !this.filterTagIds.includes(candidate.id));
+      if (tag) {
+        this.filterTagIds = [...this.filterTagIds, tag.id];
+        this.tourExampleFilter = { kind: "tag", value: tag.id };
+      }
     },
     initialListSettled(): Promise<void> {
       if (this.initialFetchDone) {
@@ -403,15 +430,16 @@ export default defineComponent({
         setTimeout(resolve, 1500);
       });
     },
-    /**
-     * Tour hook (called by the tour mixin): drop the example entries again.
-     */
-    afterTourClosed() {
+    afterTourClosed(reason: TourCloseReason) {
+      const openDemoEditor = reason === "finished" && this.demoMode;
       this.demoMode = false;
       this.demoAdrs = [];
       document.querySelectorAll(".adr-card.tour-reveal").forEach((card) => {
         card.classList.remove("tour-reveal");
       });
+      if (openDemoEditor) {
+        this.sendMessage("viewDemo");
+      }
     },
     /**
      * The edit/delete icons only show on hover, so the tour reveals them on the

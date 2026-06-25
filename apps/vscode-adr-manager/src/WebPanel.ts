@@ -19,8 +19,9 @@ import {
 } from "./extension-functions";
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { resolveMadrVersion, parseAdr } from "./plugins/parser";
-import { DEFAULT_FIELD_VISIBILITY, parseTagsFromMd } from "@adr-manager/core";
-import type { FieldVisibility, Tag } from "@adr-manager/core";
+import { consumeQueuedTourStart, getDemoAdrPath, isDemoAdrPath, type TourKind, type TourStateResponse } from "./tour";
+import { DEFAULT_FIELD_VISIBILITY, buildPrimaryDemoAdrFixture, parseTagsFromMd } from "@adr-manager/core";
+import type { FieldVisibility, MadrTemplateVersion, Tag } from "@adr-manager/core";
 
 export class WebPanel {
   /**
@@ -34,9 +35,7 @@ export class WebPanel {
   private readonly _context: vscode.ExtensionContext;
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
-  // Consumed-on-read replay flag: createOrShow always remounts the page, so a pushed
-  // "start tour" message would be lost. The webview pulls it via getTourState instead.
-  private _startTourOnNextLoad = false;
+  private readonly _queuedTourStarts = new Set<TourKind>();
 
   /**
    * Creates or shows a panel that displays a webview with the specified view using a string key.
@@ -61,10 +60,10 @@ export class WebPanel {
   }
 
   /**
-   * Makes the next main page load start the tour.
+   * Makes the next page load for the requested tour kind start the tour.
    */
-  public queueTourStart() {
-    this._startTourOnNextLoad = true;
+  public queueTourStart(kind: TourKind = "main") {
+    this._queuedTourStarts.add(kind);
   }
 
   private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext, page: string) {
@@ -93,9 +92,18 @@ export class WebPanel {
             return;
           }
           case "view": {
+            if (isDemoAdrPath(e.data.fullPath)) {
+              vscode.window.showInformationMessage("This tour example has no workspace file to open.");
+              return;
+            }
             const fileUri = vscode.Uri.file(e.data.fullPath);
             await this.viewAdr(fileUri);
             this.fetchAdrs();
+            return;
+          }
+          case "viewDemo": {
+            this.queueTourStart("editor");
+            await this.viewDemoAdr();
             return;
           }
           case "fetchAdrs": {
@@ -111,30 +119,35 @@ export class WebPanel {
             return;
           }
           case "getTourState": {
-            // Only a main page load consumes the queued replay; editor pages just read the flags.
-            const forceStart = this._startTourOnNextLoad && this._panel.title === "ADR Manager";
-            if (forceStart) {
-              this._startTourOnNextLoad = false;
-            }
-            this._panel.webview.postMessage({
+            const kind: TourKind = e.data?.kind === "editor" ? "editor" : "main";
+            const key = kind === "editor" ? "adrManager.hasSeenEditorTour" : "adrManager.hasSeenMainTour";
+            const response: TourStateResponse = {
               command: "getTourState",
-              seenMainTour: this._context.globalState.get<boolean>("adrManager.hasSeenMainTour") ?? false,
-              seenEditorTour: this._context.globalState.get<boolean>("adrManager.hasSeenEditorTour") ?? false,
-              forceStart: forceStart
-            });
+              seen: this._context.globalState.get<boolean>(key) ?? false,
+              forceStart: consumeQueuedTourStart(this._queuedTourStarts, kind)
+            };
+            this._panel.webview.postMessage(response);
             return;
           }
           case "setTourSeen": {
             const key = e.data.tour === "editor" ? "adrManager.hasSeenEditorTour" : "adrManager.hasSeenMainTour";
-            this._context.globalState.update(key, true);
+            await this._context.globalState.update(key, true);
             return;
           }
           case "requestEdit": {
+            if (isDemoAdrPath(e.data.fullPath)) {
+              vscode.window.showInformationMessage("This is a tour example, so it has no file to open.");
+              return;
+            }
             const fileUri = vscode.Uri.file(e.data.fullPath);
             vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fileUri));
             return;
           }
           case "requestDelete": {
+            if (isDemoAdrPath(e.data.fullPath)) {
+              vscode.window.showInformationMessage("This is a tour example, so it is not deleted.");
+              return;
+            }
             const selection = await vscode.window.showWarningMessage(
               `Are you sure you want to delete the ADR "${e.data.title}"?`,
               "Yes",
@@ -180,7 +193,12 @@ export class WebPanel {
             return;
           }
           case "saveAdr": {
-            const uri = await saveAdr(JSON.parse(e.data).adr);
+            const adr = JSON.parse(e.data).adr;
+            if (isDemoAdrPath(adr.fullPath)) {
+              vscode.window.showInformationMessage("This is a tour example, so it is not saved.");
+              return;
+            }
+            const uri = await saveAdr(adr);
             this._panel.webview.postMessage({
               command: "saveSuccessful",
               newPath: uri.path
@@ -224,6 +242,9 @@ export class WebPanel {
             return;
           }
           case "updateFileStatus": {
+            if (isDemoAdrPath(e.data.fullPath)) {
+              return;
+            }
             try {
               await vscode.workspace.fs.readFile(vscode.Uri.file(e.data.fullPath));
             } catch {
@@ -233,6 +254,10 @@ export class WebPanel {
             return;
           }
           case "pickRelevantFiles": {
+            if (isDemoAdrPath(e.data.fullPath)) {
+              vscode.window.showInformationMessage("Relevant files are unavailable for this tour example.");
+              return;
+            }
             const currentFiles: string[] = e.data.currentFiles ?? [];
             const candidates = await listRelevantFileCandidates(e.data.fullPath ?? "");
             const candidateSet = new Set(candidates);
@@ -261,10 +286,18 @@ export class WebPanel {
             return;
           }
           case "openRelevantFile": {
+            if (isDemoAdrPath(e.data.fullPath)) {
+              vscode.window.showInformationMessage("This tour example has no workspace files to open.");
+              return;
+            }
             await openRelevantFile(e.data.path, e.data.fullPath ?? "");
             return;
           }
           case "checkRelevantFiles": {
+            if (isDemoAdrPath(e.data.fullPath)) {
+              this._panel.webview.postMessage({ command: "relevantFilesStatus", status: {} });
+              return;
+            }
             const status = await checkRelevantFilesExistence(e.data.paths ?? [], e.data.fullPath ?? "");
             this._panel.webview.postMessage({ command: "relevantFilesStatus", status: status });
             return;
@@ -310,33 +343,38 @@ export class WebPanel {
     // "view-basic" or "view-professional" as page argument doesn't matter here
     this._updatePanelTitle("view-basic", adrNumber);
 
+    this._postAdrValues(adr, {
+      templateVersion,
+      tags: parseTagsFromMd(mdString),
+      fullPath: fileUri.path
+    });
+    this._pushFieldVisibility();
+  }
+
+  async viewDemoAdr() {
+    const fixture = buildPrimaryDemoAdrFixture();
+    await vscode.commands.executeCommand("vscode-adr-manager.openViewAdrWebView", "", "view-professional");
+    this._postAdrValues(fixture.record, {
+      templateVersion: fixture.templateVersion,
+      tags: fixture.tags,
+      fullPath: getDemoAdrPath(fixture.fileName)
+    });
+    this._pushFieldVisibility();
+  }
+
+  private _postAdrValues(
+    record: ArchitecturalDecisionRecord,
+    options: { templateVersion: MadrTemplateVersion; tags: Tag[]; fullPath: string }
+  ): void {
     this._panel.webview.postMessage({
       command: "fetchAdrValues",
       adr: JSON.stringify({
-        yaml: adr.yaml,
-        title: adr.title,
-        date: adr.date,
-        status: adr.status,
-        deciders: adr.deciders,
-        technicalStory: adr.technicalStory,
-        contextAndProblemStatement: adr.contextAndProblemStatement,
-        decisionDrivers: adr.decisionDrivers,
-        consideredOptions: adr.consideredOptions,
-        decisionOutcome: adr.decisionOutcome,
-        links: adr.links,
-        relevantFiles: adr.relevantFiles,
-        decisionMakers: adr.decisionMakers,
-        consulted: adr.consulted,
-        informed: adr.informed,
-        consequences: adr.consequences,
-        confirmation: adr.confirmation,
-        moreInformation: adr.moreInformation,
-        templateVersion: templateVersion,
-        tags: parseTagsFromMd(mdString),
-        fullPath: fileUri.path
+        ...record,
+        templateVersion: options.templateVersion,
+        tags: options.tags,
+        fullPath: options.fullPath
       })
     });
-    this._pushFieldVisibility();
   }
 
   /**
@@ -401,9 +439,10 @@ export class WebPanel {
       }
       case "view-basic":
       case "view-professional": {
-        // Mode switches re-render without a number and must not reset the numbered title.
         if (adrNumber) {
           this._panel.title = `ADR Manager - View ADR #${adrNumber}`;
+        } else if (!this._panel.title.startsWith("ADR Manager - View ADR")) {
+          this._panel.title = "ADR Manager - View ADR";
         }
         return;
       }

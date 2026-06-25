@@ -29,6 +29,26 @@ afterEach(() => {
     localStorage.clear();
 });
 
+test("tour steps stay grouped by screen section", () => {
+    expect(tourSteps.map((step) => step.id)).toEqual([
+        "intro",
+        "explorer",
+        "adr-search",
+        "adr-filter",
+        "adr-filter-example",
+        "switch-repository",
+        "delete-adr",
+        "create-adr",
+        "template-version",
+        "edit-adr",
+        "toggle-fields",
+        "field-visibility",
+        "preview",
+        "commit",
+        "replay"
+    ]);
+});
+
 test("starting over an empty workspace injects the demo repository", () => {
     tour.start();
 

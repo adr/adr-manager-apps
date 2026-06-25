@@ -79,6 +79,7 @@ import vscode from "../mixins/vscode-api-mixin";
 import saveAdr from "../mixins/save-adr";
 import createTourMixin from "../mixins/tour";
 import { buildEditorTourSteps } from "../tour/editor-steps";
+import { isDemoAdrPath } from "../../src/tour";
 
 export default defineComponent({
   components: {
@@ -96,6 +97,15 @@ export default defineComponent({
     };
   },
   methods: {
+    /**
+     * Tour hook (called by the tour mixin): the editor tour's last leg is the demo ADR opened from
+     * the main tour, so closing it returns to the overview instead of leaving the fake ADR open.
+     */
+    afterTourClosed() {
+      if (isDemoAdrPath(this.fullPath)) {
+        this.sendMessage("main");
+      }
+    },
     /**
      * Switches to the basic MADR template, hiding the professional fields while keeping the current
      * user inputs.

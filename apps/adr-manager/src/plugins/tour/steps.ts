@@ -1,5 +1,6 @@
 import { store } from "@/plugins/store";
 import type { Mode } from "@/types/store";
+import { TOUR_COPY } from "@adr-manager/core";
 
 export interface TourStep {
     id: string;
@@ -14,15 +15,49 @@ export interface TourStep {
 
 let modeBeforeToggleStep: Mode | undefined;
 let modeBeforeFieldVisibilityStep: Mode | undefined;
+let demonstratedFilter: HTMLButtonElement | undefined;
+
+function setFilterPanelOpen(open: boolean): void {
+    const button = document.querySelector<HTMLButtonElement>('[data-cy="adr-filter-toggle"]');
+    if (button && (button.getAttribute("aria-expanded") === "true") !== open) {
+        button.click();
+    }
+}
+
+function setExampleFilterActive(active: boolean): void {
+    if (active) {
+        setFilterPanelOpen(true);
+        demonstratedFilter =
+            document.querySelector<HTMLButtonElement>(".filter-panel .filter-chip:not(.tags-more-btn):not(.active)") ??
+            undefined;
+        demonstratedFilter?.click();
+        return;
+    }
+    if (demonstratedFilter?.getAttribute("aria-pressed") === "true") {
+        demonstratedFilter.click();
+    }
+    demonstratedFilter = undefined;
+    setFilterPanelOpen(false);
+}
+
+function setTemplateVersionMenuOpen(open: boolean): void {
+    const wrap = document.querySelector<HTMLElement>('[data-tour="template-version"]');
+    wrap?.dispatchEvent(new CustomEvent<boolean>("tour-version-menu", { detail: open }));
+}
+
+export function resetTourFilterDemonstration(): void {
+    setExampleFilterActive(false);
+    setFilterPanelOpen(false);
+    setTemplateVersionMenuOpen(false);
+}
 
 export const tourSteps: TourStep[] = [
     {
         id: "intro",
         title: "Architectural Decision Records",
         body:
-            "An ADR is a short Markdown document that captures one architectural decision, the context behind it, " +
-            "the options that were considered and the outcome. ADR Manager lets you create, edit and commit ADRs " +
-            "in the MADR format directly in your Git repositories."
+            TOUR_COPY.adrDefinition +
+            " ADR Manager lets you create, edit and commit ADRs in the MADR format directly in your Git repositories."
     },
     {
         id: "explorer",
@@ -37,10 +72,25 @@ export const tourSteps: TourStep[] = [
         id: "adr-search",
         target: '[data-tour="adr-search"]',
         placement: "right",
-        title: "Search and filter ADRs",
-        body:
-            "Type in the search bar to find ADRs by title across all your repositories. Use the filter button " +
-            "to narrow down decisions by status, tags, or other criteria."
+        title: "Search ADRs",
+        body: TOUR_COPY.search
+    },
+    {
+        id: "adr-filter",
+        target: '[data-cy="adr-filter-toggle"]',
+        placement: "right",
+        title: "Filter ADRs",
+        body: TOUR_COPY.filter,
+        onEnter: () => setFilterPanelOpen(true)
+    },
+    {
+        id: "adr-filter-example",
+        target: () => document.querySelector(".filter-panel .filter-chip:not(.tags-more-btn)"),
+        placement: "right",
+        title: "Apply a filter",
+        body: "Selecting a status or tag immediately narrows the ADR list. Select it again to remove the filter.",
+        onEnter: () => setExampleFilterActive(true),
+        onExit: () => setExampleFilterActive(false)
     },
     {
         id: "switch-repository",
@@ -53,42 +103,46 @@ export const tourSteps: TourStep[] = [
             "and switch between them at any time."
     },
     {
+        id: "delete-adr",
+        target: '[data-cy="deleteAdrBtn"]',
+        placement: "right",
+        title: "Delete an ADR",
+        body:
+            "Hover an ADR in the explorer and click the trash icon to delete it. The deletion is staged " +
+            "locally and only applied to the repository when you commit."
+    },
+    {
         id: "create-adr",
         target: '[data-cy="newADR"]',
         placement: "right",
         title: "Create a new ADR",
         body:
             "New ADR adds a numbered Markdown file based on the MADR template to the repository's " +
-            "ADR directory and opens it in the editor."
+            "ADR directory and opens it in the editor. New setups default to docs/decisions; the status bar " +
+            "shows the full path and active branch."
+    },
+    {
+        id: "template-version",
+        target: '[data-tour="template-version"]',
+        placement: "bottom",
+        title: "Choose the MADR version",
+        body: TOUR_COPY.templateVersion,
+        onEnter: () => setTemplateVersionMenuOpen(true),
+        onExit: () => setTemplateVersionMenuOpen(false)
     },
     {
         id: "edit-adr",
         target: '[data-tour="editor"]',
         placement: "over",
         title: "Edit with structured fields",
-        body:
-            "The editor turns the MADR template into a form with fields like title, context, considered options " +
-            "and decision outcome. Everything you type is converted to Markdown as you go, and the title also " +
-            "becomes the file name."
-    },
-    {
-        id: "preview",
-        target: '[data-tour="preview"]',
-        placement: "left",
-        title: "Live Markdown preview",
-        body:
-            "This pane shows the generated Markdown in real time. You can also edit the raw Markdown here, " +
-            "the form and the source stay in sync."
+        body: TOUR_COPY.editorIntro
     },
     {
         id: "toggle-fields",
         target: '[data-tour="mode-toggle"]',
         placement: "bottom",
         title: "Toggle optional fields",
-        body:
-            "This switch toggles the optional MADR fields. Professional mode reveals decision drivers, pros and " +
-            "cons per option and detailed consequences, while Basic keeps only the essentials. Hidden fields are " +
-            "kept in the file.",
+        body: TOUR_COPY.modeToggle,
         onEnter: () => {
             modeBeforeToggleStep = store.mode;
             // Direct assignment so the demonstration does not persist a mode change.
@@ -106,7 +160,7 @@ export const tourSteps: TourStep[] = [
         target: '[data-tour="field-visibility"]',
         placement: "bottom",
         title: "Customize visible fields",
-        body: "The Fields button is a Professional mode feature that lets you toggle individual Professional mode sections on or off to match your personal preferences.",
+        body: TOUR_COPY.fieldVisibility,
         onEnter: () => {
             modeBeforeFieldVisibilityStep = store.mode;
             store.mode = "professional";
@@ -119,23 +173,13 @@ export const tourSteps: TourStep[] = [
         }
     },
     {
-        id: "delete-adr",
-        target: '[data-cy="deleteAdrBtn"]',
-        placement: "right",
-        title: "Delete an ADR",
+        id: "preview",
+        target: '[data-tour="preview"]',
+        placement: "left",
+        title: "Live Markdown preview",
         body:
-            "Hover an ADR in the explorer and click the trash icon to delete it. The deletion is staged " +
-            "locally and only applied to the repository when you commit."
-    },
-    {
-        id: "adr-directory",
-        target: '[data-tour="adr-path"]',
-        placement: "top",
-        title: "The ADR directory",
-        body:
-            "Each repository keeps its ADRs in one directory, which ADR Manager detects automatically " +
-            "(new setups default to docs/decisions). The status bar shows the full path of the open ADR " +
-            "and the branch you are working on."
+            "This pane shows the generated Markdown in real time. You can also edit the raw Markdown here, " +
+            "the form and the source stay in sync."
     },
     {
         id: "commit",

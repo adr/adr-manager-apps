@@ -48,3 +48,6 @@ export { parseMadrVersionFromMd, stripMadrVersionComment, setMadrVersionInMd } f
 
 export { matchesAdrSearch, extractAdrTitle, extractAdrStatus, isEmptyQuery, EMPTY_QUERY } from "./search";
 export type { AdrSearchQuery, SearchableAdr } from "./search";
+
+export { buildPrimaryDemoAdrFixture, buildDemoAdrFixtures, TOUR_COPY } from "./tour";
+export type { DemoAdrFixture } from "./tour";

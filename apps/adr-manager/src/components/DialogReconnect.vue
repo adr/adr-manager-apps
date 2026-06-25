@@ -29,7 +29,7 @@ const connecting = ref(false);
 // Warm the Firebase modules while the dialog is up so the popup opens within the click gesture.
 watch(reconnectVisible, (visible) => {
     if (visible) {
-        void prewarmGitHubAuth();
+        prewarmGitHubAuth();
     }
 });
 

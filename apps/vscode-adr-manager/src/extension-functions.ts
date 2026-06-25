@@ -5,7 +5,7 @@ import { setMadrVersionInMd, setRelevantFilesInMd, setTagsInMd } from "@adr-mana
 import { ArchitecturalDecisionRecord } from "./plugins/classes";
 import { adrTemplatemarkdownContent, initialMarkdownContent, readmeMarkdownContent } from "./plugins/constants";
 import { DEFAULT_MADR_VERSION, parseAdr, serializeAdr, type MadrTemplateVersion } from "./plugins/parser";
-import { cleanPathString, matchesMadrTitleFormat, naturalCase2snakeCase } from "./plugins/utils";
+import { isListableAdrFile, matchesMadrTitleFormat, naturalCase2snakeCase, splitAdrDirectory } from "./plugins/utils";
 
 /**
  * Returns the workspace folders opened in the current VS Code instance.
@@ -111,8 +111,13 @@ function isProfessionalAdr(adr: ArchitecturalDecisionRecord) {
  * @param adrDirectory The configured ADR Directory, e.g. "docs/decisions"
  */
 export function getRootPathFromAdrPath(adrFullPath: string, adrDirectory: string): string | undefined {
-  const directory = cleanPathString(adrDirectory).replace(/^\/+|\/+$/g, "");
-  const marker = `/${directory}/`;
+  const segments = splitAdrDirectory(adrDirectory);
+  if (segments.length === 0) {
+    // ADR Directory is the root folder itself: the ADR sits directly in its root folder.
+    const lastSlash = adrFullPath.lastIndexOf("/");
+    return lastSlash === -1 ? undefined : adrFullPath.slice(0, lastSlash);
+  }
+  const marker = `/${segments.join("/")}/`;
   const markerIndex = adrFullPath.lastIndexOf(marker);
   if (markerIndex === -1) {
     return undefined;
@@ -348,7 +353,10 @@ export async function initializeAdrDirectory(rootFolderUri: vscode.Uri) {
  */
 export async function adrDirectoryExists(folderUri: vscode.Uri) {
   if (isWorkspaceOpened()) {
-    const subDirectories = cleanPathString(getAdrDirectoryString()).split("/");
+    const subDirectories = splitAdrDirectory(getAdrDirectoryString());
+    if (subDirectories.length === 0) {
+      return true; // ADR Directory is the root folder itself, which always exists
+    }
     let currentUri = folderUri;
     let currentDirectoryFound = true;
 
@@ -458,9 +466,9 @@ export async function getAllMDs(): Promise<
 }
 
 /**
- * Returns an array of potential MADRs in the form of strings that are located in the specified folder.
- * @param folderUri The URI of the directory to be scanned for MADRs
- * @returns A Promise which resolves in a string array of potential MADRs
+ * Returns the listable Markdown files located directly in the specified folder (see
+ * {@link isListableAdrFile}). Conforming files become ADRs; the rest are convertible candidates.
+ * @param folderUri The URI of the directory to be scanned
  */
 export async function getMDsFromFolder(
   folderUri: vscode.Uri
@@ -468,7 +476,7 @@ export async function getMDsFromFolder(
   const adrs: { adr: string; fullPath: string; relativePath: string; fileName: string }[] = [];
   const directory = await vscode.workspace.fs.readDirectory(folderUri);
   for (const [name, type] of directory) {
-    if (type === vscode.FileType.File && matchesMadrTitleFormat(name)) {
+    if (type === vscode.FileType.File && isListableAdrFile(name)) {
       const content = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folderUri, name));
       adrs.push({
         adr: new TextDecoder().decode(content),
@@ -539,7 +547,7 @@ export function createProfessionalAdr(fields: AdrInit & { templateVersion?: Madr
  * @param fields The fields of the edited ADR
  */
 export async function saveAdr(
-  fields: AdrInit & { fullPath: string; templateVersion?: MadrTemplateVersion; tags?: Tag[] }
+  fields: AdrInit & { fullPath: string; templateVersion?: MadrTemplateVersion; tags?: Tag[]; assignNumber?: boolean }
 ): Promise<vscode.Uri> {
   const fileUri = vscode.Uri.file(fields.fullPath);
   const adr = parseAdr(new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri)));
@@ -563,7 +571,7 @@ export async function saveAdr(
     consequences: fields.consequences,
     moreInformation: fields.moreInformation
   });
-  const newUri = getRenamedUri(fileUri, adr.title);
+  const newUri = await getSaveUri(fileUri, adr.title, fields.assignNumber ?? false);
   await vscode.workspace.fs.rename(fileUri, newUri);
   const version = fields.templateVersion ?? DEFAULT_MADR_VERSION;
   const newMD = setAdrMetadataInMd(serializeAdr(adr, version), version, {
@@ -598,16 +606,39 @@ export function getAdrObjectFromFields(fields: AdrInit): ArchitecturalDecisionRe
 }
 
 /**
- * Returns a URI of a MADR file that has been renamed to the specified name.
- * The Markdown file keeps its original ADR number, only its "actual" name will be changed.
- * @param fileUri The URI of the original file that should be renamed
- * @param newName A string to which a file should be renamed to
- * @returns A new URI with the replaced file name
+ * Returns the file name an ADR should have once its title changes. A leading MADR number prefix
+ * (NNNN- or NNNN_) is preserved; a file without one (an unnumbered ADR, or a Markdown file being
+ * converted) has its whole base name replaced. Pure string logic so the rename is unit-testable.
  */
-function getRenamedUri(fileUri: vscode.Uri, newName: string): vscode.Uri {
-  const uriWithoutTitleInFileName = fileUri.path.substring(0, fileUri.path.lastIndexOf("/") + 6);
-  const newUriString = uriWithoutTitleInFileName.concat(naturalCase2snakeCase(newName), ".md");
-  return vscode.Uri.file(newUriString);
+export function renameAdrFileName(fileName: string, newTitle: string): string {
+  const numberPrefix = fileName.match(/^\d{4}[-_]/)?.[0] ?? "";
+  return `${numberPrefix}${naturalCase2snakeCase(newTitle)}.md`;
+}
+
+/**
+ * Returns the file name an ADR should be saved under. Like {@link renameAdrFileName}, except an
+ * unnumbered file is given `assignedNumber` (used when converting a Markdown file into an ADR so it
+ * becomes referenceable). A file that already carries a number keeps it. Pure string logic.
+ */
+export function adrFileNameForSave(fileName: string, title: string, assignedNumber: number | undefined): string {
+  if (assignedNumber !== undefined && !/^\d{4}[-_]/.test(fileName)) {
+    return `${String(assignedNumber).padStart(4, "0")}-${naturalCase2snakeCase(title)}.md`;
+  }
+  return renameAdrFileName(fileName, title);
+}
+
+/**
+ * Returns the URI an ADR should be saved to (see {@link adrFileNameForSave}). A converted file
+ * (assignNumber) with no MADR number prefix is given the next free number in its folder, promoting
+ * it to a referenceable ADR; a title change to an already-named file just rewrites the title slug.
+ */
+async function getSaveUri(fileUri: vscode.Uri, title: string, assignNumber: boolean): Promise<vscode.Uri> {
+  const lastSlash = fileUri.path.lastIndexOf("/");
+  const directory = fileUri.path.substring(0, lastSlash + 1);
+  const assignedNumber = assignNumber
+    ? (await getHighestAdrNumberInFolder(vscode.Uri.file(directory))) + 1
+    : undefined;
+  return vscode.Uri.file(directory + adrFileNameForSave(fileUri.path.substring(lastSlash + 1), title, assignedNumber));
 }
 
 /**
@@ -702,9 +733,18 @@ async function saveMarkdownToAdrDirectory(md: string, title: string) {
  * Returns the highest ADR number of the ADR Directory of the specified root folder, or -1 if there are no ADRs.
  */
 async function getHighestAdrNumber(folderUri: vscode.Uri): Promise<number> {
-  const adrFolderUri = vscode.Uri.joinPath(folderUri, getAdrDirectoryString());
+  return getHighestAdrNumberInFolder(vscode.Uri.joinPath(folderUri, getAdrDirectoryString()));
+}
+
+/**
+ * Returns the highest ADR number among the numbered ADRs directly in the given folder, or -1 if
+ * there are none. Unlike {@link getHighestAdrNumber} the folder is the ADR Directory itself.
+ */
+async function getHighestAdrNumberInFolder(adrFolderUri: vscode.Uri): Promise<number> {
   const allAdrs = await getMDsFromFolder(adrFolderUri);
-  const titleNumbers = allAdrs.map((md) => Number.parseInt(md.fileName.substring(0, 4)));
+  const titleNumbers = allAdrs
+    .filter((md) => matchesMadrTitleFormat(md.fileName))
+    .map((md) => Number.parseInt(md.fileName.substring(0, 4)));
   return titleNumbers.sort((a, b) => a - b)[titleNumbers.length - 1] ?? -1;
 }
 
@@ -725,21 +765,4 @@ function getAdrPathRelativeFromRootFolder(adrUri: vscode.Uri): string {
   }
 
   return filePath;
-}
-
-/**
- * Returns the number of the specified ADR file as a string, or the empty string if the specified file is not an ADR.
- * @param fileUri The URI to the ADR file for which the ADR number should be returned
- * @returns The number of the specified ADR file, or an empty string if the file is not an ADR
- */
-export async function getAdrNumberFromUri(fileUri: vscode.Uri): Promise<string> {
-  const content = await vscode.workspace.fs.readFile(fileUri);
-  const md = new TextDecoder().decode(content);
-  if (!parseAdr(md).conforming) {
-    return "";
-  } else {
-    const splitArray = fileUri.toString().split("/");
-    const fileName = splitArray[splitArray.length - 1];
-    return fileName.substring(0, 4);
-  }
 }

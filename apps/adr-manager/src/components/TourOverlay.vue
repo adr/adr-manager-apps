@@ -238,7 +238,7 @@ watch(
     [() => tour.active.value, () => tour.stepIndex.value],
     ([isActive]) => {
         if (isActive) {
-            void syncToStep();
+            syncToStep();
         }
     },
     { flush: "post" }

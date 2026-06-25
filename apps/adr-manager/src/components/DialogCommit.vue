@@ -153,7 +153,7 @@ watch(show, (visible) => {
     commitMessage.value = "";
     openGroups.value = [];
     store.setCurrentRepositoryForCommit(props.repoFullName);
-    void store.loadUserInfo().then((loaded) => {
+    store.loadUserInfo().then((loaded) => {
         if (!loaded) {
             showErrorToast("Couldn't load your user info, so the commit author may be incomplete.");
         }

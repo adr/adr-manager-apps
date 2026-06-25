@@ -1,6 +1,6 @@
 import { ArchitecturalDecisionRecord } from "../../src/plugins/classes";
 import { getDemoAdrPath } from "../../src/tour";
-import { cleanPathString } from "../../src/plugins/utils";
+import { cleanPathString, splitAdrDirectory } from "../../src/plugins/utils";
 import { buildDemoAdrFixtures } from "@adr-manager/core";
 import type { Tag } from "@adr-manager/core";
 
@@ -23,7 +23,7 @@ export interface AdrListEntry {
  * `cleanPathString(folder + "/" + adrDirectory)` filter that MainView.adrsInFolder applies.
  */
 export function buildDemoAdrEntries(folder: string, adrDirectory: string): AdrListEntry[] {
-  const directory = cleanPathString(folder + "/" + (adrDirectory || "docs/decisions"));
+  const directory = cleanPathString([folder, ...splitAdrDirectory(adrDirectory || "docs/decisions")].join("/"));
   return buildDemoAdrFixtures().map(({ fileName, record, tags }) => {
     return {
       adr: record,

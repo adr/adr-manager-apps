@@ -80,7 +80,7 @@ export function useBranchSelection(routeData: ComputedRef<EditorRouteData>) {
 
     function retryLoadBranches(): void {
         if (currentRepo.value !== "") {
-            void loadBranchNames();
+            loadBranchNames();
         }
     }
 
@@ -90,7 +90,7 @@ export function useBranchSelection(routeData: ComputedRef<EditorRouteData>) {
             branchNames.value = [];
         } else {
             currentRepo.value = repoName;
-            void loadBranchNames();
+            loadBranchNames();
         }
     }
 
@@ -98,11 +98,11 @@ export function useBranchSelection(routeData: ComputedRef<EditorRouteData>) {
         if (currentRepo.value !== "") {
             if (branchNames.value.length === 1 && loadedOnClick.value) {
                 currentRepo.value = routeData.value.repoFullName ?? "";
-                void loadBranchNames();
+                loadBranchNames();
             }
         } else if (routeData.value.repoFullName !== undefined) {
             currentRepo.value = routeData.value.repoFullName;
-            void loadBranchNames();
+            loadBranchNames();
         }
     }
 

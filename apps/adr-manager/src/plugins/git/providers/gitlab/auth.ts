@@ -228,7 +228,7 @@ export function signOutGitLab(): void {
     const tokens = loadTokens();
     if (tokens) {
         const body = new URLSearchParams({ client_id: gitlabClientId(), token: tokens.accessToken });
-        void axios.post(`${gitlabBaseUrl()}/oauth/revoke`, body).catch(() => undefined);
+        axios.post(`${gitlabBaseUrl()}/oauth/revoke`, body).catch(() => undefined);
     }
     clearTokens();
 }

@@ -1,21 +1,17 @@
 import {
   md2adr as coreMd2adr,
   adr2md as coreAdr2md,
+  analyzeAdrDocument,
+  convertAdrDocument,
   detectMadrVersion,
   DEFAULT_MADR_VERSION,
-  matchesIgnoringFormatting,
-  parseMadr,
-  parseMadrVersionFromMd,
-  parseRelevantFilesFromMd,
-  roundTripsMadr,
+  resolveAdrTemplateVersion,
   serializeMadr,
-  stripMadrVersionComment,
-  stripRelevantFilesComment,
-  stripTagComment,
   type ArchitecturalDecisionRecord,
   type Adr2MdOptions,
   type Md2AdrOptions,
-  type MadrTemplateVersion
+  type MadrTemplateVersion,
+  type Tag
 } from "@adr-manager/core";
 
 export { detectMadrVersion, DEFAULT_MADR_VERSION };
@@ -51,44 +47,38 @@ export function adr2md(adr: ArchitecturalDecisionRecord): string {
  * rather than the detector's classic fallback.
  */
 export function resolveMadrVersion(md: string): MadrTemplateVersion {
-  const explicit = parseMadrVersionFromMd(md);
-  if (explicit) {
-    return explicit;
-  }
-  const cleanMd = stripAdrManagerMetadata(md);
-  const detected = detectMadrVersion(cleanMd);
-  if (detected === DEFAULT_MADR_VERSION) {
-    return detected;
-  }
-  const fitsDefault = roundTripsMadr(cleanMd, DEFAULT_MADR_VERSION, {
-    parse: PARSE_OPTIONS,
-    serialize: SERIALIZE_OPTIONS,
-    compare: matchesIgnoringFormatting
-  });
-  return fitsDefault ? DEFAULT_MADR_VERSION : detected;
+  return resolveAdrTemplateVersion(md, { parse: PARSE_OPTIONS, serialize: SERIALIZE_OPTIONS });
 }
 
 export function parseAdr(
   md: string,
   version: MadrTemplateVersion = resolveMadrVersion(md)
 ): ArchitecturalDecisionRecord {
-  const cleanMd = stripAdrManagerMetadata(md);
-  const adr = parseMadr(cleanMd, version, PARSE_OPTIONS);
-  adr.relevantFiles = parseRelevantFilesFromMd(md);
-  if (version !== "2.1.2") {
-    adr.conforming = roundTripsMadr(cleanMd, version, {
-      parse: PARSE_OPTIONS,
-      serialize: SERIALIZE_OPTIONS,
-      compare: matchesIgnoringFormatting
-    });
-  }
-  return adr;
+  return analyzeAdrDocument(md, {
+    version,
+    parse: PARSE_OPTIONS,
+    serialize: SERIALIZE_OPTIONS,
+    trustClassicTemplate: true
+  }).record;
 }
 
 export function serializeAdr(adr: ArchitecturalDecisionRecord, version: MadrTemplateVersion): string {
   return serializeMadr(adr, version, SERIALIZE_OPTIONS);
 }
 
-function stripAdrManagerMetadata(md: string): string {
-  return stripMadrVersionComment(stripRelevantFilesComment(stripTagComment(md)));
+/**
+ * Re-writes a document into `version` using the extension's parse/serialize options, preserving
+ * the adr-manager metadata (tags, relevant files, version marker). Backs the convert view.
+ */
+export function convertAdr(
+  md: string,
+  version: MadrTemplateVersion,
+  options: { tags?: Tag[]; relevantFiles?: string[] } = {}
+): string {
+  return convertAdrDocument(md, version, {
+    parse: PARSE_OPTIONS,
+    serialize: SERIALIZE_OPTIONS,
+    ...(options.tags ? { tags: options.tags } : {}),
+    ...(options.relevantFiles ? { relevantFiles: options.relevantFiles } : {})
+  });
 }

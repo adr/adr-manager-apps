@@ -30,8 +30,9 @@ import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { markdown } from "@codemirror/lang-markdown";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
-import { parseMadr, serializeMadr, DEFAULT_MADR_VERSION } from "@/plugins/parser";
+import { DEFAULT_MADR_VERSION } from "@/plugins/parser";
 import { debounce } from "@/utils/debounce";
+import { convertAdrDocument, parseRelevantFilesFromMd, parseTagsFromMd } from "@adr-manager/core";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 
 const props = withDefaults(defineProps<{ raw?: string; templateVersion?: MadrTemplateVersion }>(), {
@@ -47,7 +48,11 @@ let mergeMd = props.raw;
 const baseExtensions = [markdown(), syntaxHighlighting(defaultHighlightStyle), EditorView.lineWrapping];
 
 function rightDoc(): string {
-    return serializeMadr(parseMadr(mergeMd, props.templateVersion), props.templateVersion);
+    // Keep the tags/relevant-files/version metadata alongside the re-serialized body.
+    return convertAdrDocument(mergeMd, props.templateVersion, {
+        tags: parseTagsFromMd(mergeMd),
+        relevantFiles: parseRelevantFilesFromMd(mergeMd)
+    });
 }
 
 const scheduleRight = debounce(() => {

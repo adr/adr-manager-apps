@@ -6,7 +6,6 @@ import {
   createBasicAdr,
   createProfessionalAdr,
   getAdrDirectoryString,
-  getAdrNumberFromUri,
   getAllChildRootFoldersAsStrings,
   getAllMDs,
   getWorkspaceFolderNames,
@@ -36,6 +35,10 @@ export class WebPanel {
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
   private readonly _queuedTourStarts = new Set<TourKind>();
+  // The malformed ADR currently shown in the convert view, requested by the page on mount.
+  private _convertSource: { markdown: string; templateVersion: MadrTemplateVersion; fullPath: string } | undefined;
+  // Path of a just-converted file awaiting its first save, which is then assigned the next ADR number.
+  private _pendingConversionPath: string | undefined;
 
   /**
    * Creates or shows a panel that displays a webview with the specified view using a string key.
@@ -118,6 +121,29 @@ export class WebPanel {
             this.sendAdrDirectory();
             return;
           }
+          case "changeAdrDirectory": {
+            // The config-change listener refreshes the overview once the directory is updated.
+            await vscode.commands.executeCommand("vscode-adr-manager.changeAdrDirectory");
+            return;
+          }
+          case "getConvertSource": {
+            if (this._convertSource) {
+              this._panel.webview.postMessage({
+                command: "fetchConvertSource",
+                data: JSON.stringify(this._convertSource)
+              });
+            }
+            return;
+          }
+          case "acceptConversion": {
+            // Accepting conversion only changes editor state: re-open the converted ADR in the
+            // structured editor in memory. The file is written only when the user clicks Save,
+            // at which point it is assigned the next ADR number in its folder.
+            const { markdown, fullPath } = e.data;
+            this._pendingConversionPath = fullPath;
+            await this.openAdrFromMarkdown(markdown, fullPath);
+            return;
+          }
           case "getTourState": {
             const kind: TourKind = e.data?.kind === "editor" ? "editor" : "main";
             const key = kind === "editor" ? "adrManager.hasSeenEditorTour" : "adrManager.hasSeenMainTour";
@@ -198,7 +224,9 @@ export class WebPanel {
               vscode.window.showInformationMessage("This is a tour example, so it is not saved.");
               return;
             }
-            const uri = await saveAdr(adr);
+            const assignNumber = adr.fullPath === this._pendingConversionPath;
+            this._pendingConversionPath = undefined;
+            const uri = await saveAdr({ ...adr, assignNumber });
             this._panel.webview.postMessage({
               command: "saveSuccessful",
               newPath: uri.path
@@ -329,26 +357,50 @@ export class WebPanel {
     );
   }
   /**
-   * Opens the Basic MADR template and fills the fields with existing values of the specified ADR.
+   * Opens the ADR at the given URI in ADR Manager, reading its content from disk.
    * @param fileUri The URI of the ADR file to be viewed
    */
   async viewAdr(fileUri: vscode.Uri) {
+    this._pendingConversionPath = undefined;
     const mdString = new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri));
+    await this.openAdrFromMarkdown(mdString, fileUri.path);
+  }
 
+  /**
+   * Opens an ADR from an in-memory Markdown string (no disk read). A conforming document opens in
+   * the structured editor; a malformed one opens the convert view so the user can fix it without
+   * the file being rejected. The filesystem is never written here — only the Save flow does that.
+   * @param mdString The ADR Markdown
+   * @param fullPath The path the ADR is (or will be) saved to
+   */
+  async openAdrFromMarkdown(mdString: string, fullPath: string) {
     const templateVersion = resolveMadrVersion(mdString);
     const adr = parseAdr(mdString, templateVersion);
+
+    if (!adr.conforming) {
+      await this.openConvertView(mdString, templateVersion, fullPath);
+      return;
+    }
+
     await vscode.commands.executeCommand("vscode-adr-manager.openViewAdrWebView", mdString);
-
-    const adrNumber = await getAdrNumberFromUri(fileUri);
-    // "view-basic" or "view-professional" as page argument doesn't matter here
-    this._updatePanelTitle("view-basic", adrNumber);
-
+    // "view-basic" or "view-professional" as page argument doesn't matter here.
+    this._updatePanelTitle("view-basic", fullPath.split("/").pop()?.substring(0, 4) ?? "");
     this._postAdrValues(adr, {
       templateVersion,
       tags: parseTagsFromMd(mdString),
-      fullPath: fileUri.path
+      fullPath
     });
     this._pushFieldVisibility();
+  }
+
+  /**
+   * Opens the convert view for a malformed ADR. The raw source is held so the freshly loaded
+   * webview page can request it on mount, avoiding a message-delivery race.
+   */
+  private async openConvertView(mdString: string, templateVersion: MadrTemplateVersion, fullPath: string) {
+    this._convertSource = { markdown: mdString, templateVersion, fullPath };
+    await vscode.commands.executeCommand("vscode-adr-manager.openViewAdrWebView", mdString, "view-convert");
+    this._updatePanelTitle("view-convert");
   }
 
   async viewDemoAdr() {
@@ -444,6 +496,10 @@ export class WebPanel {
         } else if (!this._panel.title.startsWith("ADR Manager - View ADR")) {
           this._panel.title = "ADR Manager - View ADR";
         }
+        return;
+      }
+      case "view-convert": {
+        this._panel.title = "ADR Manager - Convert ADR";
         return;
       }
     }
@@ -579,15 +635,20 @@ export class WebPanel {
       relativePath: string;
       fileName: string;
     }[] = [];
-    (await getAllMDs()).forEach((md) => {
-      allAdrs.push({
-        adr: parseAdr(md.adr),
-        tags: parseTagsFromMd(md.adr),
-        fullPath: md.fullPath,
-        relativePath: md.relativePath,
-        fileName: md.fileName
-      });
-    });
+    for (const md of await getAllMDs()) {
+      try {
+        allAdrs.push({
+          adr: parseAdr(md.adr),
+          tags: parseTagsFromMd(md.adr),
+          fullPath: md.fullPath,
+          relativePath: md.relativePath,
+          fileName: md.fileName
+        });
+      } catch (error) {
+        // A single unparseable file must not blank the whole overview.
+        console.error(`ADR Manager: could not parse ${md.fullPath}`, error);
+      }
+    }
     this._panel.webview.postMessage({ command: "fetchAdrs", adrs: JSON.stringify(allAdrs) });
   }
 

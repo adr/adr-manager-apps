@@ -46,6 +46,14 @@ export type { TagPaletteColor } from "./tags";
 export { parseRelevantFilesFromMd, stripRelevantFilesComment, setRelevantFilesInMd } from "./relevant-files";
 export { parseMadrVersionFromMd, stripMadrVersionComment, setMadrVersionInMd } from "./madr-version";
 
+export {
+  stripAdrManagerMetadata,
+  resolveAdrTemplateVersion,
+  analyzeAdrDocument,
+  convertAdrDocument
+} from "./document-analysis";
+export type { AnalyzeAdrOptions, AdrDocumentAnalysis } from "./document-analysis";
+
 export { matchesAdrSearch, extractAdrTitle, extractAdrStatus, isEmptyQuery, EMPTY_QUERY } from "./search";
 export type { AdrSearchQuery, SearchableAdr } from "./search";
 

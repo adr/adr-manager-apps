@@ -237,7 +237,7 @@ const adrPath = computed(() => {
 onMounted(() => {
     store.reload();
     store.openAdrBy(props.repoFullName ?? "", props.adr);
-    void refreshAllRepositories();
+    refreshAllRepositories();
     if (lsGet("tourSeen") === null) {
         welcomeOpen.value = true;
     }

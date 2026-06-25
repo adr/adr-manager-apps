@@ -6,7 +6,16 @@
         <span class="word">ADR<span> Manager</span></span>
       </div>
       <span class="spacer"></span>
-      <span class="chip dir-chip" data-tour="adr-directory" :title="adrDirectory || 'docs/decisions'">
+      <span
+        class="chip dir-chip"
+        data-tour="adr-directory"
+        role="button"
+        tabindex="0"
+        :title="`Change ADR directory (currently ${adrDirectory || 'docs/decisions'})`"
+        @click="changeAdrDirectory"
+        @keydown.enter="changeAdrDirectory"
+        @keydown.space.prevent="changeAdrDirectory"
+      >
         <i class="codicon codicon-folder-opened"></i>
         <code>{{ adrDirectory || "docs/decisions" }}</code>
       </span>
@@ -136,7 +145,18 @@
         <i class="codicon codicon-files"></i>
         <h2>No ADRs detected in this workspace</h2>
         <p>
-          ADRs are loaded from <code>{{ adrDirectory || "docs/decisions" }}</code> in each workspace folder.
+          ADRs are loaded from
+          <code
+            class="dir-link"
+            role="button"
+            tabindex="0"
+            title="Change ADR directory"
+            @click="changeAdrDirectory"
+            @keydown.enter="changeAdrDirectory"
+            @keydown.space.prevent="changeAdrDirectory"
+            >{{ adrDirectory || "docs/decisions" }}</code
+          >
+          in each workspace folder.
         </p>
       </div>
       <div v-else-if="searchActive && filteredDisplayedAdrs.length === 0" class="empty">
@@ -171,7 +191,7 @@ import { buildMainTourSteps } from "../tour/main-steps";
 import type { TourStep } from "../tour/types";
 import { ArchitecturalDecisionRecord } from "../../src/plugins/classes";
 import type { TourCloseReason } from "../../src/tour";
-import { cleanPathString } from "../../src/plugins/utils";
+import { cleanPathString, splitAdrDirectory } from "../../src/plugins/utils";
 import { matchesAdrSearch, isEmptyQuery } from "@adr-manager/core";
 import type { Tag } from "@adr-manager/core";
 
@@ -352,9 +372,8 @@ export default defineComponent({
      * @param folder The folder the ADRs should be located in
      */
     adrsInFolder(folder: string) {
-      return this.filteredDisplayedAdrs.filter((adr) => {
-        return adr.relativePath.includes(cleanPathString(folder + "/" + this.adrDirectory));
-      });
+      const directoryPath = cleanPathString([folder, ...splitAdrDirectory(this.adrDirectory)].join("/"));
+      return this.filteredDisplayedAdrs.filter((adr) => adr.relativePath.includes(directoryPath));
     },
     toggleStatus(status: string) {
       if (this.filterStatuses.includes(status)) {
@@ -461,12 +480,15 @@ export default defineComponent({
      * @param adr The ADR to be deleted
      */
     requestDelete(adr: { adr: ArchitecturalDecisionRecord; fullPath: string; relativePath: string; fileName: string }) {
-      this.sendMessage("requestDelete", { title: adr.adr.title, fullPath: adr.fullPath });
+      this.sendMessage("requestDelete", { title: adr.adr.title || adr.fileName, fullPath: adr.fullPath });
     },
     /**
      * Sends a message to the extension to load the viewing webview with the content of the specified ADR file.
      * @param adr The ADR to be openend in the ADR Manager webview
      */
+    changeAdrDirectory() {
+      this.sendMessage("changeAdrDirectory");
+    },
     requestView(adr: { adr: ArchitecturalDecisionRecord; fullPath: string; relativePath: string; fileName: string }) {
       this.sendMessage("view", { fullPath: adr.fullPath });
     }
@@ -739,7 +761,12 @@ export default defineComponent({
   min-width: 0;
   max-width: 260px;
   flex: 0 1 auto;
-  cursor: default;
+  cursor: pointer;
+}
+.dir-chip:focus-visible {
+  outline: none;
+  border-color: var(--adr-focus);
+  box-shadow: 0 0 0 3px var(--adr-focus-ring);
 }
 
 .dir-chip code {
@@ -794,5 +821,19 @@ export default defineComponent({
 
 .empty p {
   font-size: var(--adr-text-sm);
+}
+
+.empty .dir-link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.empty .dir-link:hover {
+  color: var(--adr-ink);
+}
+.empty .dir-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--adr-focus-ring);
 }
 </style>

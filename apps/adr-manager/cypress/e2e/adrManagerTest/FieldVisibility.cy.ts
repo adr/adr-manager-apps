@@ -51,7 +51,11 @@ context("Field Visibility", () => {
     });
 
     context("MADR 2.1.2 field toggles", () => {
-        beforeEach(openNewProfessionalAdr);
+        beforeEach(() => {
+            openNewProfessionalAdr();
+            cy.get("[data-cy=versionSelect]").click();
+            cy.get("[data-cy=versionOption]").contains("MADR 2.1.2").click();
+        });
 
         it("shows all 2.1.2 fields by default and never shows 4.0.0-only fields", () => {
             cy.get("[data-cy=dateAdr]").should("exist");
@@ -217,6 +221,8 @@ context("Field Visibility", () => {
             cy.get("[data-cy=addRepoDialog]").click();
             cy.get("[data-cy=newADR]").click({ force: true });
             cy.get("[data-cy=modeProfessional]").click();
+            cy.get("[data-cy=versionSelect]").click();
+            cy.get("[data-cy=versionOption]").contains("MADR 2.1.2").click();
 
             // Date field should be hidden because the store loaded date=false from localStorage
             cy.get("[data-cy=dateAdr]").should("not.exist");

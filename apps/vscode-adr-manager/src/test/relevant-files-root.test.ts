@@ -41,7 +41,7 @@ describe("getRootPathFromAdrPath", () => {
     expect(getRootPathFromAdrPath("/ws/docs/decisions/", "docs/decisions")).toBeUndefined();
   });
 
-  test("treats \".\", \"./\" and \"/\" as the root folder itself", () => {
+  test('treats ".", "./" and "/" as the root folder itself', () => {
     expect(getRootPathFromAdrPath("/ws/0001-x.md", ".")).toBe("/ws");
     expect(getRootPathFromAdrPath("/ws/0001-x.md", "./")).toBe("/ws");
     expect(getRootPathFromAdrPath("/ws/service-a/0001-x.md", "/")).toBe("/ws/service-a");

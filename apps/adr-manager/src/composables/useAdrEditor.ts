@@ -103,7 +103,9 @@ export function useAdrEditor() {
         tags.value = parseTagsFromMd(adrFile.editedMd);
         const stripped = stripAdrManagerMetadata(adrFile.editedMd);
         markdown.value = adrFile.editedMd;
-        templateVersion.value = resolveAdrTemplateVersion(adrFile.editedMd, { preferredVersion: templateVersion.value });
+        templateVersion.value = resolveAdrTemplateVersion(adrFile.editedMd, {
+            preferredVersion: templateVersion.value
+        });
         const parsed = parse(adrFile.editedMd, templateVersion.value);
         if (matchesIgnoringFormatting(stripped, serializeAdr(parsed, templateVersion.value))) {
             adr.value = parsed;

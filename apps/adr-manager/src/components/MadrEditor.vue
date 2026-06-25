@@ -180,7 +180,12 @@ import ModeSwitchAlert from "./ModeSwitchAlert.vue";
 import type { ArchitecturalDecisionRecord } from "@/plugins/classes";
 import type { MadrTemplateVersion } from "@adr-manager/core";
 import type { Mode } from "@/types/store";
-import { DEFAULT_FIELD_VISIBILITY, DEFAULT_MADR_VERSION, getMadrTemplateAdapter, hasMadrTemplateField } from "@adr-manager/core";
+import {
+    DEFAULT_FIELD_VISIBILITY,
+    DEFAULT_MADR_VERSION,
+    getMadrTemplateAdapter,
+    hasMadrTemplateField
+} from "@adr-manager/core";
 import type { FieldKey, FieldVisibility } from "@adr-manager/core";
 import type { Tag } from "@/types/adr";
 

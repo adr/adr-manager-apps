@@ -635,9 +635,7 @@ export function adrFileNameForSave(fileName: string, title: string, assignedNumb
 async function getSaveUri(fileUri: vscode.Uri, title: string, assignNumber: boolean): Promise<vscode.Uri> {
   const lastSlash = fileUri.path.lastIndexOf("/");
   const directory = fileUri.path.substring(0, lastSlash + 1);
-  const assignedNumber = assignNumber
-    ? (await getHighestAdrNumberInFolder(vscode.Uri.file(directory))) + 1
-    : undefined;
+  const assignedNumber = assignNumber ? (await getHighestAdrNumberInFolder(vscode.Uri.file(directory))) + 1 : undefined;
   return vscode.Uri.file(directory + adrFileNameForSave(fileUri.path.substring(lastSlash + 1), title, assignedNumber));
 }
 

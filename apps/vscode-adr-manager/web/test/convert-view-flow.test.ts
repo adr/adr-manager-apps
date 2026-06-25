@@ -17,7 +17,7 @@ const stubs = {
     name: "EditorConvert",
     props: ["raw", "templateVersion"],
     emits: ["accept"],
-    template: '<button data-cy="acceptDiv" @click="$emit(\'accept\', \'CONVERTED MARKDOWN\')">accept</button>'
+    template: "<button data-cy=\"acceptDiv\" @click=\"$emit('accept', 'CONVERTED MARKDOWN')\">accept</button>"
   }
 };
 

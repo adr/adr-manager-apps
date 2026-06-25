@@ -115,9 +115,7 @@ describe("stripAdrManagerMetadata", () => {
 
   test("matches the composition of the individual strippers", () => {
     const md = setMadrVersionInMd(setTagsInMd(setRelevantFilesInMd(MADR_400, ["x.ts"]), [TAG_A]), "4.0.0");
-    expect(stripAdrManagerMetadata(md)).toBe(
-      stripMadrVersionComment(stripRelevantFilesComment(stripTagComment(md)))
-    );
+    expect(stripAdrManagerMetadata(md)).toBe(stripMadrVersionComment(stripRelevantFilesComment(stripTagComment(md))));
   });
 });
 
@@ -184,10 +182,7 @@ describe("analyzeAdrDocument", () => {
 
 describe("convertAdrDocument", () => {
   test("preserves tags, relevant files and the version marker", () => {
-    const source = setMadrVersionInMd(
-      setTagsInMd(setRelevantFilesInMd(MADR_212, ["src/a.ts"]), [TAG_A]),
-      "2.1.2"
-    );
+    const source = setMadrVersionInMd(setTagsInMd(setRelevantFilesInMd(MADR_212, ["src/a.ts"]), [TAG_A]), "2.1.2");
 
     const converted = convertAdrDocument(source, "4.0.0", {
       tags: parseTagsFromMd(source),

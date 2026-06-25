@@ -35,9 +35,7 @@ describe("adrFileNameForSave", () => {
   });
 
   test("keeps an existing number even when a new one is offered", () => {
-    expect(adrFileNameForSave("0003-broken-decision.md", "Use Event Sourcing", 7)).toBe(
-      "0003-use-event-sourcing.md"
-    );
+    expect(adrFileNameForSave("0003-broken-decision.md", "Use Event Sourcing", 7)).toBe("0003-use-event-sourcing.md");
   });
 
   test("falls back to a plain rename when no number is assigned", () => {

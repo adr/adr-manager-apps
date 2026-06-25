@@ -16,6 +16,7 @@ import { defineComponent } from "vue";
 import saveAdrMixin from "../mixins/save-adr";
 import vscodeApiMixin from "../mixins/vscode-api-mixin";
 import type { Tag } from "@adr-manager/core";
+import { makeAdrPayload } from "./helpers/adr-payload";
 
 // ── mock VS Code API ──────────────────────────────────────────────────────────
 const postMessage = vi.fn();
@@ -31,37 +32,6 @@ const TestComponent = defineComponent({
 const TAG_A: Tag = { id: "a1", label: "frontend", color: "#6366f1" };
 const TAG_B: Tag = { id: "b2", label: "backend", color: "#22c55e" };
 const TAG_C: Tag = { id: "c3", label: "infra", color: "#f59e0b" };
-
-/** Minimal ADR payload accepted by getInput() */
-function makeAdrPayload(overrides: Record<string, unknown> = {}) {
-  return JSON.stringify({
-    yaml: "",
-    title: "Sample ADR",
-    date: "",
-    status: "",
-    deciders: "",
-    technicalStory: "",
-    contextAndProblemStatement: "",
-    decisionDrivers: [],
-    consideredOptions: [],
-    decisionOutcome: {
-      chosenOption: "",
-      explanation: "",
-      positiveConsequences: [],
-      negativeConsequences: []
-    },
-    links: [],
-    decisionMakers: "",
-    consulted: "",
-    informed: "",
-    consequences: [],
-    confirmation: "",
-    moreInformation: "",
-    templateVersion: "2.1.2",
-    fullPath: "/path/to/0001-sample.md",
-    ...overrides
-  });
-}
 
 /** Dispatch a simulated extension-host message into the webview. */
 function dispatchExtensionMessage(data: Record<string, unknown>) {

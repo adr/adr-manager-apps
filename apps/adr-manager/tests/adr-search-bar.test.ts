@@ -165,11 +165,6 @@ describe("AdrSearchBar", () => {
             expect(wrapper.find(".filter-badge").exists()).toBe(true);
         });
 
-        it("shows the filter-badge dot when a filter is active", async () => {
-            await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
-            expect(wrapper.find(".filter-badge").exists()).toBe(true);
-        });
-
         it("multiple status chips can be active simultaneously", async () => {
             await wrapper.find("[data-cy=status-filter-accepted]").trigger("click");
             await wrapper.find("[data-cy=status-filter-proposed]").trigger("click");

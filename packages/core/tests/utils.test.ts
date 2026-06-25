@@ -10,9 +10,9 @@ import {
 } from "../src/index";
 
 describe("createShortTitle", () => {
-  // The same four cases hold with and without stripBackticks (the extension's profile),
-  // since none of these titles contain backticks.
-  const cases: { title: string; short: string }[] = [
+  // `stripped` is the expected output under the extension's stripBackticks profile. It
+  // only differs from `short` when the title actually contains backticks (last case).
+  const cases: { title: string; short: string; stripped?: string }[] = [
     {
       title: "[MADR](https://adr.github.io/madr/) 2.1.2 – The Markdown Architectural Decision Records",
       short: "MADR 2.1.2"
@@ -27,15 +27,17 @@ describe("createShortTitle", () => {
       short: "Include in [adr-tools](https://github.com/npryce/adr-tools"
     },
     // Single closing brace
-    { title: "Con. Opt 1)", short: "Con. Opt 1)" }
+    { title: "Con. Opt 1)", short: "Con. Opt 1)" },
+    // Backticks: the default keeps them, the extension's stripBackticks profile removes them.
+    { title: "Use `PostgreSQL` - durable store", short: "Use `PostgreSQL`", stripped: "Use PostgreSQL" }
   ];
 
-  cases.forEach(({ title, short }) => {
+  cases.forEach(({ title, short, stripped }) => {
     test(`default options: ${short}`, () => {
       expect(createShortTitle(title)).toBe(short);
     });
-    test(`stripBackticks: ${short}`, () => {
-      expect(createShortTitle(title, { stripBackticks: true })).toBe(short);
+    test(`stripBackticks: ${stripped ?? short}`, () => {
+      expect(createShortTitle(title, { stripBackticks: true })).toBe(stripped ?? short);
     });
   });
 });

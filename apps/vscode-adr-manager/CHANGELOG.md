@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.9
+
+### Patch Changes
+
+- 2098a7d: Modernize the extension build and trim dependencies. The extension host is now bundled with esbuild and the webviews with Vite, replacing webpack and rollup. lodash was replaced by the native String.padStart. The codicon font is now shipped inside the extension bundle, fixing webview icons that were broken in the packaged extension because it loaded them from node_modules.
+
 - 0.1.8 - Updated project repository, added introduction repository to extension description
 - 0.1.7 - Fixed bug where option description boxes after the first option were not auto-growing
 - 0.1.6 - Fixed spelling error in UI

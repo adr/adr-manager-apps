@@ -2,6 +2,13 @@ packages:
   - "apps/*"
   - "packages/*"
 
+overrides:
+  form-data: ">=4.0.6"
+  undici: "^7.28.0"
+  esbuild: ">=0.28.1"
+  protobufjs: ">=7.6.3"
+  js-yaml: ">=4.1.2"
+
 nodeLinker: hoisted
 minimumReleaseAge: 7200
 trustPolicy: no-downgrade
@@ -36,7 +43,7 @@ catalog:
   # Build toolchain (Vite for browser bundles, esbuild for the extension host).
   vite: ^8.0.16
   "@vitejs/plugin-vue": ^6.0.7
-  esbuild: ^0.28.0
+  esbuild: ^0.28.1
   # ESLint stack (flat config, shared by @adr-manager/eslint-config).
   eslint: ^10.4.1
   typescript-eslint: ^8.60.1

@@ -161,15 +161,17 @@ const unstagedRepositories = computed<StagedRepo[]>(() =>
         .slice(0, perPage)
 );
 
-// Reload repositories when the dialog is (re)opened, in case something changed on GitHub.
-watch(show, (open) => {
-    if (open) {
-        page.value = 1;
-        loadRepositories();
-    }
-});
-
-loadRepositories();
+// Load repositories when the dialog is opened (or reopened after changes on GitHub).
+watch(
+    show,
+    (open) => {
+        if (open) {
+            page.value = 1;
+            loadRepositories();
+        }
+    },
+    { immediate: true }
+);
 
 async function loadRepositories(): Promise<void> {
     lastAction.value = "list";

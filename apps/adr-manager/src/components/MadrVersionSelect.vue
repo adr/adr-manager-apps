@@ -1,6 +1,6 @@
 <template>
-    <div ref="wrap" class="verselect">
-        <button type="button" data-cy="versionSelect" class="verselect-btn" @click="open = !open">
+    <div ref="wrap" class="verselect" data-tour="template-version" @tour-version-menu="setTourMenuOpen">
+        <button type="button" data-cy="versionSelect" class="verselect-btn" :aria-expanded="open" @click="open = !open">
             <span class="mdi mdi-file-tree-outline" aria-hidden="true"></span>
             <span class="vlabel">MADR {{ modelValue }}</span>
             <span class="ver-pill">TEMPLATE</span>
@@ -44,6 +44,10 @@ useClickOutside(wrap, () => (open.value = false));
 function select(version: MadrTemplateVersion): void {
     emit("update:modelValue", version);
     open.value = false;
+}
+
+function setTourMenuOpen(event: Event): void {
+    open.value = (event as CustomEvent<boolean>).detail;
 }
 </script>
 

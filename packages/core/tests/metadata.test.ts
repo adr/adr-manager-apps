@@ -1,9 +1,12 @@
 import { describe, expect, test } from "vitest";
 import {
+  parseMadrVersionFromMd,
   parseRelevantFilesFromMd,
   parseTagsFromMd,
+  setMadrVersionInMd,
   setRelevantFilesInMd,
   setTagsInMd,
+  stripMadrVersionComment,
   stripRelevantFilesComment,
   stripTagComment
 } from "../src/index";
@@ -61,5 +64,27 @@ describe("ADR relevant-file metadata comments", () => {
     expect(
       parseRelevantFilesFromMd(`${BASE_MD}\n<!-- adr-manager-relevant-files: ["src/main.ts", 123, null] -->`)
     ).toStrictEqual(["src/main.ts"]);
+  });
+});
+
+describe("ADR MADR-version metadata comments", () => {
+  test("round-trips the pinned template version", () => {
+    expect(parseMadrVersionFromMd(setMadrVersionInMd(BASE_MD, "4.0.0"))).toBe("4.0.0");
+    expect(parseMadrVersionFromMd(setMadrVersionInMd(BASE_MD, "2.1.2"))).toBe("2.1.2");
+  });
+
+  test("replaces an existing version comment instead of appending another", () => {
+    const md = setMadrVersionInMd(setMadrVersionInMd(BASE_MD, "2.1.2"), "4.0.0");
+    expect(parseMadrVersionFromMd(md)).toBe("4.0.0");
+    expect(md.match(/adr-manager-madr-version/g)).toHaveLength(1);
+  });
+
+  test("strips the version comment", () => {
+    expect(stripMadrVersionComment(setMadrVersionInMd(BASE_MD, "4.0.0"))).toBe(BASE_MD);
+  });
+
+  test("ignores a missing or unknown version", () => {
+    expect(parseMadrVersionFromMd(BASE_MD)).toBeUndefined();
+    expect(parseMadrVersionFromMd(`${BASE_MD}\n<!-- adr-manager-madr-version: "9.9.9" -->`)).toBeUndefined();
   });
 });

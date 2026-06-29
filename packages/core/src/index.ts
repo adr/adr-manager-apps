@@ -14,6 +14,7 @@ export type { Md2AdrOptions, Adr2MdOptions } from "./parser";
 export { md2adr400, adr2md400 } from "./madr400";
 export {
   MADR_TEMPLATE_ADAPTERS,
+  DEFAULT_MADR_VERSION,
   detectMadrVersion,
   getMadrTemplateAdapter,
   hasMadrTemplateField,
@@ -43,6 +44,18 @@ export type { FieldKey, FieldVisibility } from "./fields";
 export { parseTagsFromMd, stripTagComment, setTagsInMd, TAG_PALETTE } from "./tags";
 export type { TagPaletteColor } from "./tags";
 export { parseRelevantFilesFromMd, stripRelevantFilesComment, setRelevantFilesInMd } from "./relevant-files";
+export { parseMadrVersionFromMd, stripMadrVersionComment, setMadrVersionInMd } from "./madr-version";
+
+export {
+  stripAdrManagerMetadata,
+  resolveAdrTemplateVersion,
+  analyzeAdrDocument,
+  convertAdrDocument
+} from "./document-analysis";
+export type { AnalyzeAdrOptions, AdrDocumentAnalysis } from "./document-analysis";
 
 export { matchesAdrSearch, extractAdrTitle, extractAdrStatus, isEmptyQuery, EMPTY_QUERY } from "./search";
 export type { AdrSearchQuery, SearchableAdr } from "./search";
+
+export { buildPrimaryDemoAdrFixture, buildDemoAdrFixtures, TOUR_COPY } from "./tour";
+export type { DemoAdrFixture } from "./tour";

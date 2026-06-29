@@ -201,6 +201,21 @@ importers:
       '@adr-manager/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@codemirror/lang-markdown':
+        specifier: ^6.5.0
+        version: 6.5.0
+      '@codemirror/language':
+        specifier: ^6.12.3
+        version: 6.12.3
+      '@codemirror/merge':
+        specifier: ^6.12.1
+        version: 6.12.1
+      '@codemirror/state':
+        specifier: ^6.6.0
+        version: 6.6.0
+      '@codemirror/view':
+        specifier: ^6.43.0
+        version: 6.43.0
       '@types/vscode-webview':
         specifier: ^1.57.5
         version: 1.57.5

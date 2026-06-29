@@ -33,3 +33,27 @@ export function matchesMadrTitleFormat(name: string) {
 export function cleanPathString(path: string): string {
   return path.replace(/\\/g, "/").replace(/(\/\/)+\/*/g, "/");
 }
+
+/**
+ * Splits a configured ADR directory into its meaningful path segments, dropping empty
+ * segments and ".". This makes "", ".", "./" and "/" all resolve to an empty array, which
+ * callers treat as "the workspace root folder itself" rather than a named subfolder.
+ */
+export function splitAdrDirectory(adrDirectory: string): string[] {
+  return cleanPathString(adrDirectory)
+    .split("/")
+    .filter((segment) => segment !== "" && segment !== ".");
+}
+
+// Markdown files the extension scaffolds itself, which are never ADRs and must stay out of the overview.
+const NON_ADR_MARKDOWN_FILES = new Set(["readme.md", "adr-template.md"]);
+
+/**
+ * Returns true if the file belongs in the ADR overview: any Markdown file except the README and
+ * ADR template the extension scaffolds. ADRs need no four-digit prefix anymore, so unnumbered files
+ * list alphabetically too; non-conforming ones open in the convert view instead of the editor.
+ */
+export function isListableAdrFile(name: string): boolean {
+  const lower = name.toLowerCase();
+  return lower.endsWith(".md") && !NON_ADR_MARKDOWN_FILES.has(lower);
+}

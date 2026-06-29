@@ -41,6 +41,10 @@ export async function loadRepositoryContent(repoFullName: string, branchName: st
     primeFileList(repoFullName, branchName, filePaths);
     let adrPath: string | undefined;
     const adrList = filePaths.filter((filePath) => {
+        // Skip any file that is not a Markdown file, since ADRs are always Markdown files.
+        if (!filePath.toLowerCase().endsWith(".md")) {
+            return false;
+        }
         const matchedPaths = ADR_PATH_CANDIDATES.filter(
             (path) => ("/" + filePath).includes(path) || filePath.startsWith("adr/")
         );

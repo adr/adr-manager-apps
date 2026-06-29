@@ -10,19 +10,14 @@ context("Listing and adding repositories", () => {
         cy.get("[data-cy=listRepo]").should("have.length.greaterThan", 0);
     });
     it("Add all repositories", () => {
-        cy.get("[data-cy=listRepo]").then(() => {
-            const numberOfAddedRepositories = 3;
-            let counter = 0;
-            cy.get("[data-cy=listRepo]").each(() => {
-                counter++;
-                if (counter > numberOfAddedRepositories) {
-                    return;
-                }
-                cy.get("[data-cy=listRepo]").eq(0).click();
-            });
-            cy.get("[data-cy=addRepoDialog]").click();
-            cy.wait("@showRepos", { timeout: 15000 });
-            cy.get("[data-cy=repoNameList]").children().should("have.length", numberOfAddedRepositories);
-        });
+        const repositoriesToAdd = 3;
+        // Selecting the top entry moves it out of the list, so clicking the first row N times
+        // queues N distinct repositories.
+        for (let i = 0; i < repositoriesToAdd; i++) {
+            cy.get("[data-cy=listRepo]").eq(0).click();
+        }
+        cy.get("[data-cy=addRepoDialog]").click();
+        cy.wait("@showRepos", { timeout: 15000 });
+        cy.get("[data-cy=repoNameList]").children().should("have.length", repositoriesToAdd);
     });
 });

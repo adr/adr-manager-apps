@@ -2,9 +2,9 @@
 import { defineComponent } from "vue";
 import { naturalCase2titleCase } from "../../src/plugins/utils";
 import vscodeApiMixin from "./vscode-api-mixin";
-import { DEFAULT_FIELD_VISIBILITY, getHiddenFieldsWithData } from "@adr-manager/core";
+import { DEFAULT_FIELD_VISIBILITY, DEFAULT_MADR_VERSION, getHiddenFieldsWithData } from "@adr-manager/core";
 import type { ArchitecturalDecisionRecord } from "@adr-manager/core";
-import type { FieldKey, FieldVisibility, Tag } from "@adr-manager/core";
+import type { FieldKey, FieldVisibility, MadrTemplateVersion, Tag } from "@adr-manager/core";
 
 declare global {
   interface Window {
@@ -46,7 +46,7 @@ export default defineComponent({
       consequences: [] as { kind: string; text: string }[],
       confirmation: "",
       moreInformation: "",
-      templateVersion: "2.1.2",
+      templateVersion: DEFAULT_MADR_VERSION,
       fullPath: "",
       oldTitle: "",
       fieldVisibility: { ...DEFAULT_FIELD_VISIBILITY },
@@ -207,7 +207,7 @@ export default defineComponent({
       consequences?: { kind: string; text: string }[];
       confirmation?: string;
       moreInformation?: string;
-      templateVersion?: string;
+      templateVersion?: MadrTemplateVersion;
       tags?: Tag[];
       fullPath: string;
     }) {

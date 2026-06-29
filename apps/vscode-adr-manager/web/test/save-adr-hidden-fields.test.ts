@@ -21,6 +21,7 @@ import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { FieldVisibility } from "@adr-manager/core";
 import saveAdrMixin from "../mixins/save-adr";
 import vscodeApiMixin from "../mixins/vscode-api-mixin";
+import { makeAdrPayload } from "./helpers/adr-payload";
 
 // ── mock VS Code API ──────────────────────────────────────────────────────────
 const postMessage = vi.fn();
@@ -37,41 +38,10 @@ function fv(overrides: Partial<FieldVisibility> = {}): FieldVisibility {
   return { ...DEFAULT_FIELD_VISIBILITY, ...overrides };
 }
 
-function makeAdrPayload(overrides: Record<string, unknown> = {}) {
-  return JSON.stringify({
-    yaml: "",
-    title: "Sample ADR",
-    date: "",
-    status: "",
-    deciders: "",
-    technicalStory: "",
-    contextAndProblemStatement: "",
-    decisionDrivers: [],
-    consideredOptions: [],
-    decisionOutcome: {
-      chosenOption: "",
-      explanation: "",
-      positiveConsequences: [],
-      negativeConsequences: []
-    },
-    links: [],
-    decisionMakers: "",
-    consulted: "",
-    informed: "",
-    consequences: [],
-    confirmation: "",
-    moreInformation: "",
-    templateVersion: "2.1.2",
-    fullPath: "/workspace/docs/0001-sample.md",
-    ...overrides
-  });
-}
-
 function dispatchExtensionMessage(data: Record<string, unknown>) {
   window.dispatchEvent(new MessageEvent("message", { data }));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getSaveAdrPayload(vm: any): any {
   vm.saveAdr();
   const call = postMessage.mock.calls.find((c: unknown[]) => (c[0] as any).command === "saveAdr");

@@ -1,17 +1,9 @@
 /**
- * Tests for tag color persistence across the full lifecycle:
- *
- *   1. parseTagsFromMd correctly extracts the color stored in an ADR markdown comment.
- *   2. setTagsInMd → parseTagsFromMd round-trip preserves all three tag fields.
- *   3. availableTags (from useAdrSearch) returns the correct colors when reading
- *      Repository objects populated with tagged ADR markdown.
- *   4. Remove-and-re-add scenario: creating a fresh Repository with the same markdown
- *      content (as happens when a user removes then re-adds a repo) yields identical
- *      tag objects — same id, label, and color.
- *
- * This covers the fact that tags are stored exclusively in the ADR markdown file
- * (as a `<!-- adr-manager-tags: [...] -->` comment) and therefore must survive any
- * in-memory state reset that does not modify the underlying file.
+ * Tags live exclusively in the ADR markdown (a `<!-- adr-manager-tags: [...] -->`
+ * comment), so availableTags must re-derive them from the file every time. These tests
+ * cover that derivation and its consequence: a repository rebuilt from the same markdown
+ * (e.g. removed then re-added) yields identical tag objects. Exhaustive parsing of the
+ * comment itself is covered in @adr-manager/core (metadata.test.ts).
  */
 import { describe, it, expect } from "vitest";
 import { parseTagsFromMd, setTagsInMd } from "@adr-manager/core";
@@ -54,60 +46,19 @@ const BASE_MD = "# ADR 1 – Use PostgreSQL\n\nUse PostgreSQL as the primary dat
 
 const { availableTags } = useAdrSearch();
 
-// ── 1. parseTagsFromMd color extraction ──────────────────────────────────────
-describe("parseTagsFromMd – color extraction", () => {
-    it("extracts the exact color hex stored in the markdown comment", () => {
-        const md = `${BASE_MD}\n<!-- adr-manager-tags: [{"id":"a1","label":"frontend","color":"#6366f1"}] -->`;
-        expect(parseTagsFromMd(md)).toEqual([TAG_A]);
-    });
-
-    it("extracts distinct colors for each tag in a multi-tag comment", () => {
-        const md = setTagsInMd(BASE_MD, [TAG_A, TAG_B, TAG_C]);
-        const tags = parseTagsFromMd(md);
-        expect(tags.map((t) => t.color)).toEqual([TAG_A.color, TAG_B.color, TAG_C.color]);
-    });
-
-    it("returns an empty array when the markdown has no tag comment", () => {
-        expect(parseTagsFromMd(BASE_MD)).toEqual([]);
-    });
-
-    it("returns an empty array for malformed JSON in the tag comment", () => {
-        const md = `${BASE_MD}\n<!-- adr-manager-tags: not-valid-json -->`;
-        expect(parseTagsFromMd(md)).toEqual([]);
-    });
-});
-
-// ── 2. setTagsInMd → parseTagsFromMd round-trip ──────────────────────────────
-describe("setTagsInMd → parseTagsFromMd round-trip", () => {
-    it("preserves id, label, and color for a single tag", () => {
-        const md = setTagsInMd(BASE_MD, [TAG_A]);
-        expect(parseTagsFromMd(md)).toEqual([TAG_A]);
-    });
-
-    it("preserves all three fields for multiple tags with distinct colors", () => {
+// ── 1. Markdown round-trip (web app re-export, exhaustive coverage in core) ────
+describe("tag markdown round-trip", () => {
+    it("preserves id, label, and color for multiple tags", () => {
         const md = setTagsInMd(BASE_MD, [TAG_A, TAG_B, TAG_C]);
         expect(parseTagsFromMd(md)).toEqual([TAG_A, TAG_B, TAG_C]);
     });
 
-    it("replacing tags updates the comment and new colors are returned", () => {
-        let md = setTagsInMd(BASE_MD, [TAG_A]);
-        md = setTagsInMd(md, [TAG_B, TAG_C]);
-        const tags = parseTagsFromMd(md);
-        expect(tags).toEqual([TAG_B, TAG_C]);
-    });
-
-    it("clearing tags (empty array) removes the comment entirely", () => {
-        const md = setTagsInMd(setTagsInMd(BASE_MD, [TAG_A]), []);
-        expect(parseTagsFromMd(md)).toEqual([]);
-    });
-
-    it("round-trip does not introduce extra fields", () => {
-        const md = setTagsInMd(BASE_MD, [TAG_A]);
-        expect(parseTagsFromMd(md).map((tag) => Object.keys(tag).sort())).toEqual([["color", "id", "label"]]);
+    it("returns an empty array for malformed tag metadata", () => {
+        expect(parseTagsFromMd(`${BASE_MD}\n<!-- adr-manager-tags: not-valid-json -->`)).toEqual([]);
     });
 });
 
-// ── 3. availableTags returns correct colors from Repository ───────────────────
+// ── 2. availableTags returns correct colors from Repository ───────────────────
 describe("availableTags – color correctness from repository ADRs", () => {
     it("returns the tag with the correct color from a single ADR file", () => {
         const repo = makeRepo([makeAdrFile(setTagsInMd(BASE_MD, [TAG_A]))]);
@@ -139,50 +90,26 @@ describe("availableTags – color correctness from repository ADRs", () => {
     });
 });
 
-// ── 4. Remove repo → re-add repo: tag colors stay consistent ─────────────────
-describe("remove and re-add repository – tag color consistency", () => {
-    const TAGGED_MD = setTagsInMd(BASE_MD, [TAG_A, TAG_B]);
-
-    it("tags have the same colors after a repo is removed and re-added", () => {
-        const firstLoad = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
-        const secondLoad = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
-        expect(secondLoad.map((t) => t.color)).toEqual(firstLoad.map((t) => t.color));
-    });
-
-    it("tag IDs are stable across a remove/re-add cycle", () => {
-        const firstIds = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.id);
-        const secondIds = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.id);
-        expect(secondIds).toEqual(firstIds);
-    });
-
-    it("tag labels are stable across a remove/re-add cycle", () => {
-        const firstLabels = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.label);
-        const secondLabels = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]).map((t) => t.label);
-        expect(secondLabels).toEqual(firstLabels);
-    });
-
-    it("full tag objects are identical after remove and re-add", () => {
-        const before = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
-        const after = availableTags([makeRepo([makeAdrFile(TAGGED_MD)])]);
-        expect(after).toEqual(before);
-    });
-
-    it("colors are consistent across multiple ADRs with different tags after re-add", () => {
-        const md1 = setTagsInMd("# ADR 1\nContent.", [TAG_A]);
-        const md2 = setTagsInMd("# ADR 2\nContent.", [TAG_B, TAG_C]);
-        const files = [makeAdrFile(md1, 1), makeAdrFile(md2, 2)];
-
-        const before = availableTags([makeRepo(files)]);
-        const after = availableTags([makeRepo(files)]);
-        expect(after).toEqual(before);
-    });
-
-    it("a single specific tag color matches the original after re-add", () => {
-        const md = setTagsInMd(BASE_MD, [TAG_C]);
-
+// ── 3. Tags survive an in-memory repository reset (remove → re-add) ───────────
+// Removing and re-adding a repo rebuilds it from the same ADR markdown. Because tags live
+// only in the markdown, availableTags yields byte-identical Tag objects each time.
+describe("tags are re-derived from markdown across a repository reset", () => {
+    it("rebuilding a repository from the same markdown yields identical tag objects", () => {
+        const md = setTagsInMd(BASE_MD, [TAG_A, TAG_B]);
         const before = availableTags([makeRepo([makeAdrFile(md)])]);
         const after = availableTags([makeRepo([makeAdrFile(md)])]);
         expect(after).toEqual(before);
-        expect(after).toEqual([TAG_C]);
+        expect(after).toEqual([TAG_A, TAG_B]);
+    });
+
+    it("holds across multiple ADRs carrying different tags", () => {
+        const files = [
+            makeAdrFile(setTagsInMd("# ADR 1\nContent.", [TAG_A]), 1),
+            makeAdrFile(setTagsInMd("# ADR 2\nContent.", [TAG_B, TAG_C]), 2)
+        ];
+        const before = availableTags([makeRepo(files)]);
+        const after = availableTags([makeRepo(files)]);
+        expect(after).toEqual(before);
+        expect(after).toEqual([TAG_A, TAG_B, TAG_C]);
     });
 });

@@ -8,6 +8,7 @@ import { mount } from "@vue/test-utils";
 import { defineComponent } from "vue";
 import adrDataMixin from "../mixins/adr-data";
 import vscodeApiMixin from "../mixins/vscode-api-mixin";
+import { makeAdrPayload } from "./helpers/adr-payload";
 
 const postMessage = vi.fn();
 vi.stubGlobal("vscode", { postMessage });
@@ -44,25 +45,8 @@ function dispatchExtensionMessage(data: Record<string, unknown>) {
   window.dispatchEvent(new MessageEvent("message", { data }));
 }
 
-const adrPayload = JSON.stringify({
-  yaml: "",
-  title: "Sample ADR",
-  date: "",
-  status: "",
-  deciders: "",
-  technicalStory: "",
-  contextAndProblemStatement: "",
-  decisionDrivers: [],
-  consideredOptions: [],
-  decisionOutcome: { chosenOption: "", explanation: "", positiveConsequences: [], negativeConsequences: [] },
-  links: [],
+const adrPayload = makeAdrPayload({
   relevantFiles: ["src/a.ts", ""],
-  decisionMakers: "",
-  consulted: "",
-  informed: "",
-  consequences: [],
-  confirmation: "",
-  moreInformation: "",
   fullPath: "/ws/docs/decisions/0001-sample.md"
 });
 

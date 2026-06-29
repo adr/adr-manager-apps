@@ -1,16 +1,20 @@
 <template>
-  <article class="adr-card" :class="{ broken: !adr.adr.conforming }">
+  <article class="adr-card" :class="{ broken: looksLikeAdr && !adr.adr.conforming }">
     <div
       class="adr-row"
       role="button"
       tabindex="0"
-      :title="adr.adr.conforming ? 'Open in ADR Manager' : 'Open in text editor'"
+      :title="adr.adr.conforming ? 'Open in ADR Manager' : 'Open in ADR Manager to convert'"
       @click="open"
       @keydown.enter="open"
     >
-      <span class="adr-number">{{ getAdrNumber }}</span>
+      <span v-if="isAdr" class="adr-number">
+        <i class="codicon codicon-checklist adr-kind-icon" title="Architectural decision record"></i>
+        <template v-if="hasNumber">{{ getAdrNumber }}</template>
+      </span>
+      <i v-else class="codicon codicon-file adr-file-icon" title="Markdown file — not yet an ADR"></i>
       <div class="adr-text">
-        <span class="adr-title">{{ adr.adr.title || "(No title)" }}</span>
+        <span class="adr-title">{{ displayTitle }}</span>
         <span class="adr-path">{{ adr.relativePath }}</span>
       </div>
       <span v-if="statusTone" class="chip status small" :data-tone="statusTone">{{ adr.adr.status }}</span>
@@ -37,7 +41,7 @@
         </button>
       </div>
     </div>
-    <ul v-if="!adr.adr.conforming" class="parse-errors">
+    <ul v-if="looksLikeAdr && !adr.adr.conforming" class="parse-errors">
       <li v-for="(error, index) in adr.adr.parseErrors" :key="index">
         <i class="codicon codicon-error"></i>
         Parsing error at line {{ error.line }}, position {{ error.charPosition }}: {{ error.message }}
@@ -48,6 +52,7 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
+import { matchesMadrTitleFormat } from "../../src/plugins/utils";
 
 const STATUS_TONES = ["proposed", "rejected", "accepted", "deprecated", "superseded"];
 
@@ -75,10 +80,28 @@ export default defineComponent({
   emits: ["requestView", "requestEdit", "requestDelete"],
   computed: {
     /**
-     * Returns the number of the ADR.
+     * Whether the file is an actual ADR, decided by whether its content parses as a valid MADR
+     * (not by its file name). The NNNN- prefix is only MADR's ordering convention, so a well-formed
+     * ADR with any name still counts and a malformed NNNN- file does not.
      */
+    isAdr() {
+      return Boolean(this.adr.adr.conforming);
+    },
+    /**
+     * True for the MADR file-name convention (NNNN-title.md). Drives the broken-ADR hints: a file
+     * named like an ADR but not conforming is a broken ADR worth flagging, not just stray Markdown.
+     */
+    looksLikeAdr() {
+      return Boolean(matchesMadrTitleFormat(this.adr.fileName));
+    },
+    hasNumber() {
+      return /^\d{4}/.test(this.adr.fileName);
+    },
     getAdrNumber() {
       return this.adr.fileName.substring(0, 4);
+    },
+    displayTitle() {
+      return this.adr.adr.title || (this.isAdr ? "(No title)" : this.adr.fileName.replace(/\.md$/i, ""));
     },
     statusTone() {
       const status = (this.adr.adr.status ?? "").toLowerCase();
@@ -87,15 +110,12 @@ export default defineComponent({
   },
   methods: {
     /**
-     * Opens conforming ADRs in the ADR Manager editor and non-conforming ones
-     * in the text editor so the parse errors can be fixed.
+     * Opens the ADR in ADR Manager. A conforming ADR lands in the structured editor; a malformed
+     * one lands in the convert view. The raw Markdown file stays reachable via the separate
+     * "Open Markdown file" action (requestEdit).
      */
     open() {
-      if (this.adr.adr.conforming) {
-        this.$emit("requestView");
-      } else {
-        this.$emit("requestEdit");
-      }
+      this.$emit("requestView");
     }
   }
 });
@@ -130,9 +150,23 @@ export default defineComponent({
 
 .adr-number {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--adr-font-mono);
   font-size: var(--adr-text-xs);
   font-weight: 600;
+  color: var(--adr-ink-3);
+}
+
+.adr-kind-icon {
+  font-size: 14px;
+  color: var(--adr-ink-3);
+}
+
+.adr-file-icon {
+  flex: 0 0 auto;
+  font-size: 15px;
   color: var(--adr-ink-3);
 }
 

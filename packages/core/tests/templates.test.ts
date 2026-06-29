@@ -98,6 +98,18 @@ describe("MADR template registry", () => {
     expect(detectMadrVersion(MADR_400)).toBe("4.0.0");
   });
 
+  test("cannot tell a basic 4.0.0 document from 2.1.2 (why the version marker exists)", () => {
+    const basic = new ArchitecturalDecisionRecord({
+      title: "Use PostgreSQL",
+      contextAndProblemStatement: "We need a durable system of record.",
+      consideredOptions: [{ title: "PostgreSQL" }, { title: "DynamoDB" }],
+      decisionOutcome: { chosenOption: "PostgreSQL", explanation: "it fits" }
+    });
+    const markdown = serializeMadr(basic, "4.0.0");
+    expect(markdown).not.toContain("---");
+    expect(detectMadrVersion(markdown)).toBe("2.1.2");
+  });
+
   test("dispatches 2.1.2 parsing and serialization to the classic parser", () => {
     const parsed = parseMadr(MADR_212, "2.1.2");
     expect(parsed).toStrictEqual(md2adr(MADR_212));

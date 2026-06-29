@@ -1,5 +1,4 @@
 import axios from "axios";
-import type { AxiosInstance } from "axios";
 import {
     attachAuthInterceptors,
     completeOAuthCallback,
@@ -8,6 +7,7 @@ import {
     loadTokens,
     refreshTokens
 } from "@/plugins/git/providers/gitlab/auth";
+import { fakeAxiosInstance, unauthorizedError } from "./helpers/axios";
 
 vi.mock("axios", async (importOriginal) => {
     const actual = await importOriginal<typeof import("axios")>();
@@ -144,34 +144,9 @@ test("a failed refresh clears the session", async () => {
 
 // --- interceptors ---
 
-interface CapturedHandlers {
-    request: Array<(config: { headers: Record<string, string> }) => Promise<{ headers: Record<string, string> }>>;
-    responseRejected: Array<(error: unknown) => Promise<unknown>>;
-}
-
-function fakeInstance(): { instance: AxiosInstance; handlers: CapturedHandlers } {
-    const handlers: CapturedHandlers = { request: [], responseRejected: [] };
-    const instance = {
-        request: vi.fn().mockResolvedValue({ data: "retried" }),
-        interceptors: {
-            request: { use: (fn: never) => handlers.request.push(fn) },
-            response: { use: (_ok: never, rejected: never) => handlers.responseRejected.push(rejected) }
-        }
-    };
-    return { instance: instance as unknown as AxiosInstance, handlers };
-}
-
-function unauthorizedError(config: Record<string, unknown>): Error {
-    return Object.assign(new Error("Request failed with status code 401"), {
-        isAxiosError: true,
-        response: { status: 401 },
-        config
-    });
-}
-
 test("the request interceptor injects a fresh bearer token", async () => {
     storeTokens(Date.now() + 7200_000);
-    const { instance, handlers } = fakeInstance();
+    const { instance, handlers } = fakeAxiosInstance();
     attachAuthInterceptors(instance);
 
     const config = await handlers.request[0]?.({ headers: {} });
@@ -182,7 +157,7 @@ test("the request interceptor injects a fresh bearer token", async () => {
 test("the request interceptor refreshes a token that is about to expire", async () => {
     storeTokens(Date.now() + 10_000);
     vi.mocked(axios.post).mockResolvedValueOnce(tokenResponse("rotated"));
-    const { instance, handlers } = fakeInstance();
+    const { instance, handlers } = fakeAxiosInstance();
     attachAuthInterceptors(instance);
 
     const config = await handlers.request[0]?.({ headers: {} });
@@ -192,7 +167,7 @@ test("the request interceptor refreshes a token that is about to expire", async 
 test("a 401 response is retried exactly once after a refresh", async () => {
     storeTokens(Date.now() + 7200_000);
     vi.mocked(axios.post).mockResolvedValue(tokenResponse("rotated"));
-    const { instance, handlers } = fakeInstance();
+    const { instance, handlers } = fakeAxiosInstance();
     attachAuthInterceptors(instance);
     const rejected = handlers.responseRejected[0];
 

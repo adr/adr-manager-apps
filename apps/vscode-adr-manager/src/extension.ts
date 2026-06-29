@@ -16,7 +16,6 @@ import {
   isDiagnosticsEnabled
 } from "./extension-functions";
 import { WebPanel } from "./WebPanel";
-import { parseAdr } from "./plugins/parser";
 import { getDiagnostics } from "./diagnostics/diagnostics";
 import { AdrManagerCodeActionProvider } from "./AdrManagerCodeActionProvider";
 
@@ -128,23 +127,12 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("vscode-adr-manager.viewInAdrManager", async () => {
       if (vscode.window.activeTextEditor) {
         const file = vscode.window.activeTextEditor.document;
-        const adr = parseAdr(file.getText());
-        if (!adr.conforming) {
-          vscode.window.showErrorMessage(
-            "The requested Markdown file does not conform to MADR, please edit the file such that it conforms to MADR."
-          );
-        } else {
-          if (!WebPanel.currentPanel) {
-            WebPanel.createOrShow(context, "main");
-          }
-          WebPanel.currentPanel!.viewAdr(file.uri);
-          if (
-            !(await getAllMDs()).some((md) => {
-              return md.adr === file.getText();
-            })
-          ) {
-            vscode.window.showWarningMessage("This ADR is not inside of the ADR Directory.");
-          }
+        if (!WebPanel.currentPanel) {
+          WebPanel.createOrShow(context, "main");
+        }
+        await WebPanel.currentPanel!.viewAdr(file.uri);
+        if (!(await getAllMDs()).some((md) => md.adr === file.getText())) {
+          vscode.window.showWarningMessage("This ADR is not inside of the ADR Directory.");
         }
       }
     })
@@ -153,23 +141,12 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("vscode-adr-manager.viewAdrFromContextMenu", async (uri: vscode.Uri) => {
       const mdString = new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
-      const adr = parseAdr(mdString);
-      if (!adr.conforming) {
-        vscode.window.showErrorMessage(
-          "The requested Markdown file does not conform to MADR, please edit the file such that it conforms to MADR."
-        );
-      } else {
-        if (!WebPanel.currentPanel) {
-          WebPanel.createOrShow(context, "main");
-        }
-        WebPanel.currentPanel!.viewAdr(uri);
-        if (
-          !(await getAllMDs()).some((md) => {
-            return md.adr === mdString;
-          })
-        ) {
-          vscode.window.showWarningMessage("This ADR is not inside of the ADR Directory.");
-        }
+      if (!WebPanel.currentPanel) {
+        WebPanel.createOrShow(context, "main");
+      }
+      await WebPanel.currentPanel!.viewAdr(uri);
+      if (!(await getAllMDs()).some((md) => md.adr === mdString)) {
+        vscode.window.showWarningMessage("This ADR is not inside of the ADR Directory.");
       }
     })
   );

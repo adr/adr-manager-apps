@@ -1,36 +1,11 @@
-import type { AxiosInstance } from "axios";
 import { attachGitHubInterceptors } from "@/plugins/git/providers/github/api";
 import { reconnectVisible, requestReauth, settleReauth } from "@/plugins/git/providers/github/reauth";
+import { fakeAxiosInstance, unauthorizedError } from "./helpers/axios";
 
 beforeEach(() => {
     localStorage.clear();
     settleReauth(false);
 });
-
-interface CapturedHandlers {
-    request: Array<(config: { headers: Record<string, string> }) => { headers: Record<string, string> }>;
-    responseRejected: Array<(error: unknown) => Promise<unknown>>;
-}
-
-function fakeInstance(): { instance: AxiosInstance; handlers: CapturedHandlers } {
-    const handlers: CapturedHandlers = { request: [], responseRejected: [] };
-    const instance = {
-        request: vi.fn().mockResolvedValue({ data: "retried" }),
-        interceptors: {
-            request: { use: (fn: never) => handlers.request.push(fn) },
-            response: { use: (_ok: never, rejected: never) => handlers.responseRejected.push(rejected) }
-        }
-    };
-    return { instance: instance as unknown as AxiosInstance, handlers };
-}
-
-function unauthorizedError(config: Record<string, unknown>): Error {
-    return Object.assign(new Error("Request failed with status code 401"), {
-        isAxiosError: true,
-        response: { status: 401 },
-        config
-    });
-}
 
 // --- reconnect coordinator ---
 
@@ -57,17 +32,17 @@ test("a fresh request after settling opens a new prompt", () => {
 
 // --- interceptors ---
 
-test("the request interceptor injects the stored bearer token", () => {
+test("the request interceptor injects the stored bearer token", async () => {
     localStorage.setItem("authId", "tok-123");
-    const { instance, handlers } = fakeInstance();
+    const { instance, handlers } = fakeAxiosInstance();
     attachGitHubInterceptors(instance);
 
-    const config = handlers.request[0]?.({ headers: {} });
+    const config = await handlers.request[0]?.({ headers: {} });
     expect(config?.headers["Authorization"]).toBe("Bearer tok-123");
 });
 
 test("a 401 is retried once after a successful reconnect", async () => {
-    const { instance, handlers } = fakeInstance();
+    const { instance, handlers } = fakeAxiosInstance();
     attachGitHubInterceptors(instance);
     const rejected = handlers.responseRejected[0];
 
@@ -82,7 +57,7 @@ test("a 401 is retried once after a successful reconnect", async () => {
 });
 
 test("a 401 rethrows when the user cancels the reconnect", async () => {
-    const { instance, handlers } = fakeInstance();
+    const { instance, handlers } = fakeAxiosInstance();
     attachGitHubInterceptors(instance);
     const rejected = handlers.responseRejected[0];
 
@@ -94,7 +69,7 @@ test("a 401 rethrows when the user cancels the reconnect", async () => {
 });
 
 test("an already-retried 401 rethrows without prompting again", async () => {
-    const { instance, handlers } = fakeInstance();
+    const { instance, handlers } = fakeAxiosInstance();
     attachGitHubInterceptors(instance);
     const rejected = handlers.responseRejected[0];
 

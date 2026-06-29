@@ -1,3 +1,4 @@
+import { TOUR_COPY } from "@adr-manager/core";
 import type { TourStep } from "./types";
 
 export interface EditorTourContext {
@@ -9,6 +10,11 @@ export interface EditorTourContext {
 const noopContext: EditorTourContext = {
   revealFieldVisibilityPanel: () => {}
 };
+
+function setTemplateVersionMenuOpen(open: boolean): void {
+  const wrap = document.querySelector<HTMLElement>("[data-tour='template-version']");
+  wrap?.dispatchEvent(new CustomEvent<boolean>("tour-version-menu", { detail: open }));
+}
 
 /**
  * The mini-tour shown on first open of any editor page
@@ -23,26 +29,31 @@ export function buildEditorTourSteps(context: EditorTourContext = noopContext): 
   return [
     {
       id: "template",
-      title: "The MADR editor",
-      body:
-        "This editor walks you through the MADR template. Required fields are validated as you type, " +
-        "and the question mark icons explain what belongs in each field."
+      title: "Edit with structured fields",
+      body: TOUR_COPY.editorIntro
+    },
+    {
+      id: "template-version",
+      target: "[data-tour='template-version']",
+      placement: "bottom",
+      title: "Choose the MADR version",
+      body: TOUR_COPY.templateVersion,
+      onEnter: () => setTemplateVersionMenuOpen(true),
+      onExit: () => setTemplateVersionMenuOpen(false)
     },
     {
       id: "mode-toggle",
       target: "[data-tour='mode-toggle']",
       placement: "bottom",
-      title: "Switch editor modes",
-      body:
-        "Basic shows only the required fields. Professional reveals every optional MADR field such as " +
-        "deciders, decision drivers, pros and cons, and links. Switching keeps everything you have typed."
+      title: "Toggle optional fields",
+      body: TOUR_COPY.modeToggle
     },
     {
       id: "field-visibility",
       target: "[data-tour='field-visibility']",
       placement: "bottom",
       title: "Customize visible fields",
-      body: "The Fields button is a Professional mode feature that lets you toggle individual Professional mode sections on or off to match your personal preferences.",
+      body: TOUR_COPY.fieldVisibility,
       onEnter: () => context.revealFieldVisibilityPanel(true),
       onExit: () => context.revealFieldVisibilityPanel(false)
     },

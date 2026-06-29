@@ -4,7 +4,7 @@ import { useAdrEditor } from "@/composables/useAdrEditor";
 import { ArchitecturalDecisionRecord, Repository } from "@/plugins/classes";
 import { adr2md, adr2md400, md2adr } from "@/plugins/parser";
 import { store } from "@/plugins/store";
-import { DEFAULT_FIELD_VISIBILITY, setRelevantFilesInMd } from "@adr-manager/core";
+import { DEFAULT_FIELD_VISIBILITY, setMadrVersionInMd, setRelevantFilesInMd } from "@adr-manager/core";
 import type { AdrFile } from "@/types/adr";
 
 let scope: EffectScope | undefined;
@@ -240,6 +240,34 @@ test("a template-agnostic document keeps the selected version", async () => {
     expect(editor.requiresConversion.value).toBe(false);
 });
 
+test("a basic ADR keeps a non-default version across reload via the persisted marker", async () => {
+    // A basic ADR uses only sections both templates share, so its markdown alone is
+    // indistinguishable between versions and opens at the default (4.0.0). Choosing the
+    // other version must survive a reload, beating the default.
+    const basic = new ArchitecturalDecisionRecord({
+        title: "Use PostgreSQL",
+        contextAndProblemStatement: "We need a durable system of record.",
+        consideredOptions: [{ title: "PostgreSQL" }, { title: "DynamoDB" }],
+        decisionOutcome: { chosenOption: "PostgreSQL", explanation: "it fits" }
+    });
+    const file = openInStore(adr2md(basic));
+    const editor = createEditor();
+    await nextTick();
+    expect(editor.templateVersion.value).toBe("4.0.0");
+
+    editor.setTemplateVersion("2.1.2");
+    await nextTick();
+    expect(editor.templateVersion.value).toBe("2.1.2");
+    expect(file.editedMd).toContain('<!-- adr-manager-madr-version: "2.1.2" -->');
+
+    // Reload: a fresh editor (version ref back at the default) must honor the marker.
+    scope?.stop();
+    const reloaded = createEditor();
+    await nextTick();
+    expect(reloaded.templateVersion.value).toBe("2.1.2");
+    expect(reloaded.requiresConversion.value).toBe(false);
+});
+
 test("pasting a 4.0.0 document into the raw editor switches the template version", async () => {
     openInStore(adr2md(sampleRecord()));
     const editor = createEditor();
@@ -267,7 +295,7 @@ test("accepting a conversion adopts the converted markdown and returns to the fo
 
     expect(editor.requiresConversion.value).toBe(false);
     expect(editor.adr.value.title).toBe("ADR-Manager Test");
-    expect(editor.markdown.value).toBe(converted);
+    expect(editor.markdown.value).toBe(setMadrVersionInMd(converted, "2.1.2"));
 });
 
 // ── Hidden-fields conversion dialog ─────────────────────────────────────────

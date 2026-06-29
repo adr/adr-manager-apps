@@ -1,6 +1,6 @@
 import { computed, readonly, ref, watch } from "vue";
 import { ArchitecturalDecisionRecord } from "@/plugins/classes";
-import { detectMadrVersion, getMadrTemplateAdapter, parseMadr, serializeMadr } from "@/plugins/parser";
+import { getMadrTemplateAdapter, parseMadr, serializeMadr, DEFAULT_MADR_VERSION } from "@/plugins/parser";
 import { store } from "@/plugins/store";
 import {
     matchesIgnoringFormatting,
@@ -10,9 +10,10 @@ import {
     parseRelevantFilesFromMd,
     parseTagsFromMd,
     setRelevantFilesInMd,
-    stripRelevantFilesComment,
-    stripTagComment,
-    setTagsInMd
+    setTagsInMd,
+    setMadrVersionInMd,
+    resolveAdrTemplateVersion,
+    stripAdrManagerMetadata
 } from "@adr-manager/core";
 import type { FieldKey, FieldVisibility, MadrTemplateVersion } from "@adr-manager/core";
 import type { AdrFile, Tag } from "@/types/adr";
@@ -21,10 +22,6 @@ function parse(markdown: string, version: MadrTemplateVersion): ArchitecturalDec
     const record = parseMadr(stripAdrManagerMetadata(markdown), version);
     record.relevantFiles = parseRelevantFilesFromMd(markdown);
     return record;
-}
-
-function stripAdrManagerMetadata(markdown: string): string {
-    return stripRelevantFilesComment(stripTagComment(markdown));
 }
 
 /**
@@ -50,7 +47,7 @@ export function useAdrEditor() {
      * when temporary mode ends so highlights disappear with it.
      */
     const highlightedFields = ref(new Set<FieldKey>());
-    const templateVersion = ref<MadrTemplateVersion>("2.1.2");
+    const templateVersion = ref<MadrTemplateVersion>(DEFAULT_MADR_VERSION);
 
     function effectiveVisibility(): FieldVisibility {
         return temporarilyShowAllFields.value ? { ...DEFAULT_FIELD_VISIBILITY } : store.fieldVisibility;
@@ -69,38 +66,20 @@ export function useAdrEditor() {
     function serialize(adrRecord: ArchitecturalDecisionRecord, version: MadrTemplateVersion, t: Tag[]): string {
         const filtered = applyFieldVisibilityFilter(adrRecord, effectiveVisibility());
         const md = serializeMadr(filtered, version);
-        return setTagsInMd(setRelevantFilesInMd(md, filtered.relevantFiles), t);
+        return setMadrVersionInMd(setTagsInMd(setRelevantFilesInMd(md, filtered.relevantFiles), t), version);
     }
 
     // Serializes ALL field data regardless of visibility. Used when persisting to
     // editedMd so that hiding a field never silently deletes its content from the file.
     function serializeFull(adrRecord: ArchitecturalDecisionRecord, version: MadrTemplateVersion, t: Tag[]): string {
         const md = serializeMadr(adrRecord, version);
-        return setTagsInMd(setRelevantFilesInMd(md, adrRecord.relevantFiles), t);
+        return setMadrVersionInMd(setTagsInMd(setRelevantFilesInMd(md, adrRecord.relevantFiles), t), version);
     }
 
     // Strip metadata comments before comparing so app-level fields never break round-trip checks.
     function roundTripsExactly(md: string, version: MadrTemplateVersion): boolean {
         const stripped = stripAdrManagerMetadata(md);
         return serializeAdr(parse(stripped, version), version) === stripped;
-    }
-
-    /**
-     * A document that only uses the sections both templates share (e.g. a freshly
-     * created ADR) fits either version. In that case the selected version sticks
-     * instead of falling back to the detector's default.
-     */
-    function resolveVersion(md: string): MadrTemplateVersion {
-        const stripped = stripAdrManagerMetadata(md);
-        const detected = detectMadrVersion(stripped);
-        if (detected === templateVersion.value) {
-            return detected;
-        }
-        const current = templateVersion.value;
-        if (matchesIgnoringFormatting(stripped, serializeAdr(parse(stripped, current), current))) {
-            return current;
-        }
-        return detected;
     }
 
     function clearTemporaryState(): void {
@@ -124,7 +103,9 @@ export function useAdrEditor() {
         tags.value = parseTagsFromMd(adrFile.editedMd);
         const stripped = stripAdrManagerMetadata(adrFile.editedMd);
         markdown.value = adrFile.editedMd;
-        templateVersion.value = resolveVersion(adrFile.editedMd);
+        templateVersion.value = resolveAdrTemplateVersion(adrFile.editedMd, {
+            preferredVersion: templateVersion.value
+        });
         const parsed = parse(adrFile.editedMd, templateVersion.value);
         if (matchesIgnoringFormatting(stripped, serializeAdr(parsed, templateVersion.value))) {
             adr.value = parsed;
@@ -147,7 +128,7 @@ export function useAdrEditor() {
         }
         tags.value = parseTagsFromMd(newMarkdown);
         markdown.value = newMarkdown;
-        templateVersion.value = resolveVersion(newMarkdown);
+        templateVersion.value = resolveAdrTemplateVersion(newMarkdown, { preferredVersion: templateVersion.value });
         if (roundTripsExactly(newMarkdown, templateVersion.value)) {
             adr.value = parse(newMarkdown, templateVersion.value);
             requiresConversion.value = false;

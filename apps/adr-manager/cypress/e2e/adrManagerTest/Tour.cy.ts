@@ -33,22 +33,37 @@ context("First-time tour", () => {
         });
 
         cy.get("[data-cy=tourNext]").click();
-        cy.get("[data-cy=tourStepTitle]").should("contain", "Search and filter ADRs");
+        cy.get("[data-cy=tourStepTitle]").should("contain", "Search ADRs");
+        cy.get("[data-cy=adr-filter-toggle]").should("be.visible");
 
         cy.get("[data-cy=tourNext]").click();
+        cy.get("[data-cy=tourStepTitle]").should("contain", "Filter ADRs");
+        cy.get("[data-cy=adr-filter-panel]").should("be.visible");
+
+        cy.get("[data-cy=tourNext]").click();
+        cy.get("[data-cy=tourStepTitle]").should("contain", "Apply a filter");
+        cy.get("[data-cy=adr-filter-panel] .filter-chip.active").should("have.length", 1);
+
+        cy.get("[data-cy=tourNext]").click();
+        cy.get("[data-cy=adr-filter-panel]").should("not.exist");
         cy.get("[data-cy=tourStepTitle]").should("contain", "Switch repositories");
+
+        cy.get("[data-cy=tourNext]").click();
+        cy.get("[data-cy=tourStepTitle]").should("contain", "Delete an ADR");
 
         cy.get("[data-cy=tourNext]").click();
         cy.get("[data-cy=tourStepTitle]").should("contain", "Create a new ADR");
 
         cy.get("[data-cy=tourNext]").click();
+        cy.get("[data-cy=tourStepTitle]").should("contain", "Choose the MADR version");
+        cy.get("[data-cy=versionSelect]").should("contain", "MADR 2.1.2");
+        cy.get("[data-cy=versionOption]").should("have.length.greaterThan", 1);
+
+        cy.get("[data-cy=tourNext]").click();
+        cy.get("[data-cy=versionOption]").should("not.exist");
         cy.get("[data-cy=tourStepTitle]").should("contain", "Edit with structured fields");
         cy.get("[data-cy=titleAdr]").should("exist");
 
-        cy.get("[data-cy=tourNext]").click();
-        cy.get("[data-cy=tourStepTitle]").should("contain", "Live Markdown preview");
-
-        // The toggle-fields step forces professional mode while it is shown.
         cy.get("[data-cy=tourNext]").click();
         cy.get("[data-cy=tourStepTitle]").should("contain", "Toggle optional fields");
         cy.get("[data-cy=decisionDriversPro]").should("exist");
@@ -58,11 +73,8 @@ context("First-time tour", () => {
         cy.get("[data-cy=fieldsBtn]").should("be.visible");
 
         cy.get("[data-cy=tourNext]").click();
-        cy.get("[data-cy=tourStepTitle]").should("contain", "Delete an ADR");
+        cy.get("[data-cy=tourStepTitle]").should("contain", "Live Markdown preview");
         cy.get("[data-cy=decisionDriversPro]").should("not.exist");
-
-        cy.get("[data-cy=tourNext]").click();
-        cy.get("[data-cy=tourStepTitle]").should("contain", "The ADR directory");
 
         cy.get("[data-cy=tourNext]").click();
         cy.get("[data-cy=tourStepTitle]").should("contain", "Commit your changes");

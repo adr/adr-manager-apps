@@ -71,7 +71,7 @@
         "adrManager.adrDirectory": {
           "type": "string",
           "default": "docs/decisions",
-          "description": "Specifies the path of the ADR directory, relative to a root workspace folder",
+          "description": "Specifies the path of the ADR directory, relative to a root workspace folder. Use \".\" to load ADRs directly from the workspace folder itself.",
           "pattern": "^([^?*:\"<>|]+[\\/]?)+$",
           "patternErrorMessage": "Invalid directory. Avoid using the following characters:\n? * : \" < > |"
         },
@@ -134,7 +134,7 @@
         },
         {
           "command": "vscode-adr-manager.viewAdrFromContextMenu",
-          "when": "resourceLangId == markdown && resourceFilename =~ /^\\d{4}((-|_)[^\\s-_?*:\"<>|\\/]+)+.md$/",
+          "when": "resourceLangId == markdown",
           "group": "vscode-adr-manager"
         }
       ]
@@ -183,6 +183,11 @@
   },
   "dependencies": {
     "@adr-manager/core": "workspace:*",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language": "^6.12.3",
+    "@codemirror/merge": "^6.12.1",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.43.0",
     "@types/vscode-webview": "^1.57.5",
     "@vscode/codicons": "^0.0.45",
     "@vuelidate/core": "^2.0.3",

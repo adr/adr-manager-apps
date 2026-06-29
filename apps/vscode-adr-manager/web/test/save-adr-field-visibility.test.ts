@@ -17,6 +17,7 @@ import { DEFAULT_FIELD_VISIBILITY } from "@adr-manager/core";
 import type { FieldVisibility } from "@adr-manager/core";
 import saveAdrMixin from "../mixins/save-adr";
 import vscodeApiMixin from "../mixins/vscode-api-mixin";
+import { makeAdrPayload } from "./helpers/adr-payload";
 
 // ── mock VS Code API ──────────────────────────────────────────────────────────
 const postMessage = vi.fn();
@@ -32,35 +33,6 @@ const TestComponent = defineComponent({
 function fv(overrides: Partial<FieldVisibility> = {}): FieldVisibility {
   return { ...DEFAULT_FIELD_VISIBILITY, ...overrides };
 }
-
-/** Minimal ADR payload accepted by getInput() */
-const makeAdrPayload = (title = "Sample ADR") =>
-  JSON.stringify({
-    yaml: "",
-    title,
-    date: "",
-    status: "",
-    deciders: "",
-    technicalStory: "",
-    contextAndProblemStatement: "",
-    decisionDrivers: [],
-    consideredOptions: [],
-    decisionOutcome: {
-      chosenOption: "",
-      explanation: "",
-      positiveConsequences: [],
-      negativeConsequences: []
-    },
-    links: [],
-    decisionMakers: "",
-    consulted: "",
-    informed: "",
-    consequences: [],
-    confirmation: "",
-    moreInformation: "",
-    templateVersion: "2.1.2",
-    fullPath: "/path/to/adr.md"
-  });
 
 /** Dispatch a message that looks like it came from the extension host */
 function dispatchExtensionMessage(data: Record<string, unknown>) {
@@ -169,7 +141,7 @@ describe("save-adr mixin – field visibility persistence", () => {
       await wrapper.vm.$nextTick();
 
       // Extension sends a new ADR's content (simulates switching to ADR B)
-      dispatchExtensionMessage({ command: "fetchAdrValues", adr: makeAdrPayload("ADR B") });
+      dispatchExtensionMessage({ command: "fetchAdrValues", adr: makeAdrPayload({ title: "ADR B" }) });
       await wrapper.vm.$nextTick();
 
       expect((wrapper.vm as any).fieldVisibility.status).toBe(false);
@@ -179,7 +151,7 @@ describe("save-adr mixin – field visibility persistence", () => {
       dispatchExtensionMessage({ command: "fieldVisibility", fieldVisibility: fv({ links: false }) });
       await wrapper.vm.$nextTick();
 
-      dispatchExtensionMessage({ command: "fetchAdrValues", adr: makeAdrPayload("New Title") });
+      dispatchExtensionMessage({ command: "fetchAdrValues", adr: makeAdrPayload({ title: "New Title" }) });
       await wrapper.vm.$nextTick();
 
       expect((wrapper.vm as any).title).toBe("New Title");
@@ -191,7 +163,7 @@ describe("save-adr mixin – field visibility persistence", () => {
       expect((wrapper.vm as any).fieldVisibility.date).toBe(true);
 
       // Extension sends ADR data first …
-      dispatchExtensionMessage({ command: "fetchAdrValues", adr: makeAdrPayload("ADR B") });
+      dispatchExtensionMessage({ command: "fetchAdrValues", adr: makeAdrPayload({ title: "ADR B" }) });
       await wrapper.vm.$nextTick();
 
       // … then immediately pushes the saved visibility (as WebPanel.ts now does)
@@ -262,7 +234,7 @@ describe("save-adr mixin – field visibility persistence", () => {
       (wrapper.vm as any).setFieldVisibility("status", false);
 
       // 2. Navigate to ADR B: extension sends new ADR content
-      dispatchExtensionMessage({ command: "fetchAdrValues", adr: makeAdrPayload("ADR B") });
+      dispatchExtensionMessage({ command: "fetchAdrValues", adr: makeAdrPayload({ title: "ADR B" }) });
       await wrapper.vm.$nextTick();
 
       // 3. Extension proactively pushes the saved visibility (the fix)

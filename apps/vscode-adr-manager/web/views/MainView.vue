@@ -6,7 +6,16 @@
         <span class="word">ADR<span> Manager</span></span>
       </div>
       <span class="spacer"></span>
-      <span class="chip dir-chip" data-tour="adr-directory" :title="adrDirectory || 'docs/decisions'">
+      <span
+        class="chip dir-chip"
+        data-tour="adr-directory"
+        role="button"
+        tabindex="0"
+        :title="`Change ADR directory (currently ${adrDirectory || 'docs/decisions'})`"
+        @click="changeAdrDirectory"
+        @keydown.enter="changeAdrDirectory"
+        @keydown.space.prevent="changeAdrDirectory"
+      >
         <i class="codicon codicon-folder-opened"></i>
         <code>{{ adrDirectory || "docs/decisions" }}</code>
       </span>
@@ -36,6 +45,7 @@
           class="filter-toggle"
           :class="{ open: filtersOpen, 'has-active': hasActiveFilters }"
           data-cy="adr-filter-toggle"
+          data-tour="adr-filter"
           :aria-expanded="filtersOpen"
           aria-label="Toggle ADR filters"
           title="Toggle filters"
@@ -135,7 +145,18 @@
         <i class="codicon codicon-files"></i>
         <h2>No ADRs detected in this workspace</h2>
         <p>
-          ADRs are loaded from <code>{{ adrDirectory || "docs/decisions" }}</code> in each workspace folder.
+          ADRs are loaded from
+          <code
+            class="dir-link"
+            role="button"
+            tabindex="0"
+            title="Change ADR directory"
+            @click="changeAdrDirectory"
+            @keydown.enter="changeAdrDirectory"
+            @keydown.space.prevent="changeAdrDirectory"
+            >{{ adrDirectory || "docs/decisions" }}</code
+          >
+          in each workspace folder.
         </p>
       </div>
       <div v-else-if="searchActive && filteredDisplayedAdrs.length === 0" class="empty">
@@ -152,7 +173,7 @@
       v-model:active="tourActive"
       :steps="tourSteps"
       :offer="tourOffer"
-      done-label="Finish"
+      :done-label="demoMode ? 'Open the editor' : 'Finish'"
       @offer-answered="onTourOfferAnswered"
       @closed="onTourClosed"
     ></TourOverlay>
@@ -169,7 +190,8 @@ import { buildDemoAdrEntries, DEMO_FOLDER_NAME, type AdrListEntry } from "../tou
 import { buildMainTourSteps } from "../tour/main-steps";
 import type { TourStep } from "../tour/types";
 import { ArchitecturalDecisionRecord } from "../../src/plugins/classes";
-import { cleanPathString } from "../../src/plugins/utils";
+import type { TourCloseReason } from "../../src/tour";
+import { cleanPathString, splitAdrDirectory } from "../../src/plugins/utils";
 import { matchesAdrSearch, isEmptyQuery } from "@adr-manager/core";
 import type { Tag } from "@adr-manager/core";
 
@@ -193,6 +215,7 @@ export default defineComponent({
       searchText: "",
       filterStatuses: [] as string[],
       filterTagIds: [] as string[],
+      tourExampleFilter: null as { kind: "status" | "tag"; value: string } | null,
       filtersOpen: false,
       tagsExpanded: false,
       // Display-only example entries while the tour runs over an empty workspace.
@@ -270,7 +293,7 @@ export default defineComponent({
     },
     availableStatuses() {
       const seen = new Set<string>();
-      for (const entry of this.allAdrs) {
+      for (const entry of this.displayedAdrs) {
         const s = (entry.adr.status ?? "").toLowerCase().trim();
         if (s) seen.add(s);
       }
@@ -278,7 +301,7 @@ export default defineComponent({
     },
     availableTags(): Tag[] {
       const seen = new Map<string, Tag>();
-      for (const entry of this.allAdrs) {
+      for (const entry of this.displayedAdrs) {
         for (const tag of entry.tags ?? []) {
           if (!seen.has(tag.id)) seen.set(tag.id, tag);
         }
@@ -299,12 +322,7 @@ export default defineComponent({
     },
     filteredDisplayedAdrs() {
       if (!this.searchActive) return this.displayedAdrs;
-      if (this.showingDemoEntries) {
-        return this.demoAdrs.filter((entry) =>
-          (entry.adr.title ?? "").toLowerCase().includes(this.searchText.toLowerCase())
-        );
-      }
-      return this.sortedAdrs.filter((entry) =>
+      return this.displayedAdrs.filter((entry) =>
         matchesAdrSearch(
           {
             title: entry.adr.title ?? "",
@@ -354,9 +372,8 @@ export default defineComponent({
      * @param folder The folder the ADRs should be located in
      */
     adrsInFolder(folder: string) {
-      return this.filteredDisplayedAdrs.filter((adr) => {
-        return adr.relativePath.includes(cleanPathString(folder + "/" + this.adrDirectory));
-      });
+      const directoryPath = cleanPathString([folder, ...splitAdrDirectory(this.adrDirectory)].join("/"));
+      return this.filteredDisplayedAdrs.filter((adr) => adr.relativePath.includes(directoryPath));
     },
     toggleStatus(status: string) {
       if (this.filterStatuses.includes(status)) {
@@ -390,8 +407,37 @@ export default defineComponent({
       }
       this.tourSteps = buildMainTourSteps({
         demoMode: this.demoMode,
-        revealCardActions: this.revealCardActions
+        hasFilters: this.hasFilters,
+        revealCardActions: this.revealCardActions,
+        setFiltersOpen: (open) => {
+          this.filtersOpen = open;
+        },
+        setExampleFilterActive: this.setExampleFilterActive
       });
+    },
+    setExampleFilterActive(active: boolean) {
+      if (!active) {
+        if (this.tourExampleFilter?.kind === "status") {
+          this.filterStatuses = this.filterStatuses.filter((status) => status !== this.tourExampleFilter?.value);
+        } else if (this.tourExampleFilter?.kind === "tag") {
+          this.filterTagIds = this.filterTagIds.filter((id) => id !== this.tourExampleFilter?.value);
+        }
+        this.tourExampleFilter = null;
+        return;
+      }
+
+      const status = this.availableStatuses.find((candidate) => !this.filterStatuses.includes(candidate));
+      if (status) {
+        this.filterStatuses = [...this.filterStatuses, status];
+        this.tourExampleFilter = { kind: "status", value: status };
+        return;
+      }
+
+      const tag = this.availableTags.find((candidate) => !this.filterTagIds.includes(candidate.id));
+      if (tag) {
+        this.filterTagIds = [...this.filterTagIds, tag.id];
+        this.tourExampleFilter = { kind: "tag", value: tag.id };
+      }
     },
     initialListSettled(): Promise<void> {
       if (this.initialFetchDone) {
@@ -403,15 +449,16 @@ export default defineComponent({
         setTimeout(resolve, 1500);
       });
     },
-    /**
-     * Tour hook (called by the tour mixin): drop the example entries again.
-     */
-    afterTourClosed() {
+    afterTourClosed(reason: TourCloseReason) {
+      const openDemoEditor = reason === "finished" && this.demoMode;
       this.demoMode = false;
       this.demoAdrs = [];
       document.querySelectorAll(".adr-card.tour-reveal").forEach((card) => {
         card.classList.remove("tour-reveal");
       });
+      if (openDemoEditor) {
+        this.sendMessage("viewDemo");
+      }
     },
     /**
      * The edit/delete icons only show on hover, so the tour reveals them on the
@@ -433,12 +480,15 @@ export default defineComponent({
      * @param adr The ADR to be deleted
      */
     requestDelete(adr: { adr: ArchitecturalDecisionRecord; fullPath: string; relativePath: string; fileName: string }) {
-      this.sendMessage("requestDelete", { title: adr.adr.title, fullPath: adr.fullPath });
+      this.sendMessage("requestDelete", { title: adr.adr.title || adr.fileName, fullPath: adr.fullPath });
     },
     /**
      * Sends a message to the extension to load the viewing webview with the content of the specified ADR file.
      * @param adr The ADR to be openend in the ADR Manager webview
      */
+    changeAdrDirectory() {
+      this.sendMessage("changeAdrDirectory");
+    },
     requestView(adr: { adr: ArchitecturalDecisionRecord; fullPath: string; relativePath: string; fileName: string }) {
       this.sendMessage("view", { fullPath: adr.fullPath });
     }
@@ -711,7 +761,12 @@ export default defineComponent({
   min-width: 0;
   max-width: 260px;
   flex: 0 1 auto;
-  cursor: default;
+  cursor: pointer;
+}
+.dir-chip:focus-visible {
+  outline: none;
+  border-color: var(--adr-focus);
+  box-shadow: 0 0 0 3px var(--adr-focus-ring);
 }
 
 .dir-chip code {
@@ -766,5 +821,19 @@ export default defineComponent({
 
 .empty p {
   font-size: var(--adr-text-sm);
+}
+
+.empty .dir-link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.empty .dir-link:hover {
+  color: var(--adr-ink);
+}
+.empty .dir-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--adr-focus-ring);
 }
 </style>

@@ -165,11 +165,6 @@ describe("MainView – search and tag-filter pagination", () => {
       expect(wrapper.find("[data-cy=adr-search-clear]").exists()).toBe(true);
     });
 
-    it("shows the clear button when text is non-empty", async () => {
-      await wrapper.find("[data-cy=adr-search-input]").setValue("post");
-      expect(wrapper.find("[data-cy=adr-search-clear]").exists()).toBe(true);
-    });
-
     it("filters ADR list to entries matching the typed text", async () => {
       await wrapper.find("[data-cy=adr-search-input]").setValue("postgres");
       expect(wrapper.findAll("[data-cy=adr-card]").map((card) => card.text())).toEqual(["Use Postgres"]);

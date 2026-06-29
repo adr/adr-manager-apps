@@ -1,7 +1,7 @@
 // Tests for the extension-specific utilities. The shared parser/title/casing
 // logic is tested in @adr-manager/core (packages/core/tests).
 import { describe, expect, test } from "vitest";
-import { cleanPathString, matchesMadrTitleFormat } from "../plugins/utils";
+import { cleanPathString, isListableAdrFile, matchesMadrTitleFormat, splitAdrDirectory } from "../plugins/utils";
 
 describe("Test MADR Title Format Match", () => {
   test("Valid MADR titles", () => {
@@ -65,5 +65,34 @@ describe("Test Cleaning Path Strings", () => {
     for (let i = 0; i < uncleanedPaths.length; i++) {
       expect(cleanPathString(uncleanedPaths[i]!)).toBe(cleanedPaths[i]);
     }
+  });
+});
+
+describe("Test Splitting ADR Directories", () => {
+  test("Splits a nested directory into its segments", () => {
+    expect(splitAdrDirectory("docs/decisions")).toEqual(["docs", "decisions"]);
+    expect(splitAdrDirectory("/doc/adr/")).toEqual(["doc", "adr"]);
+  });
+
+  test("Treats root references as an empty segment list", () => {
+    expect(splitAdrDirectory(".")).toEqual([]);
+    expect(splitAdrDirectory("./")).toEqual([]);
+    expect(splitAdrDirectory("/")).toEqual([]);
+    expect(splitAdrDirectory("")).toEqual([]);
+  });
+});
+
+describe("Test Listable ADR Files", () => {
+  test("Lists any Markdown file, numbered or not", () => {
+    expect(isListableAdrFile("0001-use-vue.md")).toBe(true);
+    expect(isListableAdrFile("case-description-1-anonymized-raw.md")).toBe(true);
+    expect(isListableAdrFile("Decision Notes.MD")).toBe(true);
+  });
+
+  test("Skips non-Markdown files and the scaffolded README and template", () => {
+    expect(isListableAdrFile("diagram.png")).toBe(false);
+    expect(isListableAdrFile("README.md")).toBe(false);
+    expect(isListableAdrFile("readme.md")).toBe(false);
+    expect(isListableAdrFile("adr-template.md")).toBe(false);
   });
 });

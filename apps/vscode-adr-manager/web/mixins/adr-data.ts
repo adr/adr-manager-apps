@@ -1,5 +1,6 @@
 // Vue mixin which holds all the data used by a MADR template component
 import { defineComponent } from "vue";
+import { DEFAULT_MADR_VERSION } from "@adr-manager/core";
 import { createShortTitle } from "../../src/plugins/utils";
 import vscodeApiMixin from "./vscode-api-mixin";
 
@@ -17,7 +18,7 @@ export default defineComponent({
   props: {
     templateVersion: {
       type: String,
-      default: "2.1.2"
+      default: DEFAULT_MADR_VERSION
     }
   },
   data() {

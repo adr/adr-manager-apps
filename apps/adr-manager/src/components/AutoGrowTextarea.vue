@@ -39,6 +39,6 @@ function onInput(event: Event): void {
 onMounted(resize);
 watch(
     () => props.modelValue,
-    () => void nextTick(resize)
+    () => nextTick(resize)
 );
 </script>

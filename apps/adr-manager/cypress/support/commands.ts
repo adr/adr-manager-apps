@@ -48,11 +48,30 @@ Cypress.Commands.add("visitAuthenticatedManager", (url: string, options: Authent
     });
 });
 
+// "Type to add" rows promote the add-row into a real entry on the first keystroke and move
+// focus to it, so the rest of the text must be typed into the now-focused field.
+Cypress.Commands.add("addListItem", (addInputSelector: string, text: string) => {
+    cy.get(addInputSelector).type(text.charAt(0));
+    const rest = text.slice(1);
+    if (rest) {
+        cy.focused().type(rest);
+    }
+});
+
+// Adds a considered option via its add row (see addListItem for the focus behaviour).
+Cypress.Commands.add("addConsideredOption", (text: string) => {
+    cy.addListItem("[data-cy=considerOptTextAdr]", text);
+});
+
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Cypress {
         interface Chainable {
             visitAuthenticatedManager(url: string, options?: AuthenticatedManagerOptions): Chainable<AUTWindow>;
+            /** Type into a "type to add" row's input, handling the first-keystroke focus shift. */
+            addListItem(addInputSelector: string, text: string): Chainable<void>;
+            /** Add a considered option by its title via the considered-options add row. */
+            addConsideredOption(text: string): Chainable<void>;
         }
     }
 }

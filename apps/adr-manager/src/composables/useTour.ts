@@ -1,6 +1,6 @@
 import { computed, readonly, ref } from "vue";
 import { injectDemo, snapshotEditorState, teardownDemo } from "@/plugins/tour/demoRepository";
-import { tourSteps } from "@/plugins/tour/steps";
+import { resetTourFilterDemonstration, tourSteps } from "@/plugins/tour/steps";
 import { store } from "@/plugins/store";
 import type { TourSnapshot } from "@/plugins/tour/demoRepository";
 
@@ -37,6 +37,7 @@ export function useTour() {
             return;
         }
         currentStep.value?.onExit?.();
+        resetTourFilterDemonstration();
         active.value = false;
         if (snapshot) {
             // Safe in both modes: without demo state the snapshot matches the live state.

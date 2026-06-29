@@ -4,6 +4,12 @@ export const GITHUB_ADR_REPO_FULL_NAME = "adr/adr-manager";
 export const GITHUB_EMPTY_REPO_FULL_NAME = "adr/adr-test-repository-empty";
 export const GITHUB_EMPTY_REPO_BRANCH = "testing-branch";
 export const GITLAB_ADR_REPO_FULL_NAME = "gitlab/adr-manager";
+export const GITHUB_TAGGED_REPO_FULL_NAME = "adr/adr-tagged";
+
+// A loaded ADR carrying this many tags lets the search/filter specs exercise tag
+// pagination without driving the tag picker through the UI (which is racy). Exhaustive
+// pagination boundaries (7/10/11/20) are covered by the AdrSearchBar unit tests.
+export const SEARCH_TAG_LABELS = Array.from({ length: 12 }, (_, index) => `SearchTag${index + 1}`);
 
 interface MockRepo {
     fullName: string;
@@ -329,6 +335,25 @@ function createGitHubRepos(): MockRepo[] {
                 main: { "README.md": "# Empty ADR repository\n" },
                 [GITHUB_EMPTY_REPO_BRANCH]: { "README.md": "# Empty ADR repository\n" }
             }
+        }),
+        repo({
+            fullName: GITHUB_TAGGED_REPO_FULL_NAME,
+            defaultBranch: "main",
+            description: "Repository whose ADR carries many tags for search/filter E2E",
+            updatedAt: "2024-02-15T10:00:00Z",
+            branches: ["main"],
+            filesByBranch: {
+                main: {
+                    "README.md": "# Tagged fixture repository\n",
+                    "docs/adr/0001-tagged-decision.md": adrMarkdown(
+                        "Tagged Decision",
+                        "accepted",
+                        "MADR",
+                        "README.md",
+                        SEARCH_TAG_LABELS
+                    )
+                }
+            }
         })
     ];
 }
@@ -402,7 +427,18 @@ function smallRepoFiles(adrPath: string): Record<string, string> {
     };
 }
 
-function adrMarkdown(title: string, status: string, chosenOption: string, relevantFile = "README.md"): string {
+function adrMarkdown(
+    title: string,
+    status: string,
+    chosenOption: string,
+    relevantFile = "README.md",
+    tagLabels: string[] = []
+): string {
+    const tagComment = tagLabels.length
+        ? `<!-- adr-manager-tags: ${JSON.stringify(
+              tagLabels.map((label, index) => ({ id: `tag-${index}`, label, color: "#6366f1" }))
+          )} -->\n`
+        : "";
     return `# ${title}
 
 * Status: ${status}
@@ -445,7 +481,7 @@ Plain Markdown ADRs.
 * Bad, because they require discipline.
 
 <!-- adr-manager-relevant-files: ${JSON.stringify([relevantFile])} -->
-`;
+${tagComment}`;
 }
 
 function parseGitHubRepoRequest(

@@ -1,4 +1,5 @@
 import { defineComponent } from "vue";
+import type { TourCloseReason, TourKind, TourStateResponse } from "../../src/tour";
 
 // The VS Code API is acquired once in the webview HTML (see WebPanel) under the constant "vscode"
 declare const vscode: { postMessage(message: { command: string; data?: unknown }): void };
@@ -7,13 +8,12 @@ declare const vscode: { postMessage(message: { command: string; data?: unknown }
  * Shared tour protocol for the webview pages. The host keeps the persistent
  * "seen" flags in globalState; the page asks for them on mount (getTourState)
  * and reports back when the user has answered the offer or closed the tour
- * (setTourSeen). The main page additionally honors the consumed-on-read
- * forceStart flag set by the "ADR Manager: Show Tour" command.
+ * (setTourSeen). Each page requests and consumes the state for its own tour kind.
  *
  * A component using this mixin may define `beforeTourStart()` (e.g. to inject
- * demo data) and `afterTourClosed()` (e.g. to remove it) as hooks.
+ * demo data) and `afterTourClosed(reason)` (e.g. to remove it) as hooks.
  */
-export default function createTourMixin(kind: "main" | "editor") {
+export default function createTourMixin(kind: TourKind) {
   return defineComponent({
     data() {
       return {
@@ -25,20 +25,19 @@ export default function createTourMixin(kind: "main" | "editor") {
     },
     mounted() {
       window.addEventListener("message", this.handleTourStateMessage);
-      vscode.postMessage({ command: "getTourState" });
+      vscode.postMessage({ command: "getTourState", data: { kind } });
     },
     beforeUnmount() {
       window.removeEventListener("message", this.handleTourStateMessage);
     },
     methods: {
       handleTourStateMessage(event: MessageEvent) {
-        const message = event.data;
+        const message = event.data as TourStateResponse;
         if (message.command !== "getTourState") {
           return;
         }
-        const seen = kind === "main" ? message.seenMainTour : message.seenEditorTour;
-        this.tourSeen = seen;
-        if (!seen || (kind === "main" && message.forceStart)) {
+        this.tourSeen = message.seen;
+        if (!message.seen || message.forceStart) {
           this.startTour();
         }
       },
@@ -59,11 +58,11 @@ export default function createTourMixin(kind: "main" | "editor") {
       onTourOfferAnswered() {
         this.markTourSeen();
       },
-      onTourClosed() {
+      onTourClosed(reason: TourCloseReason) {
         if (kind === "editor") {
           this.markTourSeen();
         }
-        (this as unknown as { afterTourClosed?: () => void }).afterTourClosed?.();
+        (this as unknown as { afterTourClosed?: (reason: TourCloseReason) => void }).afterTourClosed?.(reason);
       },
       markTourSeen() {
         if (!this.tourSeen) {

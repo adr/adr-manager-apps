@@ -8,6 +8,10 @@ overrides:
   esbuild: ">=0.28.1"
   protobufjs: ">=7.6.3"
   js-yaml: ">=4.1.2"
+  # read-yaml-file@1.1.0 (pulled in by @manypkg/get-packages, a changesets dep)
+  # still calls the removed yaml.safeLoad API, so it needs the last patched 3.x
+  # release instead of the global 4.x floor above.
+  read-yaml-file>js-yaml: "^3.15.0"
 
 nodeLinker: hoisted
 minimumReleaseAge: 7200

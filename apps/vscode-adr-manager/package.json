@@ -1,6 +1,6 @@
 {
-  "name": "vscode-adr-manager",
-  "displayName": "ADR Manager",
+  "name": "adr-manager-vscode",
+  "displayName": "ADR Manager for VS Code",
   "description": "A VS Code extension for the ADR Manager, for documenting and managing MADRs in VS Code.",
   "version": "0.0.1",
   "publisher": "adr-org",

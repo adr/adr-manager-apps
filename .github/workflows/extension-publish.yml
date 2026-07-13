@@ -24,6 +24,6 @@ jobs:
         with:
           cache: true
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter vscode-adr-manager exec vsce publish --no-dependencies
+      - run: pnpm --filter adr-manager-vscode exec vsce publish --no-dependencies
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

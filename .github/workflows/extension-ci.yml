@@ -22,7 +22,7 @@ jobs:
         with:
           cache: true
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter vscode-adr-manager test # `pretest` auto-runs typecheck + compile + lint
+      - run: pnpm --filter adr-manager-vscode test # `pretest` auto-runs typecheck + compile + lint
       - run: pnpm vsix
       - uses: actions/upload-artifact@v4
         with:

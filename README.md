@@ -3,13 +3,13 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Extension · CI](https://github.com/adr/adr-manager-apps/actions/workflows/extension-ci.yml/badge.svg)](https://github.com/adr/adr-manager-apps/actions/workflows/extension-ci.yml)
 [![Web · Tests](https://github.com/adr/adr-manager-apps/actions/workflows/web-tests.yml/badge.svg)](https://github.com/adr/adr-manager-apps/actions/workflows/web-tests.yml)
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/StevenChen.vscode-adr-manager?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=StevenChen.vscode-adr-manager)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/adr-org.vscode-adr-manager?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=adr-org.vscode-adr-manager)
 
 ADR Manager Apps is the monorepo for the web-based **ADR Manager** and the **ADR Manager VS Code extension**.
 Both apps help teams create, edit, validate, and manage Architectural Decision Records (ADRs) written in Markdown with the [MADR](https://adr.github.io/madr/) template.
 
 - **Web app**: manage MADRs in GitHub repositories, live at <https://adr.github.io/adr-manager-apps/>
-- **VS Code extension**: manage MADRs in local workspaces, on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=StevenChen.vscode-adr-manager)
+- **VS Code extension**: manage MADRs in local workspaces, on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=adr-org.vscode-adr-manager)
 
 The apps share a common core and tooling, and are developed, tested, versioned, and released together from one pnpm workspace.
 

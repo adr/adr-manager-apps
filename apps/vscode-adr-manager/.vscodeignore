@@ -6,6 +6,8 @@ docs/**
 .gitignore
 .prettierignore
 vsc-extension-quickstart.md
+dist/harness/**
+eslint.config.mjs
 **/tsconfig.json
 **/.eslintrc.json
 eslint.config.js

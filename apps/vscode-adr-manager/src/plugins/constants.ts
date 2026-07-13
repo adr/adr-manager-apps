@@ -3,7 +3,7 @@
 import * as vscode from "vscode";
 
 // Extension constants
-export const EXTENSION = vscode.extensions.getExtension("StevenChen.vscode-adr-manager");
+export const EXTENSION = vscode.extensions.getExtension("adr-org.vscode-adr-manager");
 export const EXTENSION_URI = vscode.Uri.parse(EXTENSION!.extensionPath);
 
 export const initialMarkdownContent = `# Use Markdown Architectural Decision Records

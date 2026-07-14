@@ -21,8 +21,8 @@ jobs:
     permissions:
       contents: write # GITHUB_TOKEN needs write access to push the gh-pages branch
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
       - uses: pnpm/action-setup@v6
@@ -33,7 +33,7 @@ jobs:
         env:
           VITE_GITLAB_CLIENT_ID: ${{ vars.VITE_GITLAB_CLIENT_ID }}
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }} # same-repo deploy, no PAT
           publish_branch: gh-pages

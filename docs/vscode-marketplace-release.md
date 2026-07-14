@@ -42,10 +42,14 @@ Start from a clean, current `main` after the version pull request has been merge
 git switch main
 git pull --ff-only
 git status --short
+
 pnpm install --frozen-lockfile
 pnpm --filter adr-manager-vscode test
 pnpm vsix
+
+# Must output new version
 node -p "require('./apps/vscode-adr-manager/package.json').version"
+
 az login
 pnpm --filter adr-manager-vscode exec vsce publish --no-dependencies --azure-credential
 az logout

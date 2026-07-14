@@ -18,7 +18,7 @@ The apps share a common core and tooling, and are developed, tested, versioned, 
 | Package                        | Path                                                   | Description                                                                                                                                           |
 | ------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `adr-manager`                  | [`apps/adr-manager`](apps/adr-manager)                 | Web app (Vue 3, Vite, TypeScript, CodeMirror 6) for managing MADRs in GitHub repositories via GitHub OAuth                                            |
-| `vscode-adr-manager`           | [`apps/vscode-adr-manager`](apps/vscode-adr-manager)   | VS Code extension for managing MADRs in single-root, multi-root, and folder-based workspaces, with commands, context menus, snippets, and diagnostics |
+| `adr-manager-vscode`           | [`apps/vscode-adr-manager`](apps/vscode-adr-manager)   | VS Code extension for managing MADRs in single-root, multi-root, and folder-based workspaces, with commands, context menus, snippets, and diagnostics |
 | `@adr-manager/core`            | [`packages/core`](packages/core)                       | Shared MADR parser (ANTLR4), ADR domain model, and utilities used by both apps                                                                        |
 | `@adr-manager/eslint-config`   | [`packages/eslint-config`](packages/eslint-config)     | Shared ESLint flat configs (`base`, `vue`, `node`)                                                                                                    |
 | `@adr-manager/prettier-config` | [`packages/prettier-config`](packages/prettier-config) | Shared Prettier configuration                                                                                                                         |
@@ -131,13 +131,13 @@ pnpm e2e:web
 
 Releases are coordinated with [Changesets](https://github.com/changesets/changesets):
 
-For the GitHub Pages setup checklist and deployment guide, see [GitHub Pages CI/CD Guide](docs/github-pages-ci-cd.md).
+For the complete extension publishing procedure, see the [VS Code Marketplace Release Guide](docs/vscode-marketplace-release.md).
 
 1. Add a changeset alongside any change that should be released: `pnpm changeset`.
 2. On every push to `main`, the `Release` workflow opens or updates a **Version Packages (joint release)** PR that applies pending changesets (version bumps and changelogs, via `pnpm version-packages`).
-3. Merging that PR publishes the bumped versions to `main`. Neither package is published to npm. Instead:
+3. Merging that PR lands the bumped versions on `main`. Neither package is published to npm. Instead:
    - the web app deploys to GitHub Pages automatically (`Web · Build & Publish` pushes `apps/adr-manager/dist` to the `gh-pages` branch), and
-   - the extension is published to the VS Code Marketplace by manually running the `Extension · Publish` workflow (`vsce publish`, requires the `VSCE_PAT` secret).
+   - a maintainer publishes the extension locally with Microsoft Entra authentication after signing in through the Azure CLI.
 
 | Workflow                | Trigger                                                        | What it does                                               |
 | ----------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -146,7 +146,6 @@ For the GitHub Pages setup checklist and deployment guide, see [GitHub Pages CI/
 | `Web · Tests`           | Push touching the web app or shared packages, manual           | Vitest unit tests and Cypress e2e tests (Chrome)           |
 | `Release`               | Push to `main`                                                 | Opens/updates the Changesets "Version Packages" PR         |
 | `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual | Builds the web app and deploys it to the `gh-pages` branch |
-| `Extension · Publish`   | Manual                                                         | Publishes the extension to the VS Code Marketplace         |
 
 ## Repository structure
 

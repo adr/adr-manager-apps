@@ -1,132 +1,90 @@
-# ADR Manager VS Code Extension
+# ADR Manager for VS Code
 
-Visual Studio Code (VS Code) extension based on the [ADR Manager](https://github.com/adr/adr-manager-apps), providing features for managing Architectural Decision Records (ADRs) based on the [MADR template](https://adr.github.io/madr/) in the versions 2.1.2 and 4.0.0. The editor detects the template version of an opened ADR, and a version selector in the editor toolbar rewrites a document from one template to the other.
-
-A quick introduction to all the features of this extension is available [here](https://github.com/adr/vscode-adr-manager-introduction).
-
-This extension is the `vscode-adr-manager` package of the [`adr-manager-apps`](../../README.md) monorepo, where it is developed alongside the web-based ADR Manager.
-
-This VS Code extension is part of a Bachelor Thesis written at the University of Stuttgart by Steven Chen.
-
-# Index
-
-1. [Workspace Concept](#workspace-concept)
-   1. [Single-root Workspace](#single-root-workspace)
-   2. [Multi-root Workspace](#multi-root-workspace)
-   3. [Special Case: Single-root Workspace with only Subfolders](#special-case-single-root-workspace-with-only-subfolders)
-2. [Features](#features)
-   1. [Commands](#commands)
-   2. [Settings](#settings)
-   3. [Menus](#menus)
-   4. [Linting](#linting)
-3. [Development](#development)
-4. [Known Issues](#known-issues)
-
-## Workspace Concept
-
-The VS Code ADR Manager provides its features on a workspace level. To be able to use its features, the user has to open at least one folder as a root folder in the workspace of a VS Code instance.
-
-Additionally, the user has to establish an `ADR Directory`, a path to a folder inside of the workspace relative to the root of the workspace, where most of the extension's features will act upon. It defaults to `docs/decisions`, but can be changed by the user via command or in the user/workspace settings.
-
-Depending on the number of folders opened as root folders in the same workspace, the extension will behave differently:
-
-### Single-root Workspace
-
-If the user has opened only one folder in the workspace as a root folder, the user will only be able to act upon that root folder with regard to the ADR Directory, e.g., only list ADRs inside of the ADR Directory in that particular folder, only add new ADRs to the ADR Directory in that particular folder etc.
-
-### Multi-root Workspace
-
-If the user has opened multiple folders in the workspace as root folders, the extension will try to take every root folder into account when using its features, e.g., list _every_ ADR that is inside of the ADR Directory of _every_ root folder, having the ability to choose which ADR Directory of which root folder a new ADR will be added to etc.
-
-### Special Case: Single-root Workspace with only Subfolders
-
-As an alternative to the Multi-root workspace, the user may also add a single root folder which _only_(!) contains multiple other subfolders (e.g., a folder with multiple cloned repositories in it). In this case, the extension will behave as if the user has opened every subfolder in the workspace as separate root folders.
-
-If this behaviour is not desired, it can be disabled in the user/workspace settings.
+Create, edit, search, and validate Architectural Decision Records (ADRs) without leaving Visual Studio Code. ADR Manager stores decisions as Markdown and supports [MADR](https://adr.github.io/madr/) 2.1.2 and 4.0.0.
 
 ## Features
 
-### Commands
+- Create and edit ADRs with basic or professional structured editors.
+- Switch between MADR 2.1.2 and 4.0.0 while editing.
+- Search ADRs by title and filter them by status or tag.
+- Add tags and link decisions to relevant workspace files.
+- Choose which optional MADR fields are visible without discarding their content.
+- Reorder considered options and consequences.
+- Convert nonconforming Markdown into a valid ADR before saving it.
+- Open ADRs from the Command Palette or Explorer context menu.
+- Validate numbered MADR files with diagnostics and title-case quick fixes.
+- Insert basic and professional MADR snippets in Markdown files.
+- Use the built-in tour to learn the overview and editor.
+- Delete ADRs safely by moving their Markdown files to the system trash.
 
-As of now, the following commands are supported by this extension:
+## Quick Start
 
-- `Open ADR Manager`: Opens a webview panel and renders the main webview of the ADR Manager. Here, the user can see all ADRs that are located in the ADR Directory/Directories, relative to each root folder in the current workspace, add a new ADR, view and edit existing ADRs using the MADR template(s) provided by the extension or delete an existing ADR (reversible).<br/>
+1. Install [ADR Manager for VS Code](https://marketplace.visualstudio.com/items?itemName=adr-org.adr-manager-vscode).
+2. Open a folder or workspace in VS Code.
+3. Run `ADR Manager: Open ADR Manager` from the Command Palette.
+4. Use `ADR Manager: Initialize ADR Directory` if the workspace does not have an ADR directory yet, or create an ADR and let the extension create the directory when needed.
 
-<i>Note</i>: Currently, only Markdown files that meet the following criteria will be listed in this webview:
+The default ADR directory is `docs/decisions`. Change it with the `adrManager.adrDirectory` setting or the `ADR Manager: Change ADR Directory` command.
 
-1. Be located in the ADR Directory
-2. Follow the naming convention of MADR <br/>(NNNN{-,\_}random{-,\_}title.md, in kebab-case, snake_case or a combination of these two cases, no special characters in the name (? \* : " < > / \ |) due to file name limitations, and N corresponds to a number between 0-9)
+## Workspace and File Handling
 
-If the content of a potential ADR detected by the extension does not conform to MADR, an error message will be shown and the user won't be able to view the Markdown file using the provided MADR template(s).
+ADR Manager supports normal single-root workspaces and multi-root workspaces. By default, a single workspace folder that contains only subfolders is treated like a collection of workspace roots. Disable this with `adrManager.treatSingleRootAsMultiRoot` when that behavior is not useful.
 
-- `Add New ADR`: Opens a webview panel where the user can add a new ADR using the MADR template(s) provided by the extension. The user can choose between a basic template with only the required fields of an ADR and the professional template, displaying all options of MADR.<br/>
-  The extension chooses the basic or the professional MADR template according to the user's preferences configured in the user/workspace settings.<br/>
-  If the user is working in a multi-root workspace (or a multi-root-like workspace), the extension will ask the user in which ADR Directory of which root folder the newly created ADR should be saved to.
+The overview scans Markdown files directly inside the configured ADR directory of each workspace root. It excludes the scaffolded `README.md` and `adr-template.md` files. Files do not need a four-digit MADR number to appear in the overview.
 
-- `Open ADR Manager On This File`: Only when a Markdown file is open: Prompts the extension to view the Markdown file using the MADR template(s) provided by the extension.<br/>
-  This command is not bound to the ADR Directory, i.e., the user may execute this command on an ADR even if it's not located inside of (an) ADR Directory.<br/>
-  This command only works if the content of the Markdown file conforms to MADR.
+Conforming ADRs open in the structured editor. Other Markdown files open in a conversion view so their content can be reviewed and converted safely. Conversion does not overwrite the file until the converted ADR is saved. The `Open ADR Manager on This File` command and Explorer context menu can also open Markdown files outside the configured ADR directory.
 
-- `Change ADR Directory`: Upon executing this command, the extension will ask the user to enter a new path to the ADR Directory. This path must be a path relative to the root folder(s).<br/>
-  Alternatively, this can be configured in the user/workspace settings.
+New ADRs are saved as numbered Markdown files. Renaming an ADR title updates its filename while preserving an existing four-digit number prefix.
 
-- `Initialize ADR Directory`: Upon running this command, the extension will generate the ADR Directory specified in the settings. In addition, the files "0000-use-markdown-architectural-decision-records.md", "adr-template.md" and "README.md" are created inside the ADR Directory as boilerplate. <br/>
-  If the ADR Directory already exists in the workspace folder, the extension will ask the user if he wants to generate the boilerplate files or not.<br/>
-  If the user is working in a multi-root workspace (or a multi-root-like workspace), the extension will ask the user for the root folder in which the ADR Directory should be initialized.
+## Commands
 
-### Menus
+| Command                                      | Purpose                                                   |
+| -------------------------------------------- | --------------------------------------------------------- |
+| `ADR Manager: Open ADR Manager`              | Open the ADR overview for the current workspace.          |
+| `ADR Manager: Add New ADR`                   | Create an ADR with the configured editor mode.            |
+| `ADR Manager: Initialize ADR Directory`      | Create the configured ADR directory and starter files.    |
+| `ADR Manager: Change ADR Directory`          | Change the ADR directory relative to each workspace root. |
+| `ADR Manager: Show Tour`                     | Replay the guided overview and editor tour.               |
+| `ADR Manager: Open ADR Manager on This File` | Open or convert the selected Markdown file.               |
 
-As of now, this extension contributes the following menus:
+## Settings
 
-- `Explorer Context Menu`: When right-clicking on an ADR Directory (or any directory along the way to the ADR Directory), the extension will display the option `Open ADR Manager` which executes the command with the same name.<br/>
-  When right-clicking on a Markdown file that follows the naming convention of MADR, the extension will display the option `View in ADR Manager`, opening the webview to view (and edit) the ADR using the template(s) provided by the extension.
+| Setting                                   | Default          | Purpose                                                                                                      |
+| ----------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `adrManager.adrDirectory`                 | `docs/decisions` | ADR directory relative to each workspace root. Use `.` for the workspace root itself.                        |
+| `adrManager.editorMode.addAdrEditorMode`  | `basic`          | Choose `basic` or `professional` when creating an ADR.                                                       |
+| `adrManager.editorMode.viewAdrEditorMode` | `sufficient`     | Choose `basic`, `professional`, or `sufficient`. `sufficient` selects the editor based on the ADR's content. |
+| `adrManager.showDiagnostics`              | `true`           | Show MADR diagnostics in the Markdown editor.                                                                |
+| `adrManager.treatSingleRootAsMultiRoot`   | `true`           | Treat a single folder containing only subfolders like a multi-root workspace.                                |
 
-### Linting
+## Diagnostics and Snippets
 
-As of now, this extension provides linting for potential ADR files for the following cases:
+Diagnostics apply to Markdown files with a numbered MADR-style filename such as `0001-use-markdown.md`. They report missing or empty required sections, headings that are not in title case, and a chosen option that is not listed among the considered options.
 
-- If there is no header for the title
-- If there is no subheader for all other required fields of an ADR, i.e. if there is no subheader for 'Context and Problem Statement', 'Considered Options' or 'Decision Outcome'
-- If a required section, excluding the title, (i.e., 'Context and Problem Statement', 'Considered Options' or 'Decision Outcome') is empty
-- If headings or subheadings are not written in title case
-- If the chosen option is not listed in the list of considered options
+The extension provides two Markdown snippets:
 
-### Snippets
+- `basic-madr` inserts the required MADR fields.
+- `professional-madr` inserts the complete MADR template.
 
-As of now, this extension contributes the following snippets that can be inserted using IntelliSense or when typing certain keywords in a text editor:
+## Support and Development
 
-- `Basic ADR Template`: Inserts a template with only the required fields of a MADR (keyword: `basic-madr`, )
-- `Professional ADR Template`: Inserts a template with all fields of a MADR (keyword: `professional-madr`)
+Report bugs and request features in the [adr-manager-apps issue tracker](https://github.com/adr/adr-manager-apps/issues).
 
-### Settings
+The extension is developed in the [adr-manager-apps monorepo](https://github.com/adr/adr-manager-apps) and shares its parser and ADR domain model with the web app through [`@adr-manager/core`](https://github.com/adr/adr-manager-apps/tree/main/packages/core).
 
-As of now, this extension contributes the following settings:
+Run these commands from the repository root:
 
-- `adrManager.adrDirectory`: Specifies the path of the directory containing the ADRs, relative to the root workspace folder(s) (default: docs/decisions)
+```bash
+pnpm watch:ext
+pnpm test:ext
+pnpm build:ext
+pnpm vsix
+```
 
-- `adrManager.editorMode.addAdrEditorMode`: Specifies the preferred editor mode when creating a new ADR using the extension's webview (default: basic)
-- `adrManager.editorMode.viewAdrEditorMode`: Specifies the preferred editor mode when viewing/editing an existing ADR using the extension's webview (default: sufficient, the extension will choose the template based on the content of the ADR)
+To debug the extension, open `apps/vscode-adr-manager` in VS Code and press `F5`. Maintainers can follow the [VS Code Marketplace Release Guide](https://github.com/adr/adr-manager-apps/blob/main/docs/vscode-marketplace-release.md) when publishing a new version.
 
-- `adrManager.treatSingleRootAsMultiRoot`: Specifies whether the extension should treat single-root workspaces with only subdirectories as multi-root workspaces (default: true)
+## License and Acknowledgements
 
-- `adrManager.showDiagnostics`: Specifies if the extension shows diagnostics in the text editor when working on ADR files (default: true)
+The extension is licensed under the [MIT License](https://github.com/adr/adr-manager-apps/blob/main/apps/vscode-adr-manager/LICENSE).
 
-## Development
-
-This extension is developed in the [`adr-manager-apps`](../../README.md) monorepo and shares the MADR parser and ADR domain model with the web app through the [`@adr-manager/core`](../../packages/core) package.
-See the [root README](../../README.md) for prerequisites and the full development workflow.
-
-The commands below are run from the repository root:
-
-- `pnpm watch:ext` watches the extension host bundle (esbuild), the webview bundles (Vite), and the type checker (tsc) in parallel.
-- `pnpm build:ext` builds the extension into `apps/vscode-adr-manager/dist`.
-- `pnpm test:ext` runs the extension tests.
-- `pnpm lint:ext` lints the extension.
-- `pnpm vsix` packages the extension as a VSIX file.
-
-To debug the extension, open the `apps/vscode-adr-manager` folder in VS Code and press `F5` to launch an Extension Development Host using the `Run Extension` launch configuration.
-
-## Known Issues
-
-This release is a prototype and may contain errors and bugs. Some features are not implemented yet and some implementations may be subject to change.<br/>
-It is aimed at generating feedback from user evaluation with select stakeholders.
+The VS Code extension was originally created by Steven Chen as part of a Bachelor thesis at the University of Stuttgart. It is now maintained alongside the web-based ADR Manager in the adr-manager-apps monorepo.

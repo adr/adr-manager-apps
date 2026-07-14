@@ -1,22 +1,35 @@
 {
   "name": "adr-manager-vscode",
   "displayName": "ADR Manager for VS Code",
-  "description": "A VS Code extension for the ADR Manager, for documenting and managing MADRs in VS Code.",
+  "description": "Create, edit, search, and validate MADR-based architectural decision records in VS Code.",
   "version": "0.0.1",
   "publisher": "adr-org",
   "icon": "assets/logo.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adr/vscode-adr-manager.git"
+    "url": "https://github.com/adr/adr-manager-apps.git",
+    "directory": "apps/vscode-adr-manager"
   },
+  "homepage": "https://github.com/adr/adr-manager-apps/tree/main/apps/vscode-adr-manager#readme",
+  "bugs": {
+    "url": "https://github.com/adr/adr-manager-apps/issues"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "pricing": "Free",
   "engines": {
     "vscode": "^1.120.0"
   },
   "categories": [
+    "Linters",
+    "Snippets",
     "Other"
   ],
   "keywords": [
-    "ADR, MADR, Manager"
+    "ADR",
+    "MADR",
+    "architecture",
+    "decision-records",
+    "documentation"
   ],
   "activationEvents": [
     "onStartupFinished",

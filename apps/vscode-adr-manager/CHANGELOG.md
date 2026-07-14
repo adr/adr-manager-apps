@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.2
+
+### Patch Changes
+
+- 1b08a2b: Refresh the VS Code Marketplace metadata and overview, and document the manual Microsoft Entra release process.
+
 ## 0.0.1
 
 ### Patch Changes

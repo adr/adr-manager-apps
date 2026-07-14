@@ -2,7 +2,7 @@
   "name": "adr-manager-vscode",
   "displayName": "ADR Manager for VS Code",
   "description": "Create, edit, search, and validate MADR-based architectural decision records in VS Code.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "adr-org",
   "icon": "assets/logo.png",
   "repository": {

@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@adr-manager/prettier-config": "workspace:*",
-    "@vscode/vsce": "^3.9.2",
+    "@vscode/vsce": "^4.1.0",
     "concurrently": "catalog:",
     "prettier": "catalog:"
   }

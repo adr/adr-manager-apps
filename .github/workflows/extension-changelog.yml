@@ -5,6 +5,12 @@ name: Extension · Changelog
 
 on:
   push:
+    branches: [main]
+    paths:
+      - "apps/vscode-adr-manager/CHANGELOG.md"
+      - "heylogs.properties"
+      - ".github/workflows/extension-changelog.yml"
+  pull_request:
     paths:
       - "apps/vscode-adr-manager/CHANGELOG.md"
       - "heylogs.properties"

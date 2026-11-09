@@ -2,6 +2,13 @@ name: Web · Tests
 
 on:
   push:
+    branches: [main]
+    paths:
+      - "apps/adr-manager/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/web-tests.yml"
+  pull_request:
     paths:
       - "apps/adr-manager/**"
       - "packages/**"

@@ -2,6 +2,13 @@ name: Extension · CI
 
 on:
   push:
+    branches: [main]
+    paths:
+      - "apps/vscode-adr-manager/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/extension-ci.yml"
+  pull_request:
     paths:
       - "apps/vscode-adr-manager/**"
       - "packages/**"

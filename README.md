@@ -134,13 +134,13 @@ Neither app is published to npm:
 - The web app deploys to GitHub Pages automatically when a change reaches `main` (`Web · Build & Publish` pushes `apps/adr-manager/dist` to the `gh-pages` branch).
 - The extension is released manually. Its [changelog](apps/vscode-adr-manager/CHANGELOG.md) follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and is checked by [heylogs](https://github.com/nbbrd/heylogs). A maintainer publishes it locally with Microsoft Entra authentication after signing in through the Azure CLI. See the [VS Code Marketplace Release Guide](docs/vscode-marketplace-release.md) for the complete procedure.
 
-| Workflow                | Trigger                                                        | What it does                                               |
-| ----------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
-| `Repo · Checks`         | Every push, manual                                             | Prettier check, type checks, and linting across the repo   |
-| `Extension · CI`        | Push touching the extension or shared packages, manual         | Compiles, lints, tests, and uploads a VSIX artifact        |
-| `Web · Tests`           | Push touching the web app or shared packages, manual           | Vitest unit tests and Cypress e2e tests (Chrome)           |
-| `Extension · Changelog` | Push touching the extension changelog, manual                  | Checks the changelog against Keep a Changelog with heylogs |
-| `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual | Builds the web app and deploys it to the `gh-pages` branch |
+| Workflow                | Trigger                                                                          | What it does                                               |
+| ----------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `Repo · Checks`         | Pull request, push to `main`, manual                                             | Prettier check, type checks, and linting across the repo   |
+| `Extension · CI`        | Pull request or push to `main` touching the extension or shared packages, manual | Compiles, lints, tests, and uploads a VSIX artifact        |
+| `Web · Tests`           | Pull request or push to `main` touching the web app or shared packages, manual   | Vitest unit tests and Cypress e2e tests (Chrome)           |
+| `Extension · Changelog` | Pull request or push to `main` touching the extension changelog, manual          | Checks the changelog against Keep a Changelog with heylogs |
+| `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual                   | Builds the web app and deploys it to the `gh-pages` branch |
 
 ## Repository structure
 

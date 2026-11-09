@@ -1,0 +1,30 @@
+name: Repo · Audit
+
+# Dependabot cannot read the two-document lockfile that pnpm 12 writes, so it
+# raises no security alerts for these dependencies. This workflow covers that gap.
+#
+# It has no pull_request trigger so that a new advisory does not fail unrelated
+# pull requests. Add one once the audit passes.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/audit.yml"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: pnpm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: ".nvmrc"
+      - uses: pnpm/action-setup@v6
+      - run: pnpm audit --audit-level high

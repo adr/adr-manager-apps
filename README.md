@@ -148,13 +148,14 @@ jbang com.github.nbbrd.heylogs:heylogs-cli:0.19.1:bin release --ref <version> ap
 
 After merging, tag the merge commit with `web-v<version>` and push the tag. Deployment does not depend on this step.
 
-| Workflow                | Trigger                                                                          | What it does                                                 |
-| ----------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `Repo · Checks`         | Pull request, push to `main`, manual                                             | Prettier check, type checks, and linting across the repo     |
-| `Extension · CI`        | Pull request or push to `main` touching the extension or shared packages, manual | Compiles, lints, tests, and uploads a VSIX artifact          |
-| `Web · Tests`           | Pull request or push to `main` touching the web app or shared packages, manual   | Vitest unit tests and Cypress e2e tests (Chrome)             |
-| `Repo · Changelogs`     | Pull request or push to `main` touching a changelog, manual                      | Checks both changelogs against Keep a Changelog with heylogs |
-| `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual                   | Builds the web app and deploys it to the `gh-pages` branch   |
+| Workflow                | Trigger                                                                          | What it does                                                   |
+| ----------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `Repo · Checks`         | Pull request, push to `main`, manual                                             | Prettier check, type checks, and linting across the repo       |
+| `Extension · CI`        | Pull request or push to `main` touching the extension or shared packages, manual | Compiles, lints, tests, and uploads a VSIX artifact            |
+| `Web · Tests`           | Pull request or push to `main` touching the web app or shared packages, manual   | Vitest unit tests and Cypress e2e tests (Chrome)               |
+| `Repo · Changelogs`     | Pull request or push to `main` touching a changelog, manual                      | Checks both changelogs against Keep a Changelog with heylogs   |
+| `Repo · Audit`          | Weekly, push to `main` touching dependencies, manual                             | Fails on known high or critical vulnerabilities (`pnpm audit`) |
+| `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual                   | Builds the web app and deploys it to the `gh-pages` branch     |
 
 ## Repository structure
 

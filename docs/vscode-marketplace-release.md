@@ -24,19 +24,22 @@ The established local publishing flow uses Microsoft Entra authentication throug
 
 ## Version the Release
 
-Every releasable change must include a Changeset:
+Every change that affects extension users adds an entry under `## [Unreleased]` in `apps/vscode-adr-manager/CHANGELOG.md`, which follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The `Extension · Changelog` workflow checks the format with [heylogs](https://github.com/nbbrd/heylogs).
 
-```bash
-pnpm changeset
-```
+To prepare a release, open a pull request that makes these two changes, then review and merge it before publishing:
 
-Select `adr-manager-vscode` and choose the appropriate semantic version bump. After the change is merged into `main`, the `Release` workflow opens or updates the `Version Packages (joint release)` pull request. Review and merge that pull request before publishing.
+1. Set the new semantic version in `apps/vscode-adr-manager/package.json`.
+2. Move the `## [Unreleased]` entries into a new version section:
 
-Changesets owns the version in `apps/vscode-adr-manager/package.json` and the extension changelog. Do not pass `patch`, `minor`, `major`, or a version number to `vsce publish`, because that would bypass the repository's release process.
+   ```bash
+   jbang com.github.nbbrd.heylogs:heylogs-cli:0.19.1:bin release --ref <version> apps/vscode-adr-manager/CHANGELOG.md
+   ```
+
+The pull request sets the version. Do not pass `patch`, `minor`, `major`, or a version number to `vsce publish`, because that would bypass the repository's release process.
 
 ## Publish the Release
 
-Start from a clean, current `main` after the version pull request has been merged:
+Start from a clean, current `main` after the release pull request has been merged:
 
 ```bash
 git switch main
@@ -57,13 +60,18 @@ az logout
 
 `git status --short` should produce no output before publishing. The test command runs the extension type check, host compilation, lint, and test suite. `pnpm vsix` builds the production host and webviews, then produces an installable package for final inspection before `vsce publish` builds and uploads the release.
 
-After publishing, open the [Marketplace page](https://marketplace.visualstudio.com/items?itemName=adr-org.adr-manager-vscode).
+After publishing, open the [Marketplace page](https://marketplace.visualstudio.com/items?itemName=adr-org.adr-manager-vscode) and tag the release. The changelog's version links point to these tags:
+
+```bash
+git tag vscode-v<version>
+git push origin vscode-v<version>
+```
 
 ## Troubleshooting
 
 ### The version already exists
 
-The Marketplace does not allow a published version to be replaced. Confirm that the `Version Packages (joint release)` pull request was merged and that local `main` contains the new version. Do not fix this by passing a version directly to `vsce publish`.
+The Marketplace does not allow a published version to be replaced. Confirm that the release pull request was merged and that local `main` contains the new version. Do not fix this by passing a version directly to `vsce publish`.
 
 ### Authentication or authorization fails
 

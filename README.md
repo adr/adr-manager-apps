@@ -11,7 +11,7 @@ Both apps help teams create, edit, validate, and manage Architectural Decision R
 - **Web app**: manage MADRs in GitHub repositories, live at <https://adr.github.io/adr-manager-apps/>
 - **VS Code extension**: manage MADRs in local workspaces, on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=adr-org.adr-manager-vscode)
 
-The apps share a common core and tooling, and are developed, tested, versioned, and released together from one pnpm workspace.
+The apps share a common core and tooling, and are developed and tested together from one pnpm workspace.
 
 ## Packages
 
@@ -129,30 +129,24 @@ pnpm e2e:web
 
 ## Releases and CI
 
-Releases are coordinated with [Changesets](https://github.com/changesets/changesets):
+Neither app is published to npm:
 
-For the complete extension publishing procedure, see the [VS Code Marketplace Release Guide](docs/vscode-marketplace-release.md).
-
-1. Add a changeset alongside any change that should be released: `pnpm changeset`.
-2. On every push to `main`, the `Release` workflow opens or updates a **Version Packages (joint release)** PR that applies pending changesets (version bumps and changelogs, via `pnpm version-packages`).
-3. Merging that PR lands the bumped versions on `main`. Neither package is published to npm. Instead:
-   - the web app deploys to GitHub Pages automatically (`Web · Build & Publish` pushes `apps/adr-manager/dist` to the `gh-pages` branch), and
-   - a maintainer publishes the extension locally with Microsoft Entra authentication after signing in through the Azure CLI.
+- The web app deploys to GitHub Pages automatically when a change reaches `main` (`Web · Build & Publish` pushes `apps/adr-manager/dist` to the `gh-pages` branch).
+- The extension is released manually. Its [changelog](apps/vscode-adr-manager/CHANGELOG.md) follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and is checked by [heylogs](https://github.com/nbbrd/heylogs). A maintainer publishes it locally with Microsoft Entra authentication after signing in through the Azure CLI. See the [VS Code Marketplace Release Guide](docs/vscode-marketplace-release.md) for the complete procedure.
 
 | Workflow                | Trigger                                                        | What it does                                               |
 | ----------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
 | `Repo · Checks`         | Every push, manual                                             | Prettier check, type checks, and linting across the repo   |
 | `Extension · CI`        | Push touching the extension or shared packages, manual         | Compiles, lints, tests, and uploads a VSIX artifact        |
 | `Web · Tests`           | Push touching the web app or shared packages, manual           | Vitest unit tests and Cypress e2e tests (Chrome)           |
-| `Release`               | Push to `main`                                                 | Opens/updates the Changesets "Version Packages" PR         |
+| `Extension · Changelog` | Push touching the extension changelog, manual                  | Checks the changelog against Keep a Changelog with heylogs |
 | `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual | Builds the web app and deploys it to the `gh-pages` branch |
 
 ## Repository structure
 
 ```text
 .
-|-- .changeset/                  # changesets config and pending release notes
-|-- .github/workflows/           # CI, release, and publish pipelines
+|-- .github/workflows/           # CI and publish pipelines
 |-- apps/
 |   |-- adr-manager/             # web app (src, tests, cypress)
 |   `-- vscode-adr-manager/      # VS Code extension (src, webviews in web/)
@@ -162,6 +156,7 @@ For the complete extension publishing procedure, see the [VS Code Marketplace Re
 |   |-- prettier-config/         # shared Prettier config
 |   `-- tsconfig/                # shared TypeScript configs
 |-- .nvmrc                       # Node version used by CI (and nvm users)
+|-- heylogs.properties           # changelog check settings (versioning, tags, forge)
 |-- package.json                 # root orchestration scripts
 |-- pnpm-workspace.yaml          # workspace layout, dependency catalog, install hardening
 `-- README.md
@@ -176,7 +171,7 @@ Before opening a pull request:
 2. Keep changes focused and describe the user-facing effect.
 3. Add or update tests when changing behavior.
 4. Run the relevant checks from the workspace root.
-5. Add a changeset with `pnpm changeset` when the change should be released.
+5. When a change affects extension users, add an entry under `## [Unreleased]` in the [extension changelog](apps/vscode-adr-manager/CHANGELOG.md).
 
 For a full validation pass, run:
 

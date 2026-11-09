@@ -1,0 +1,23 @@
+name: Extension · Changelog
+
+# Checks the extension changelog against Keep a Changelog with heylogs.
+# heylogs reads its versioning, tagging, and forge settings from heylogs.properties.
+
+on:
+  push:
+    paths:
+      - "apps/vscode-adr-manager/CHANGELOG.md"
+      - "heylogs.properties"
+      - ".github/workflows/extension-changelog.yml"
+  workflow_dispatch:
+
+jobs:
+  heylogs:
+    name: heylogs check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jbangdev/jbang-action@v0.143.0
+        with:
+          script: com.github.nbbrd.heylogs:heylogs-cli:0.19.1:bin
+          scriptargs: "check --format github-actions apps/vscode-adr-manager/CHANGELOG.md"

@@ -33,26 +33,26 @@ allowBuilds:
 catalog:
   # Pinned exactly so every package builds against the identical compiler/runtime.
   typescript: 6.0.3
-  vue: 3.5.35
+  vue: 3.5.44
   # Shared tooling (caret ranges; pnpm resolves the newest installable).
-  "@types/node": ^22.19.19
-  sass: ^1.100.0
+  "@types/node": ^22.20.5
+  sass: ^1.107.1
   antlr4: ^4.13.2
-  prettier: ^3.8.3
-  concurrently: ^10.0.3
+  prettier: ^3.9.10
+  concurrently: ^10.0.6
   # Build toolchain (Vite for browser bundles, esbuild for the extension host).
-  vite: ^8.0.16
-  "@vitejs/plugin-vue": ^6.0.7
-  esbuild: ^0.28.1
+  vite: ^8.3.5
+  "@vitejs/plugin-vue": ^6.0.10
+  esbuild: ^0.28.2
   # ESLint stack (flat config, shared by @adr-manager/eslint-config).
-  eslint: ^10.4.1
-  typescript-eslint: ^8.60.1
+  eslint: ^10.14.0
+  typescript-eslint: ^8.72.1
   "@eslint/js": ^10.0.1
-  eslint-plugin-vue: ^10.9.2
+  eslint-plugin-vue: ^10.12.0
   vue-eslint-parser: ^10.4.1
-  globals: ^17.6.0
+  globals: ^17.14.0
   eslint-config-prettier: ^10.1.8
   # Test runner (all packages).
   vitest: ^4.1.8
   # Type-checks .vue SFCs (web app and extension webviews).
-  vue-tsc: ^3.3.3
+  vue-tsc: ^3.3.14

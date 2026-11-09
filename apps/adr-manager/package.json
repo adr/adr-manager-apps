@@ -54,7 +54,7 @@
         "cypress": "^15.16.0",
         "cypress-vite": "^1.10.0",
         "eslint": "catalog:",
-        "jsdom": "^29.1.1",
+        "jsdom": "^30.1.3",
         "prettier": "catalog:",
         "typescript": "catalog:",
         "vite": "catalog:",

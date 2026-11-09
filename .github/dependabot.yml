@@ -1,0 +1,33 @@
+version: 2
+
+updates:
+  # Dependabot handles pnpm workspaces through the npm ecosystem.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      # Matches minimumReleaseAge in pnpm-workspace.yaml (7200 minutes).
+      default-days: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Must not exceed engines.vscode of the extension, or vsce refuses to package it.
+      - dependency-name: "@types/vscode"
+      # Follows the Node major version in .nvmrc.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # Must match the ANTLR tool that generated packages/core/src/parser.
+      - dependency-name: antlr4
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 5
+    groups:
+      github-actions:
+        patterns: ["*"]

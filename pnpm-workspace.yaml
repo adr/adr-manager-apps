@@ -32,7 +32,7 @@ allowBuilds:
 # Reference these from a package.json with the "catalog:" protocol.
 catalog:
   # Pinned exactly so every package builds against the identical compiler/runtime.
-  typescript: 6.0.3
+  typescript: 7.0.2
   vue: 3.5.35
   # Shared tooling (caret ranges; pnpm resolves the newest installable).
   "@types/node": ^22.19.19

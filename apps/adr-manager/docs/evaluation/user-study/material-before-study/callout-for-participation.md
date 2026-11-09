@@ -41,9 +41,9 @@ The video recordings and unapproved case descriptions will _**NOT**_ be publishe
 We would be very happy about your participation!
 If you have any questions, feel free to contact us.
 
-Daniel Abajirov, st155165@stud.uni-stuttgart.de<br>
-Katrin Bauer, st161700@stud.uni-stuttgart.de<br>
-Manuel Merkel, st155131@stud.uni-stuttgart.de
+Daniel Abajirov<br>
+Katrin Bauer<br>
+Manuel Merkel
 
 <hr>
 

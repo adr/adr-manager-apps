@@ -5,6 +5,7 @@ scripts/**
 docs/**
 .gitignore
 .prettierignore
+heylogs.properties
 vsc-extension-quickstart.md
 dist/harness/**
 eslint.config.mjs

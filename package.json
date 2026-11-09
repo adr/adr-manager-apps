@@ -2,7 +2,7 @@
   "name": "adr-manager-apps",
   "version": "0.0.0",
   "private": true,
-  "description": "Monorepo for joint major releases of the web-based ADR Manager and its VS Code extension",
+  "description": "Monorepo for the web-based ADR Manager and its VS Code extension",
   "packageManager": "pnpm@12.18.0",
   "engines": {
     "node": ">=22.13"

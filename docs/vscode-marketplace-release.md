@@ -24,7 +24,7 @@ The established local publishing flow uses Microsoft Entra authentication throug
 
 ## Version the Release
 
-Every change that affects extension users adds an entry under `## [Unreleased]` in `apps/vscode-adr-manager/CHANGELOG.md`, which follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The `Extension · Changelog` workflow checks the format with [heylogs](https://github.com/nbbrd/heylogs).
+Every change that affects extension users adds an entry under `## [Unreleased]` in `apps/vscode-adr-manager/CHANGELOG.md`, which follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The `Repo · Changelogs` workflow checks the format with [heylogs](https://github.com/nbbrd/heylogs).
 
 To prepare a release, open a pull request that makes these two changes, then review and merge it before publishing:
 

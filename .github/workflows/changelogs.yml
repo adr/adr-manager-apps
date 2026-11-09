@@ -1,0 +1,29 @@
+name: Repo · Changelogs
+
+# Checks the app changelogs against Keep a Changelog with heylogs.
+# heylogs reads its settings from heylogs.properties at the root and in each app.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/*/CHANGELOG.md"
+      - "**/heylogs.properties"
+      - ".github/workflows/changelogs.yml"
+  pull_request:
+    paths:
+      - "apps/*/CHANGELOG.md"
+      - "**/heylogs.properties"
+      - ".github/workflows/changelogs.yml"
+  workflow_dispatch:
+
+jobs:
+  heylogs:
+    name: heylogs check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: jbangdev/jbang-action@v0.143.0
+        with:
+          script: com.github.nbbrd.heylogs:heylogs-cli:0.19.1:bin
+          scriptargs: "check --format github-actions apps/adr-manager/CHANGELOG.md apps/vscode-adr-manager/CHANGELOG.md"

@@ -103,4 +103,4 @@ git diff --check
 For visible web app changes, smoke check `http://localhost:8000/adr-manager-apps/#/manager`.
 Unauthenticated access should redirect to `#/login?redirect=/manager`.
 
-When the update changes what extension users see, add an entry under `## [Unreleased]` in `apps/vscode-adr-manager/CHANGELOG.md`.
+When the update changes what users see, add an entry under `## [Unreleased]` in the changelog of each affected app.

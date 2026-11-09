@@ -4,7 +4,7 @@
 
 This is the `adr-manager` web app package of the [`adr-manager-apps`](../../README.md) monorepo.
 For installation, build, test, and release instructions that apply to the whole repository, see the [root README](../../README.md).
-This document covers what is specific to the web app.
+This document covers what is specific to the web app. See the [CHANGELOG](CHANGELOG.md) for notable changes.
 
 ## Description
 

@@ -28,7 +28,7 @@ The two apps are the deliverables. The `@adr-manager/*` packages are private wor
 
 Package-specific usage details live in the package docs:
 
-- [Web app README](apps/adr-manager/README.md)
+- [Web app README](apps/adr-manager/README.md) and [CHANGELOG](apps/adr-manager/CHANGELOG.md)
 - [VS Code extension README](apps/vscode-adr-manager/README.md) and [CHANGELOG](apps/vscode-adr-manager/CHANGELOG.md)
 
 ## Architecture
@@ -129,18 +129,32 @@ pnpm e2e:web
 
 ## Releases and CI
 
-Neither app is published to npm:
+Each app has its own version, changelog, and tag prefix, because the apps reach users in different ways and at different times. Neither app is published to npm.
 
-- The web app deploys to GitHub Pages automatically when a change reaches `main` (`Web · Build & Publish` pushes `apps/adr-manager/dist` to the `gh-pages` branch).
-- The extension is released manually. Its [changelog](apps/vscode-adr-manager/CHANGELOG.md) follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and is checked by [heylogs](https://github.com/nbbrd/heylogs). A maintainer publishes it locally with Microsoft Entra authentication after signing in through the Azure CLI. See the [VS Code Marketplace Release Guide](docs/vscode-marketplace-release.md) for the complete procedure.
+| App               | Changelog                                         | Tags                | How it reaches users                                                                                                                                                                          |
+| ----------------- | ------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web app           | [CHANGELOG](apps/adr-manager/CHANGELOG.md)        | `web-v<version>`    | Deploys to GitHub Pages whenever a change reaches `main` (`Web · Build & Publish` pushes `apps/adr-manager/dist` to the `gh-pages` branch)                                                    |
+| VS Code extension | [CHANGELOG](apps/vscode-adr-manager/CHANGELOG.md) | `vscode-v<version>` | A maintainer publishes it locally with Microsoft Entra authentication after signing in through the Azure CLI. See the [VS Code Marketplace Release Guide](docs/vscode-marketplace-release.md) |
 
-| Workflow                | Trigger                                                                          | What it does                                               |
-| ----------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `Repo · Checks`         | Pull request, push to `main`, manual                                             | Prettier check, type checks, and linting across the repo   |
-| `Extension · CI`        | Pull request or push to `main` touching the extension or shared packages, manual | Compiles, lints, tests, and uploads a VSIX artifact        |
-| `Web · Tests`           | Pull request or push to `main` touching the web app or shared packages, manual   | Vitest unit tests and Cypress e2e tests (Chrome)           |
-| `Extension · Changelog` | Pull request or push to `main` touching the extension changelog, manual          | Checks the changelog against Keep a Changelog with heylogs |
-| `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual                   | Builds the web app and deploys it to the `gh-pages` branch |
+The packages in `packages/` are internal, stay at `0.0.0`, and have no changelog. When a shared package changes, record the effect in the changelog of each affected app.
+
+Changelogs follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and are checked by [heylogs](https://github.com/nbbrd/heylogs).
+
+To cut a web app version, open a pull request that sets the version in `apps/adr-manager/package.json` and moves the `## [Unreleased]` entries into a new section:
+
+```bash
+jbang com.github.nbbrd.heylogs:heylogs-cli:0.19.1:bin release --ref <version> apps/adr-manager/CHANGELOG.md
+```
+
+After merging, tag the merge commit with `web-v<version>` and push the tag. Deployment does not depend on this step.
+
+| Workflow                | Trigger                                                                          | What it does                                                 |
+| ----------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `Repo · Checks`         | Pull request, push to `main`, manual                                             | Prettier check, type checks, and linting across the repo     |
+| `Extension · CI`        | Pull request or push to `main` touching the extension or shared packages, manual | Compiles, lints, tests, and uploads a VSIX artifact          |
+| `Web · Tests`           | Pull request or push to `main` touching the web app or shared packages, manual   | Vitest unit tests and Cypress e2e tests (Chrome)             |
+| `Repo · Changelogs`     | Pull request or push to `main` touching a changelog, manual                      | Checks both changelogs against Keep a Changelog with heylogs |
+| `Web · Build & Publish` | Push to `main` touching the web app or shared packages, manual                   | Builds the web app and deploys it to the `gh-pages` branch   |
 
 ## Repository structure
 
@@ -156,7 +170,7 @@ Neither app is published to npm:
 |   |-- prettier-config/         # shared Prettier config
 |   `-- tsconfig/                # shared TypeScript configs
 |-- .nvmrc                       # Node version used by CI (and nvm users)
-|-- heylogs.properties           # changelog check settings (versioning, tags, forge)
+|-- heylogs.properties           # changelog check settings; each app adds its tag prefix
 |-- package.json                 # root orchestration scripts
 |-- pnpm-workspace.yaml          # workspace layout, dependency catalog, install hardening
 `-- README.md
@@ -171,7 +185,7 @@ Before opening a pull request:
 2. Keep changes focused and describe the user-facing effect.
 3. Add or update tests when changing behavior.
 4. Run the relevant checks from the workspace root.
-5. When a change affects extension users, add an entry under `## [Unreleased]` in the [extension changelog](apps/vscode-adr-manager/CHANGELOG.md).
+5. When a change affects users of an app, add an entry under `## [Unreleased]` in the changelog of that app: [web app](apps/adr-manager/CHANGELOG.md) or [VS Code extension](apps/vscode-adr-manager/CHANGELOG.md).
 
 For a full validation pass, run:
 

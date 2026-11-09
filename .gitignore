@@ -33,3 +33,7 @@ yarn-error.log*
 .env
 .env*.local
 .idea
+
+.venv/
+venv/
+__pycache__/

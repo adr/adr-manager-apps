@@ -11,6 +11,8 @@ The web app deploys whenever a change reaches `main`, so entries under Unrelease
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-11-09
+
 ### Added
 
 - GitLab support, including self-hosted instances.
@@ -37,4 +39,5 @@ The web app deploys whenever a change reaches `main`, so entries under Unrelease
 - The tour appeared again after signing out and back in.
 - Tooltips were sometimes not visible.
 
-[Unreleased]: https://github.com/adr/adr-manager-apps/compare/002eeaa...HEAD
+[Unreleased]: https://github.com/adr/adr-manager-apps/compare/web-v3.0.0...HEAD
+[3.0.0]: https://github.com/adr/adr-manager-apps/compare/002eeaa...web-v3.0.0
